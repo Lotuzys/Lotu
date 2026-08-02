@@ -615,11 +615,31 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- Firebase (compat SDK — namespaced API, no build step needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+// ═══════════════════════════════════════════════
+// FIREBASE — fill in with your project's config
+// (Firebase console → Project settings → Your apps → SDK setup and config)
+// ═══════════════════════════════════════════════
+const FIREBASE_CONFIG={
+  apiKey:"YOUR_API_KEY",
+  authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:"YOUR_PROJECT_ID",
+  storageBucket:"YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId:"YOUR_SENDER_ID",
+  appId:"YOUR_APP_ID"
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
 // ═══════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════
-const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:10,ONE_GOAL_AGAINST_PTS:5,WIN_PTS:2,LOSS_PTS:-1,CAPTAIN_MULT:2,STORAGE_KEY:'sfl_v2',USERS_KEY:'sfl_users_v2'};
+const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:10,ONE_GOAL_AGAINST_PTS:5,WIN_PTS:2,LOSS_PTS:-1,CAPTAIN_MULT:2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
 const POS_C={G:'#f97316',D:'#3b82f6',M:'#22c55e',F:'#ef4444'};
 const POS_LT={G:'V',D:'G',M:'S',F:'P'};
 const POS_FL={G:'Vartininkas',D:'Gynėjas',M:'Saugas',F:'Puolėjas'};
@@ -697,21 +717,10 @@ const FR=[
 ];
 
 // ═══════════════════════════════════════════════
-// AUTH — localStorage-based user system
+// AUTH — Firebase Auth (shared across every device)
 // ═══════════════════════════════════════════════
 let CURRENT_USER = null;
-
-function getUsers(){try{return JSON.parse(localStorage.getItem(CONFIG.USERS_KEY)||'{}')}catch{return{}}}
-function saveUsers(u){try{localStorage.setItem(CONFIG.USERS_KEY,JSON.stringify(u))}catch{}}
-function getUserState(email){
-  const key=CONFIG.STORAGE_KEY+'_'+email;
-  try{const r=localStorage.getItem(key);return r?JSON.parse(r):null}catch{return null}
-}
-function saveUserState(email,state){
-  const key=CONFIG.STORAGE_KEY+'_'+email;
-  try{localStorage.setItem(key,JSON.stringify(state))}catch{}}
-function getActiveEmail(){try{return localStorage.getItem('sfl_active')||null}catch{return null}}
-function setActiveEmail(e){try{if(e)localStorage.setItem('sfl_active',e);else localStorage.removeItem('sfl_active')}catch{}}
+function isAdmin(){return !!(CURRENT_USER&&CURRENT_USER.email===CONFIG.ADMIN_EMAIL);}
 
 function switchLoginTab(t){
   document.getElementById('ltab-in').classList.toggle('on',t==='in');
@@ -720,60 +729,75 @@ function switchLoginTab(t){
   document.getElementById('form-register').style.display=t==='up'?'block':'none';
 }
 
-function doLogin(){
+async function doLogin(){
   const email=document.getElementById('li-email').value.trim().toLowerCase();
   const pass=document.getElementById('li-pass').value;
-  const users=getUsers();
   const errEl=document.getElementById('li-err');
-  if(!users[email]||users[email].pass!==btoa(pass)){
-    errEl.classList.add('show');return;
-  }
   errEl.classList.remove('show');
-  setActiveEmail(email);
-  loginUser(email);
+  try{
+    await auth.signInWithEmailAndPassword(email,pass);
+  }catch(e){
+    errEl.textContent='Neteisingi prisijungimo duomenys';
+    errEl.classList.add('show');
+  }
 }
 
-function doRegister(){
+let pendingRegisterName=null;
+async function doRegister(){
   const name=document.getElementById('reg-name').value.trim();
   const email=document.getElementById('reg-email').value.trim().toLowerCase();
   const pass=document.getElementById('reg-pass').value;
   const errEl=document.getElementById('reg-err');
+  errEl.classList.remove('show');
   if(!name||!email||pass.length<6){
     errEl.textContent='Užpildyk visus laukus (slaptažodis min. 6 simboliai)';
     errEl.classList.add('show');return;
   }
-  const users=getUsers();
-  if(users[email]){errEl.textContent='Toks el. paštas jau užregistruotas';errEl.classList.add('show');return;}
-  errEl.classList.remove('show');
-  users[email]={name,pass:btoa(pass),createdAt:Date.now()};
-  saveUsers(users);
-  setActiveEmail(email);
-  loginUser(email,true);
+  try{
+    pendingRegisterName=name;
+    const cred=await auth.createUserWithEmailAndPassword(email,pass);
+    cred.user.updateProfile({displayName:name}).catch(()=>{});
+  }catch(e){
+    pendingRegisterName=null;
+    errEl.textContent=e.code==='auth/email-already-in-use'?'Toks el. paštas jau užregistruotas':'Registracijos klaida: '+e.message;
+    errEl.classList.add('show');
+  }
 }
 
-function loginUser(email,isNew=false){
-  const users=getUsers();
-  CURRENT_USER={email,name:users[email].name};
-  const saved=getUserState(email);
-  if(saved){loadStateFromObj(saved);}
-  else{resetStateData();}
+// Single source of truth for post-auth UI: fires on login, register, and page reload (persisted session)
+auth.onAuthStateChanged(async user=>{
+  document.getElementById('d-players').textContent=PLAYERS.length;
+  if(user){
+    await loginUser(user);
+  }else{
+    unsubscribeLeagueState();
+    CURRENT_USER=null;
+    resetStateData();
+    document.getElementById('main-nav').style.display='none';
+    document.getElementById('admbtn').style.display='none';
+    document.getElementById('pts-chip').style.display='none';
+    document.getElementById('user-chip').style.display='none';
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+    document.getElementById('page-login').classList.add('on');
+  }
+});
+
+async function loginUser(user){
+  const doc=await getUserState(user.uid);
+  const isNew=!doc;
+  if(doc){loadStateFromObj(doc);}else{resetStateData();}
+  CURRENT_USER={uid:user.uid,email:user.email,name:(doc&&doc.name)||pendingRegisterName||user.displayName||user.email.split('@')[0]};
+  pendingRegisterName=null;
+  await loadLeagueState();
+  subscribeLeagueState();
   updateTopbarForUser();
-  if(isNew||!saved){showOnboarding();}
-  else{showMainApp();}
+  if(isNew||!STATE.favTeam){showOnboarding();}else{showMainApp();}
 }
 
-function doLogout(){
+async function doLogout(){
   document.getElementById('prof-bg').classList.remove('open');
   if(CURRENT_USER)saveCurrentState();
-  CURRENT_USER=null;
-  setActiveEmail(null);
-  resetStateData();
-  document.getElementById('main-nav').style.display='none';
-  document.getElementById('admbtn').style.display='none';
-  document.getElementById('pts-chip').style.display='none';
-  document.getElementById('user-chip').style.display='none';
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.getElementById('page-login').classList.add('on');
+  await auth.signOut();
 }
 
 function updateTopbarForUser(){
@@ -784,7 +808,7 @@ function updateTopbarForUser(){
   document.getElementById('user-chip').style.display='flex';
   document.getElementById('pts-chip').style.display='block';
   document.getElementById('main-nav').style.display='flex';
-  document.getElementById('admbtn').style.display='block';
+  document.getElementById('admbtn').style.display=isAdmin()?'block':'none';
 }
 
 // ═══════════════════════════════════════════════
@@ -841,11 +865,14 @@ function resetStateData(){
   STATE.myTotalPts=0;STATE.myRoundsPlayed=0;STATE.favTeam='';STATE.fantasyTeamName='';
 }
 
+// Per-user document (squads, personal points). Shared match data (DB/teams/savedMatches)
+// lives in the separate league/state document — see LEAGUE STATE section below.
 function stateToObj(){
   return {
+    name:CURRENT_USER?CURRENT_USER.name:undefined,
+    email:CURRENT_USER?CURRENT_USER.email:undefined,
     curRound:STATE.curRound,adminRound:STATE.adminRound,squadLocked:STATE.squadLocked,
     mySquads:STATE.mySquads,myRoundPts:STATE.myRoundPts,myRoundDetail:STATE.myRoundDetail,
-    DB:STATE.DB,teams:STATE.teams,savedMatches:[...STATE.savedMatches],
     myTotalPts:STATE.myTotalPts,myRoundsPlayed:STATE.myRoundsPlayed,
     favTeam:STATE.favTeam,fantasyTeamName:STATE.fantasyTeamName,
     captain:STATE.captain,
@@ -857,7 +884,6 @@ function stateToObj(){
 function loadStateFromObj(s){
   STATE.curRound=s.curRound??0;STATE.adminRound=s.adminRound??0;STATE.squadLocked=s.squadLocked??false;
   STATE.mySquads=s.mySquads??{};STATE.myRoundPts=s.myRoundPts??{};STATE.myRoundDetail=s.myRoundDetail??{};
-  STATE.DB=s.DB??{};STATE.teams=s.teams??freshTeams();STATE.savedMatches=new Set(s.savedMatches??[]);
   STATE.myTotalPts=s.myTotalPts??0;STATE.myRoundsPlayed=s.myRoundsPlayed??0;
   STATE.favTeam=s.favTeam??'';STATE.fantasyTeamName=s.fantasyTeamName??'';
   STATE.captain=s.captain??null;
@@ -865,9 +891,59 @@ function loadStateFromObj(s){
   STATE.taken=new Set(s.taken??[]);STATE.takenTeams=new Set(s.takenTeams??[]);
 }
 
+// ═══════════════════════════════════════════════
+// FIRESTORE PERSISTENCE — per-user doc (users/{uid})
+// ═══════════════════════════════════════════════
+function userDocRef(uid){return db.collection('users').doc(uid);}
+
+async function getUserState(uid){
+  try{
+    const snap=await userDocRef(uid).get();
+    return snap.exists?snap.data():null;
+  }catch(e){console.error('Nepavyko įkelti vartotojo duomenų',e);return null;}
+}
+
 function saveCurrentState(){
   if(!CURRENT_USER)return;
-  saveUserState(CURRENT_USER.email,stateToObj());
+  const obj=stateToObj();
+  userDocRef(CURRENT_USER.uid).set(obj,{merge:true}).catch(e=>console.error('Nepavyko išsaugoti',e));
+}
+
+// ═══════════════════════════════════════════════
+// FIRESTORE PERSISTENCE — shared league doc (league/state)
+// Match results, goalscorers and standings are the same for every player,
+// so they live in one shared document instead of each user's own doc.
+// ═══════════════════════════════════════════════
+const LEAGUE_DOC=db.collection('league').doc('state');
+let leagueUnsub=null;
+
+async function loadLeagueState(){
+  try{
+    const snap=await LEAGUE_DOC.get();
+    const d=snap.exists?snap.data():null;
+    STATE.DB=d?.DB??{};STATE.teams=d?.teams??freshTeams();STATE.savedMatches=new Set(d?.savedMatches??[]);
+  }catch(e){console.error('Nepavyko įkelti turo duomenų',e);}
+}
+
+function subscribeLeagueState(){
+  if(leagueUnsub)leagueUnsub();
+  leagueUnsub=LEAGUE_DOC.onSnapshot(snap=>{
+    if(!snap.exists)return;
+    const d=snap.data();
+    STATE.DB=d.DB??{};STATE.teams=d.teams??freshTeams();STATE.savedMatches=new Set(d.savedMatches??[]);
+    if(document.getElementById('page-squad')?.classList.contains('on'))renderFixtures();
+    if(document.getElementById('page-standings')?.classList.contains('on'))renderStFull();
+    if(document.getElementById('page-dash')?.classList.contains('on'))renderStMini();
+    if(document.getElementById('page-admin')?.classList.contains('on')&&isAdmin())renderAdmin();
+  },e=>console.error('League listener error',e));
+}
+
+function unsubscribeLeagueState(){if(leagueUnsub){leagueUnsub();leagueUnsub=null;}}
+
+function saveLeagueState(){
+  if(!isAdmin())return;
+  LEAGUE_DOC.set({DB:STATE.DB,teams:STATE.teams,savedMatches:[...STATE.savedMatches]},{merge:true})
+    .catch(e=>{console.error(e);toast('Klaida išsaugant — patikrink admin teises');});
 }
 
 // Getters
@@ -902,6 +978,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // PAGE ROUTING
 // ═══════════════════════════════════════════════
 function showPage(name,btn){
+  if(name==='admin'&&!isAdmin()){toast('Prieiga tik administratoriui');return;}
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb,.abtn').forEach(b=>b.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
@@ -931,17 +1008,21 @@ function showMainApp(){
 // ═══════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════
-function renderDash(){
+async function fetchAllUsers(){
+  try{
+    const snap=await db.collection('users').get();
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){console.error('Nepavyko įkelti dalyvių sąrašo',e);return [];}
+}
+
+async function renderDash(){
   document.getElementById('d-players').textContent=PLAYERS.length;
   document.getElementById('d-mypts').textContent=STATE.myTotalPts;
   document.getElementById('hdr-pts').textContent=STATE.myTotalPts;
   if(STATE.fantasyTeamName)document.getElementById('dash-title').textContent=STATE.fantasyTeamName;
   // Rank
-  const allUsers=getUsers();
-  const scores=Object.keys(allUsers).map(email=>{
-    const us=getUserState(email);
-    return us?us.myTotalPts||0:0;
-  }).sort((a,b)=>b-a);
+  const allUsers=await fetchAllUsers();
+  const scores=allUsers.map(u=>u.myTotalPts||0).sort((a,b)=>b-a);
   const rank=scores.indexOf(STATE.myTotalPts)+1;
   document.getElementById('d-rank').textContent=rank>0?'#'+rank:'#1';
   document.getElementById('d-rounds').innerHTML=FR.map((r,i)=>{
@@ -1243,22 +1324,19 @@ function renderStFull(){
 }
 
 // ═══════════════════════════════════════════════
-// LEADERBOARD — reads all users from localStorage
+// LEADERBOARD — reads all users from Firestore
 // ═══════════════════════════════════════════════
-function renderLB(){
-  const users=getUsers();
-  const entries=Object.keys(users).map(email=>{
-    const us=getUserState(email)||{};
-    return {
-      name:users[email].name,
-      email,
-      pts:us.myTotalPts||0,
-      rounds:us.myRoundsPlayed||0,
-      favTeam:us.favTeam||'',
-      teamName:us.fantasyTeamName||users[email].name+"'s FC",
-      isMe:CURRENT_USER&&email===CURRENT_USER.email,
-    };
-  }).sort((a,b)=>b.pts-a.pts);
+async function renderLB(){
+  const allUsers=await fetchAllUsers();
+  const entries=allUsers.map(u=>({
+    name:u.name||u.email||'Žaidėjas',
+    uid:u.id,
+    pts:u.myTotalPts||0,
+    rounds:u.myRoundsPlayed||0,
+    favTeam:u.favTeam||'',
+    teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
+    isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
+  })).sort((a,b)=>b.pts-a.pts);
   document.getElementById('lb-sub').textContent=`${entries.length} dalyvių`;
   const medals=['🥇','🥈','🥉'];
   document.getElementById('lb-list').innerHTML=entries.map((r,i)=>`
@@ -1352,6 +1430,7 @@ function addSc(key,home,away){
 }
 function rmSc(key,idx){const el=document.getElementById(`sr-${key}-${idx}`);if(el)el.remove();}
 function saveM(key,ri,di,mi){
+  if(!isAdmin()){toast('Prieiga tik administratoriui');return;}
   const hg=parseInt(document.getElementById(`hg-${key}`)?.value)||0;
   const ag=parseInt(document.getElementById(`ag-${key}`)?.value)||0;
   const scorers=[];
@@ -1377,21 +1456,11 @@ function saveM(key,ri,di,mi){
   toast(`${m[0]} ${hg}:${ag} ${m[1]} — išsaugota ✓`);
   renderAdmin();renderStMini();renderDash();
   if(document.getElementById('page-squad').classList.contains('on'))renderFixtures();
-  // Save shared DB to all users? For simplicity, save to current user state
-  saveCurrentState();
+  saveLeagueState();
 }
 
-// ═══════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════
-(function init(){
-  document.getElementById('d-players').textContent=PLAYERS.length;
-  const email=getActiveEmail();
-  if(email){
-    const users=getUsers();
-    if(users[email]){loginUser(email);}
-  }
-})();
+// Boot: auth.onAuthStateChanged() above drives the initial page — Firebase
+// restores a persisted session automatically, no manual boot check needed.
 </script>
 </body>
 </html>
