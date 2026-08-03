@@ -33,6 +33,16 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 .user-chip:hover{border-color:var(--or)}
 .user-av{width:24px;height:24px;border-radius:50%;background:var(--or);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
 
+/* SPONSOR */
+.spons-top{margin-right:14px;padding-right:14px;border-right:1px solid var(--bor);display:flex;align-items:center;flex-shrink:0}
+.spons-top img{width:30px;height:30px;border-radius:7px;display:block}
+.dspons{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.94);border-radius:20px;padding:5px 14px 5px 6px;margin-top:14px}
+.dspons img{width:26px;height:26px;border-radius:6px;display:block}
+.dspons-lbl{font-size:10px;font-weight:700;color:var(--or2);text-transform:uppercase;letter-spacing:.06em}
+.spons-panel-body{padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.spons-panel-body img{width:120px;height:120px;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.spons-panel-txt{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+
 /* PAGES */
 .page{display:none;min-height:calc(100vh - 56px)}.page.on{display:block}
 
@@ -333,6 +343,7 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 <div class="topbar">
   <div class="lmark">⚽</div>
   <div class="ltxt"><div class="lname">SFL Fantasy 7×7</div><div class="lsub">A Divizija · 2026/27</div></div>
+  <div class="spons-top" id="spons-top" title="Sezono rėmėjas"></div>
   <nav class="nav" id="main-nav" style="display:none">
     <button class="nb on" onclick="showPage('dash',this)">Pagrindinis</button>
     <button class="nb" onclick="showPage('squad',this)">Mano komanda</button>
@@ -423,6 +434,7 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
       <button class="btnp" onclick="showPage('squad',document.querySelectorAll('.nb')[1])">Sudaryti komandą →</button>
       <button class="btns" onclick="showPage('history',document.querySelectorAll('.nb')[2])">Mano istorija</button>
     </div>
+    <div class="dspons" id="dspons"><span class="dspons-lbl">Sezono rėmėjas</span></div>
   </div>
   <div class="dstats">
     <div class="sc"><div class="sv">11</div><div class="sl">Fantasy turų</div></div>
@@ -516,6 +528,10 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
         <div class="rrow"><span>🥈 2 vieta</span><span class="rp lg">200€</span></div>
         <div class="rrow"><span>🥉 3 vieta</span><span class="rp lg">100€</span></div>
         <div class="prize-note">Startinio mokesčio sumažinimas</div>
+      </div>
+      <div class="pan">
+        <div class="ph"><h3>Rėmėjas</h3></div>
+        <div class="spons-panel-body" id="spons-panel-body"></div>
       </div>
       <div class="pan"><div class="ph"><h3>A grupė</h3></div><div id="stand-mini"></div></div>
     </div>
@@ -732,6 +748,22 @@ function isPastDeadline(i){ return Date.now()>=FR[i].deadline; }
 function formatDeadline(i){
   return new Intl.DateTimeFormat('lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(FR[i].deadline);
 }
+
+// ═══════════════════════════════════════════════
+// SPONSOR — season sponsor logo, shown in the topbar, dashboard hero and
+// squad-page sidebar. Single asset embedded once, injected into all three
+// placeholder containers on boot.
+// ═══════════════════════════════════════════════
+const SPONSOR_LOGO='data:image/png;base64,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';
+function renderSponsorLogos(){
+  const top=document.getElementById('spons-top');
+  if(top)top.innerHTML=`<img src="${SPONSOR_LOGO}" alt="betsson">`;
+  const hero=document.getElementById('dspons');
+  if(hero)hero.insertAdjacentHTML('beforeend',`<img src="${SPONSOR_LOGO}" alt="betsson">`);
+  const panel=document.getElementById('spons-panel-body');
+  if(panel)panel.innerHTML=`<img src="${SPONSOR_LOGO}" alt="betsson"><div class="spons-panel-txt">Sezono rėmėjas</div>`;
+}
+renderSponsorLogos();
 
 // ═══════════════════════════════════════════════
 // AUTH — Firebase Auth (shared across every device)
