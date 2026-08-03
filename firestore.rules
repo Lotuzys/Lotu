@@ -31,21 +31,80 @@ service cloud.firestore {
       };
     }
 
+    // ── Trusted player data ─────────────────────────────────────────────
+    // meta/players holds a copy of sfl-fantasy-v2.html's PLAYERS array
+    // (position/team/price only, indexed 0..n-1 for ids 1..n — array order
+    // IS the id, no string-keyed lookup needed) so squad legality can be
+    // checked against real data instead of whatever a client write claims.
+    // Synced automatically whenever the admin logs in (syncPlayerIndex() in
+    // the app) — admin-write-only, never touched by regular players.
+    function playerIndex() {
+      return get(/databases/$(database)/documents/meta/players).data.list;
+    }
+    function playerAt(idx, id) {
+      return idx[id - 1];
+    }
+
     // ── Per-user squad integrity ─────────────────────────────────────────
     // Points are never stored — the client always derives them from a
     // round's frozen squad snapshot (mySquads) plus the shared match-results
-    // doc (admin-only-writable), recomputed fresh on every read. So the only
-    // thing worth protecting here is the squad snapshot itself: once a
-    // round's deadline passes, its entry in mySquads is frozen. This runs
-    // only on UPDATE — the very first write, at onboarding, is a plain
-    // `create` with no history to protect.
+    // doc (admin-only-writable), recomputed fresh on every read. So what's
+    // worth protecting here is the squad snapshot itself: it must be a
+    // legal squad (7 correctly-positioned real players, one per club, within
+    // budget) whenever it's created or changed, and frozen once that
+    // round's deadline passes. This runs only on UPDATE — the very first
+    // write, at onboarding, is a plain `create` with no history to protect.
+
+    // A single slot must be a real player (checked against the trusted
+    // index by id, not by trusting the pos/team/price the client submitted
+    // alongside it) whose recorded position matches this slot.
+    function slotValid(p, pos, idx) {
+      return p != null && ('id' in p) && p.id >= 1 && p.id <= idx.size() && playerAt(idx, p.id).pos == pos;
+    }
+
+    function squadLegal(snap) {
+      let idx = playerIndex();
+      let gk = snap.slots.G; let df = snap.slots.D; let mf = snap.slots.M; let fw = snap.slots.F;
+      let shapeOk = gk.size()==1 && df.size()==2 && mf.size()==2 && fw.size()==2;
+      let g0 = shapeOk ? gk[0] : null;
+      let d0 = shapeOk ? df[0] : null; let d1 = shapeOk ? df[1] : null;
+      let m0 = shapeOk ? mf[0] : null; let m1 = shapeOk ? mf[1] : null;
+      let f0 = shapeOk ? fw[0] : null; let f1 = shapeOk ? fw[1] : null;
+      let slotsOk = shapeOk
+        && slotValid(g0,'G',idx) && slotValid(d0,'D',idx) && slotValid(d1,'D',idx)
+        && slotValid(m0,'M',idx) && slotValid(m1,'M',idx) && slotValid(f0,'F',idx) && slotValid(f1,'F',idx);
+      // One player per club — 7 pairwise distinctness checks (no set type
+      // available here, so this is spelled out rather than deduced).
+      let t0 = slotsOk ? playerAt(idx,g0.id).team : 'a';
+      let t1 = slotsOk ? playerAt(idx,d0.id).team : 'b';
+      let t2 = slotsOk ? playerAt(idx,d1.id).team : 'c';
+      let t3 = slotsOk ? playerAt(idx,m0.id).team : 'd';
+      let t4 = slotsOk ? playerAt(idx,m1.id).team : 'e';
+      let t5 = slotsOk ? playerAt(idx,f0.id).team : 'f';
+      let t6 = slotsOk ? playerAt(idx,f1.id).team : 'g';
+      let teamsOk = t0!=t1 && t0!=t2 && t0!=t3 && t0!=t4 && t0!=t5 && t0!=t6
+        && t1!=t2 && t1!=t3 && t1!=t4 && t1!=t5 && t1!=t6
+        && t2!=t3 && t2!=t4 && t2!=t5 && t2!=t6
+        && t3!=t4 && t3!=t5 && t3!=t6
+        && t4!=t5 && t4!=t6
+        && t5!=t6;
+      let budget = slotsOk
+        ? playerAt(idx,g0.id).price + playerAt(idx,d0.id).price + playerAt(idx,d1.id).price
+          + playerAt(idx,m0.id).price + playerAt(idx,m1.id).price + playerAt(idx,f0.id).price + playerAt(idx,f1.id).price
+        : 9999;
+      return slotsOk && teamsOk && budget <= 50.01;
+    }
+
     function roundSquadOk(key) {
       let beforeSquads = resource.data.get('mySquads', {});
       let afterSquads  = request.resource.data.get('mySquads', {});
       let beforeHas = key in beforeSquads;
       let afterHas  = key in afterSquads;
       let unchanged = beforeHas == afterHas && (!beforeHas || afterSquads[key] == beforeSquads[key]);
-      return unchanged || request.time < DEADLINES()[key];
+      let beforeDeadline = request.time < DEADLINES()[key];
+      return unchanged
+        || (beforeDeadline && !afterHas)
+        || (beforeDeadline && afterHas && squadLegal(afterSquads[key]));
     }
 
     function squadStateValid() {
@@ -57,8 +116,8 @@ service cloud.firestore {
     // Each player's own squad. Everyone signed in can read (needed for the
     // leaderboard — every viewer recomputes every user's points client-side
     // from this plus the shared results doc). Writing your own doc is
-    // allowed, but a round's squad is frozen once that round's deadline
-    // passes.
+    // allowed, but a submitted/changed squad must be legal, and it's frozen
+    // once that round's deadline passes.
     match /users/{uid} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == uid;
@@ -68,6 +127,12 @@ service cloud.firestore {
     // Match results, goalscorers and league standings — shared by everyone,
     // only the admin account can write.
     match /league/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Trusted player position/team/price index — see playerIndex() above.
+    match /meta/{doc} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }

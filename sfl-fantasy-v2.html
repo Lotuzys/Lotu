@@ -63,6 +63,11 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 .form-btn:hover{background:var(--or2)}
 .form-err{font-size:12px;color:var(--red);margin-top:8px;display:none}
 .form-err.show{display:block}
+.form-ok{font-size:12px;color:var(--gr);margin-top:8px;display:none}
+.form-ok.show{display:block}
+.forgot-link{font-size:12px;color:var(--mu);text-align:right;margin-top:-8px;margin-bottom:16px}
+.forgot-link a{color:var(--or);text-decoration:none;cursor:pointer}
+.forgot-link a:hover{text-decoration:underline}
 
 /* ONBOARDING */
 .onboard-wrap{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;padding:20px}
@@ -382,7 +387,9 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
           <label class="form-label">Slaptažodis</label>
           <input class="form-input" id="li-pass" type="password" placeholder="••••••••">
         </div>
+        <div class="forgot-link"><a onclick="doPasswordReset()">Pamiršai slaptažodį?</a></div>
         <div class="form-err" id="li-err">Neteisingi prisijungimo duomenys</div>
+        <div class="form-ok" id="li-ok">Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.</div>
         <button class="form-btn" onclick="doLogin()">Prisijungti →</button>
       </div>
       <!-- REGISTER FORM -->
@@ -782,12 +789,33 @@ async function doLogin(){
   const email=document.getElementById('li-email').value.trim().toLowerCase();
   const pass=document.getElementById('li-pass').value;
   const errEl=document.getElementById('li-err');
-  errEl.classList.remove('show');
+  const okEl=document.getElementById('li-ok');
+  errEl.classList.remove('show');okEl.classList.remove('show');
   try{
     await auth.signInWithEmailAndPassword(email,pass);
   }catch(e){
     errEl.textContent='Neteisingi prisijungimo duomenys';
     errEl.classList.add('show');
+  }
+}
+
+async function doPasswordReset(){
+  const email=document.getElementById('li-email').value.trim().toLowerCase();
+  const errEl=document.getElementById('li-err');
+  const okEl=document.getElementById('li-ok');
+  errEl.classList.remove('show');okEl.classList.remove('show');
+  if(!email){
+    errEl.textContent='Įrašyk el. paštą į lauką aukščiau, tada spausk „Pamiršai slaptažodį?"';
+    errEl.classList.add('show');return;
+  }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    okEl.textContent=`Slaptažodžio atkūrimo laiškas išsiųstas į ${email} — patikrink pašto dėžutę.`;
+    okEl.classList.add('show');
+  }catch(e){
+    // Don't reveal whether the address is registered — same message either way.
+    okEl.textContent=`Jei ${email} užregistruotas, atkūrimo laiškas jau pakeliui — patikrink pašto dėžutę.`;
+    okEl.classList.add('show');
   }
 }
 
@@ -840,6 +868,7 @@ async function loginUser(user){
   await loadLeagueState();
   subscribeLeagueState();
   updateTopbarForUser();
+  if(isAdmin())syncPlayerIndex();
   if(isNew||!STATE.favTeam){showOnboarding();}else{showMainApp();}
 }
 
@@ -989,7 +1018,12 @@ function subscribeLeagueState(){
     if(document.getElementById('page-history')?.classList.contains('on'))renderHistory();
     if(document.getElementById('page-leaders')?.classList.contains('on'))renderLB();
     if(document.getElementById('page-standings')?.classList.contains('on'))renderStFull();
-    if(document.getElementById('page-admin')?.classList.contains('on')&&isAdmin())renderAdmin();
+    // Tabs only here too, for the same reason as saveM() — this listener
+    // fires on your own write echoing back, potentially more than once, and
+    // a full renderAdmin() would blow away unsaved edits elsewhere on the
+    // page each time. Switching rounds (setAdminRound) still does a full
+    // rebuild, so the match grid catches up next time it's actually opened.
+    if(document.getElementById('page-admin')?.classList.contains('on')&&isAdmin())renderAdminTabs();
   },e=>console.error('League listener error',e));
 }
 
@@ -1046,6 +1080,21 @@ function saveLeagueState(){
   if(!isAdmin())return;
   LEAGUE_DOC.set({DB:STATE.DB,teams:STATE.teams,savedMatches:[...STATE.savedMatches]},{merge:true})
     .catch(e=>{console.error(e);toast('Klaida išsaugant — patikrink admin teises');});
+}
+
+// ═══════════════════════════════════════════════
+// PLAYER INDEX — trusted position/team/price lookup for firestore.rules.
+// Rules can't see the PLAYERS constant baked into this HTML file, so a
+// compact copy lives in meta/players (admin-write-only) for the security
+// rules to validate submitted squads against — otherwise a direct Firestore
+// write could claim any price/team it wants for a player. Re-synced every
+// time the admin logs in, so it never drifts from the app's own roster.
+// ═══════════════════════════════════════════════
+function syncPlayerIndex(){
+  const idx={};
+  PLAYERS.forEach(p=>{idx[String(p.id)]={pos:p.pos,team:p.team,price:p.price};});
+  db.collection('meta').doc('players').set(idx)
+    .catch(e=>console.error('Nepavyko sinchronizuoti žaidėjų indekso',e));
 }
 
 // Getters
@@ -1437,11 +1486,21 @@ function openProfile(){
 // ADMIN
 // ═══════════════════════════════════════════════
 const scorerRowCount={};
-function renderAdmin(){
-  document.getElementById('rtabs').innerHTML=FR.map((r,i)=>{
+// Cheap: just the round-tab checkmarks. Safe to call on every remote update
+// (someone else's save, or your own write echoing back) since it never
+// touches the match-block DOM — so it can never wipe in-progress, unsaved
+// scorer entries on other matches. Only an explicit round switch or first
+// page load should pull in the (expensive, DOM-rebuilding) match grid.
+function renderAdminTabs(){
+  const rtabs=document.getElementById('rtabs');
+  if(!rtabs)return;
+  rtabs.innerHTML=FR.map((r,i)=>{
     const has=STATE.DB[i]&&Object.values(STATE.DB[i]).some(d=>Object.keys(d).length>0);
     return `<button class="rtb ${i===STATE.adminRound?'on':''} ${has?'has':''}" onclick="setAdminRound(${i})">${r.n}</button>`;
   }).join('');
+}
+function renderAdmin(){
+  renderAdminTabs();
   renderAdminRound();
 }
 function setAdminRound(i){STATE.adminRound=i;document.querySelectorAll('.rtb').forEach((b,j)=>b.classList.toggle('on',j===i));renderAdminRound();}
@@ -1519,7 +1578,9 @@ function saveM(key,ri,di,mi){
   const svEl=document.getElementById(`sv-${key}`);if(svEl)svEl.classList.add('on');
   const m=FR[ri].days[di].m[mi];
   toast(`${m[0]} ${hg}:${ag} ${m[1]} — išsaugota ✓`);
-  renderAdmin();renderStMini();renderDash();
+  // Tabs only, not a full renderAdmin() — a full rebuild would wipe any
+  // unsaved scorer entries you're mid-typing on another match this round.
+  renderAdminTabs();renderStMini();renderDash();
   if(document.getElementById('page-squad').classList.contains('on'))renderFixtures();
   saveLeagueState();
 }
