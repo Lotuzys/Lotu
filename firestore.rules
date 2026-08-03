@@ -61,37 +61,47 @@ service cloud.firestore {
       return p != null && ('id' in p) && p.id >= 1 && p.id <= idx.size() && playerAt(idx, p.id).pos == pos;
     }
 
-    function squadLegal(snap) {
-      let idx = playerIndex();
+    // Firestore rules cap each function at 10 local variables, so the
+    // legality check is split into several small functions on a 7-element
+    // list [G, D, D, M, M, F, F] instead of one function with a named
+    // variable per slot.
+    function squadSlots(snap) {
       let gk = snap.slots.G; let df = snap.slots.D; let mf = snap.slots.M; let fw = snap.slots.F;
       let shapeOk = gk.size()==1 && df.size()==2 && mf.size()==2 && fw.size()==2;
-      let g0 = shapeOk ? gk[0] : null;
-      let d0 = shapeOk ? df[0] : null; let d1 = shapeOk ? df[1] : null;
-      let m0 = shapeOk ? mf[0] : null; let m1 = shapeOk ? mf[1] : null;
-      let f0 = shapeOk ? fw[0] : null; let f1 = shapeOk ? fw[1] : null;
-      let slotsOk = shapeOk
-        && slotValid(g0,'G',idx) && slotValid(d0,'D',idx) && slotValid(d1,'D',idx)
-        && slotValid(m0,'M',idx) && slotValid(m1,'M',idx) && slotValid(f0,'F',idx) && slotValid(f1,'F',idx);
-      // One player per club — 7 pairwise distinctness checks (no set type
-      // available here, so this is spelled out rather than deduced).
-      let t0 = slotsOk ? playerAt(idx,g0.id).team : 'a';
-      let t1 = slotsOk ? playerAt(idx,d0.id).team : 'b';
-      let t2 = slotsOk ? playerAt(idx,d1.id).team : 'c';
-      let t3 = slotsOk ? playerAt(idx,m0.id).team : 'd';
-      let t4 = slotsOk ? playerAt(idx,m1.id).team : 'e';
-      let t5 = slotsOk ? playerAt(idx,f0.id).team : 'f';
-      let t6 = slotsOk ? playerAt(idx,f1.id).team : 'g';
-      let teamsOk = t0!=t1 && t0!=t2 && t0!=t3 && t0!=t4 && t0!=t5 && t0!=t6
-        && t1!=t2 && t1!=t3 && t1!=t4 && t1!=t5 && t1!=t6
-        && t2!=t3 && t2!=t4 && t2!=t5 && t2!=t6
-        && t3!=t4 && t3!=t5 && t3!=t6
-        && t4!=t5 && t4!=t6
-        && t5!=t6;
-      let budget = slotsOk
-        ? playerAt(idx,g0.id).price + playerAt(idx,d0.id).price + playerAt(idx,d1.id).price
-          + playerAt(idx,m0.id).price + playerAt(idx,m1.id).price + playerAt(idx,f0.id).price + playerAt(idx,f1.id).price
-        : 9999;
-      return slotsOk && teamsOk && budget <= 50.01;
+      return shapeOk ? [gk[0], df[0], df[1], mf[0], mf[1], fw[0], fw[1]] : [];
+    }
+    function slotsValid(s, idx) {
+      return s.size()==7
+        && slotValid(s[0],'G',idx) && slotValid(s[1],'D',idx) && slotValid(s[2],'D',idx)
+        && slotValid(s[3],'M',idx) && slotValid(s[4],'M',idx) && slotValid(s[5],'F',idx) && slotValid(s[6],'F',idx);
+    }
+    function slotTeams(s, idx) {
+      return [playerAt(idx,s[0].id).team, playerAt(idx,s[1].id).team, playerAt(idx,s[2].id).team,
+              playerAt(idx,s[3].id).team, playerAt(idx,s[4].id).team, playerAt(idx,s[5].id).team,
+              playerAt(idx,s[6].id).team];
+    }
+    // One player per club — 7 pairwise distinctness checks (no set type
+    // available here, so this is spelled out rather than deduced).
+    function teamsDistinct(t) {
+      return t[0]!=t[1] && t[0]!=t[2] && t[0]!=t[3] && t[0]!=t[4] && t[0]!=t[5] && t[0]!=t[6]
+        && t[1]!=t[2] && t[1]!=t[3] && t[1]!=t[4] && t[1]!=t[5] && t[1]!=t[6]
+        && t[2]!=t[3] && t[2]!=t[4] && t[2]!=t[5] && t[2]!=t[6]
+        && t[3]!=t[4] && t[3]!=t[5] && t[3]!=t[6]
+        && t[4]!=t[5] && t[4]!=t[6]
+        && t[5]!=t[6];
+    }
+    function squadBudget(s, idx) {
+      return playerAt(idx,s[0].id).price + playerAt(idx,s[1].id).price + playerAt(idx,s[2].id).price
+        + playerAt(idx,s[3].id).price + playerAt(idx,s[4].id).price + playerAt(idx,s[5].id).price
+        + playerAt(idx,s[6].id).price;
+    }
+    function squadLegal(snap) {
+      let idx = playerIndex();
+      let s = squadSlots(snap);
+      return s.size()==7
+        && slotsValid(s, idx)
+        && teamsDistinct(slotTeams(s, idx))
+        && squadBudget(s, idx) <= 50.01;
     }
 
     function roundSquadOk(key) {
