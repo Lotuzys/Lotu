@@ -977,12 +977,13 @@ function computeScoring(mySquads,db){
     const snap=mySquads[riStr];
     const r=FR[ri];
     if(!snap||!r)return;
-    const scorerGoals={},teamGA={},teamResults={};
+    const scorerGoals={},teamGA={},teamResults={},teamPlayed={};
     r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
       const saved=db[ri]?.[di]?.[mi];if(!saved)return;
       saved.scorers.forEach(sc=>{scorerGoals[sc.pid]=(scorerGoals[sc.pid]||0)+sc.cnt;});
       const hg=saved.hg,ag=saved.ag;
       teamGA[m[0]]=(teamGA[m[0]]||0)+ag;teamGA[m[1]]=(teamGA[m[1]]||0)+hg;
+      teamPlayed[m[0]]=true;teamPlayed[m[1]]=true;
       if(!teamResults[m[0]])teamResults[m[0]]=[];if(!teamResults[m[1]])teamResults[m[1]]=[];
       if(hg>ag){teamResults[m[0]].push('W');teamResults[m[1]].push('L');}
       else if(ag>hg){teamResults[m[1]].push('W');teamResults[m[0]].push('L');}
@@ -993,13 +994,15 @@ function computeScoring(mySquads,db){
       if(!p)return;
       const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
       const mult=isC?CONFIG.CAPTAIN_MULT:1;
-      const goals=scorerGoals[p.id]||0;const ga=teamGA[p.team]||0;
+      const goals=scorerGoals[p.id]||0;const ga=teamGA[p.team]||0;const played=!!teamPlayed[p.team];
       const res=teamResults[p.team]||[];const wins=res.filter(x=>x==='W').length;const losses=res.filter(x=>x==='L').length;
       let pts=goals*CONFIG.PTS_POS[pos];
-      if(pos==='G'||pos==='D'){if(ga===0)pts+=CONFIG.CS_PTS;else if(ga===1)pts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
+      // Clean-sheet/1-conceded bonus only once a result actually exists for this
+      // team this round — otherwise "no data yet" reads as "conceded nothing".
+      if(played&&(pos==='G'||pos==='D')){if(ga===0)pts+=CONFIG.CS_PTS;else if(ga===1)pts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
       pts+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;pts=Math.max(0,pts);
       const final=pts*mult;total+=final;
-      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,ga,isC});
+      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,ga,played,isC});
     }));
     roundPts[ri]=total;roundDetail[ri]=detail;
     totalPts+=total;roundsPlayed++;
