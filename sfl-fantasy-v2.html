@@ -40,7 +40,9 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 .dspons img{width:36px;height:36px;border-radius:8px;display:block}
 .dspons-lbl{font-size:10px;font-weight:700;color:var(--or2);text-transform:uppercase;letter-spacing:.06em}
 .spons-panel-body{padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:9px}
-.spons-panel-body img{width:160px;height:160px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.spons-panel-body img{width:160px;height:160px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.12);transition:transform .15s}
+.spons-panel-link{display:flex;flex-direction:column;align-items:center;gap:9px;text-decoration:none;cursor:pointer}
+.spons-panel-link:hover img{transform:scale(1.03)}
 .spons-panel-txt{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 
 /* PAGES */
@@ -100,6 +102,8 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 .rtile:hover{border-color:var(--or);box-shadow:0 2px 12px rgba(249,115,22,.15)}
 .rtile.done{border-color:var(--or);background:var(--ordim)}
 .rtile.cur{border-color:var(--or);box-shadow:0 0 0 2px var(--or)}
+.rtile.future{opacity:.5;cursor:not-allowed}
+.rtile.future:hover{border-color:var(--bor);box-shadow:var(--sh)}
 .rtn{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
 .rts{font-size:11px;font-weight:600;color:var(--ink2);margin:3px 0}
 .rtpt{font-size:17px;font-weight:800;color:var(--or)}.rtpt.em{color:var(--mu);font-size:11px;font-weight:400}
@@ -306,6 +310,11 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 
 /* LEADERBOARD */
 .lbwrap{max-width:680px;margin:0 auto;padding:18px}
+.lb-filters{padding:12px 14px;border-bottom:1px solid var(--bor)}
+.lb-mode{display:flex;background:var(--sur);border-radius:8px;padding:3px;margin-bottom:10px}
+.lb-mb{flex:1;padding:7px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--mu);border-radius:6px;cursor:pointer;transition:all .15s}
+.lb-mb.on{background:#fff;color:var(--or);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.lb-prize{background:#fff7ed;border:1.5px solid var(--or);border-radius:var(--r);padding:9px 13px;margin:0 14px 12px;font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:8px}
 .lbrow{display:grid;grid-template-columns:36px 24px 1fr auto auto;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--bor);font-size:12px;transition:background .1s}
 .lbrow:hover{background:var(--sur)}.lbrow.me{background:#fff7ed!important;border-left:3px solid var(--or)}
 .lbrow:last-child{border-bottom:none}
@@ -439,7 +448,7 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
   </div>
   <div class="dstats">
     <div class="sc"><div class="sv">11</div><div class="sl">Fantasy turų</div></div>
-    <div class="sc"><div class="sv">12</div><div class="sl">Komandų</div></div>
+    <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl">Fantasy komandų</div></div>
     <div class="sc"><div class="sv">600€</div><div class="sl">Prizai</div></div>
     <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl">Tavo taškai</div></div>
     <div class="sc"><div class="sv" id="d-rank">—</div><div class="sl">Vieta</div></div>
@@ -551,6 +560,14 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 <div class="page" id="page-leaders">
   <div class="lbwrap"><div class="pan">
     <div class="ph"><h3>Fantasy lyderiai</h3><span class="sub" id="lb-sub">0 turų</span></div>
+    <div class="lb-filters">
+      <div class="lb-mode">
+        <button class="lb-mb on" id="lbm-season" onclick="setLBMode('season')">Sezono lyderiai</button>
+        <button class="lb-mb" id="lbm-round" onclick="setLBMode('round')">Turo lyderiai</button>
+      </div>
+      <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
+    </div>
+    <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
   </div></div>
 </div>
@@ -604,14 +621,13 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
   </div>
 </div>
 
-<!-- RESULT PANEL -->
+<!-- SQUAD SAVED CONFIRMATION -->
 <div class="rp2" id="res-panel">
   <div class="ri">
-    <div class="rhero"><div class="remo" id="res-emo">🎉</div><div class="rscore" id="res-score">0</div><div class="rlbl" id="res-lbl">fantasy taškų</div></div>
+    <div class="rhero"><div class="remo" id="res-emo">✅</div><div class="rscore" id="res-score">✓</div><div class="rlbl" id="res-lbl">Komanda išsaugota</div></div>
     <div class="rgrid2" id="res-grid"></div>
     <div class="racts">
-      <button class="rbk" onclick="document.getElementById('res-panel').classList.remove('open')">← Grįžti</button>
-      <button class="rnxt" onclick="goNextRound()">Kitas turas →</button>
+      <button class="rbk" onclick="document.getElementById('res-panel').classList.remove('open')">Gerai, ačiū →</button>
     </div>
   </div>
 </div>
@@ -751,7 +767,7 @@ function renderSponsorLogos(){
   const hero=document.getElementById('dspons');
   if(hero)hero.insertAdjacentHTML('beforeend',`<img src="${SPONSOR_LOGO}" alt="betsson">`);
   const panel=document.getElementById('spons-panel-body');
-  if(panel)panel.innerHTML=`<img src="${SPONSOR_LOGO}" alt="betsson"><div class="spons-panel-txt">Sezono rėmėjas</div>`;
+  if(panel)panel.innerHTML=`<a href="https://www.betsson.com/" target="_blank" rel="noopener noreferrer" class="spons-panel-link"><img src="${SPONSOR_LOGO}" alt="betsson"><div class="spons-panel-txt">Sezono rėmėjas</div></a>`;
 }
 renderSponsorLogos();
 
@@ -1167,12 +1183,15 @@ async function renderDash(){
   const scores=allUsers.map(u=>computeScoring(u.mySquads||{},STATE.DB).totalPts).sort((a,b)=>b-a);
   const rank=scores.indexOf(totalPts)+1;
   document.getElementById('d-rank').textContent=rank>0?'#'+rank:'#1';
+  document.getElementById('d-teams').textContent=allUsers.length;
+  const live=computeCurrentRound();
   document.getElementById('d-rounds').innerHTML=FR.map((r,i)=>{
     const done=STATE.mySquads[i]!==undefined;
+    const future=i>live;
     const isCur=i===STATE.curRound&&!done;
-    return `<div class="rtile ${done?'done':''} ${isCur?'cur':''}" onclick="goRound(${i})">
+    return `<div class="rtile ${done?'done':''} ${isCur?'cur':''} ${future?'future':''}" onclick="goRound(${i})">
       <div class="rtn">${r.n}</div><div class="rts">${r.days[0].l} + ${r.days[1].l}</div>
-      <div class="rtpt ${done?'':'em'}">${done?roundPts[i]+'pts':'Laukiama'}</div>
+      <div class="rtpt ${done?'':'em'}">${future?'🔒 Uždaryta':(done?roundPts[i]+'pts':'Laukiama')}</div>
     </div>`;
   }).join('');
 }
@@ -1192,6 +1211,10 @@ function loadRoundIntoPitch(i){
   STATE.activePos=null;STATE.activePosIdx=null;STATE.activePosF='Visos';STATE.activeTeamF='Visos';
 }
 function goRound(i){
+  if(i>computeCurrentRound()){
+    toast('Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas');
+    return;
+  }
   loadRoundIntoPitch(i);
   showPage('squad',document.querySelectorAll('.nb')[1]);
   renderAllSlots();renderFilters();renderList();
@@ -1381,11 +1404,31 @@ function submitSquad(){
   if(isPastDeadline(STATE.curRound)){toast(`Terminas praėjo (${formatDeadline(STATE.curRound)}) — komandos pateikti nebegalima`);return;}
   if(filledSlots()<7){toast('Reikia 7 žaidėjų!');return;}
   if(!STATE.captain){toast('Pasirink kapitoną ⭐ — spaudk žvaigždutę po žaidėju');return;}
+  const isUpdate=STATE.mySquads[STATE.curRound]!==undefined;
   const slotsCopy={};
   Object.entries(STATE.slots).forEach(([pos,arr])=>{slotsCopy[pos]=arr.map(p=>p?{...p}:null);});
   STATE.mySquads[STATE.curRound]={slots:slotsCopy,captain:{...STATE.captain}};
-  renderAllSlots();updateBottomBar();renderSquadMsg();
-  toast(`${FR[STATE.curRound].n} komanda išsaugota ✓ — gali keisti iki termino`);saveCurrentState();
+  renderAllSlots();updateBottomBar();renderSquadMsg();saveCurrentState();
+  showSquadSavedScreen(isUpdate);
+}
+
+// Full-screen confirmation that the squad really did save — shown on every
+// submit, first time or a later update, per request: don't just toast it.
+function showSquadSavedScreen(isUpdate){
+  const snap=STATE.mySquads[STATE.curRound];if(!snap)return;
+  document.getElementById('res-lbl').textContent=`${FR[STATE.curRound].n} — komanda ${isUpdate?'atnaujinta':'išsaugota'}`;
+  const cards=[];
+  Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
+    if(!p)return;
+    const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+    cards.push(`<div class="rc good ${isC?'cap':''}">
+      <div class="rcname">${isC?'⭐ ':''}${p.name}</div>
+      <div class="rcteam">${p.team} · ${POS_FL[pos]}</div>
+      <div class="rcpts ${isC?'cap':''}">${p.price.toFixed(1)}M${isC?' · kapitonas':''}</div>
+    </div>`);
+  }));
+  document.getElementById('res-grid').innerHTML=cards.join('');
+  document.getElementById('res-panel').classList.add('open');
 }
 
 function goNextRound(){
@@ -1446,21 +1489,64 @@ function renderStFull(){
 // ═══════════════════════════════════════════════
 // LEADERBOARD — reads all users from Firestore
 // ═══════════════════════════════════════════════
+let LB_MODE='season';
+let LB_ROUND=null;
+
+function setLBMode(mode){
+  LB_MODE=mode;
+  if(mode==='round'&&LB_ROUND===null)LB_ROUND=Math.max(0,computeCurrentRound()-1);
+  document.getElementById('lbm-season').classList.toggle('on',mode==='season');
+  document.getElementById('lbm-round').classList.toggle('on',mode==='round');
+  document.getElementById('lb-rounds').style.display=mode==='round'?'flex':'none';
+  if(mode==='round')renderLBRoundTabs();
+  renderLB();
+}
+function renderLBRoundTabs(){
+  document.getElementById('lb-rounds').innerHTML=FR.map((r,i)=>
+    `<button class="rtb ${i===LB_ROUND?'on':''}" onclick="setLBRound(${i})">${i+1} turas</button>`).join('');
+}
+function setLBRound(i){LB_ROUND=i;renderLBRoundTabs();renderLB();}
+
 async function renderLB(){
   const allUsers=await fetchAllUsers();
-  const entries=allUsers.map(u=>{
-    const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},STATE.DB);
-    return {
-      name:u.name||u.email||'Žaidėjas',
-      uid:u.id,
-      pts:totalPts,
-      rounds:roundsPlayed,
-      favTeam:u.favTeam||'',
-      teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
-      isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
-    };
-  }).sort((a,b)=>b.pts-a.pts);
-  document.getElementById('lb-sub').textContent=`${entries.length} dalyvių`;
+  const prizeEl=document.getElementById('lb-prize');
+  let entries;
+  if(LB_MODE==='round'){
+    const ri=LB_ROUND??Math.max(0,computeCurrentRound()-1);
+    entries=allUsers.map(u=>{
+      const {roundPts}=computeScoring(u.mySquads||{},STATE.DB);
+      return {
+        name:u.name||u.email||'Žaidėjas',
+        uid:u.id,
+        pts:roundPts[ri]||0,
+        favTeam:u.favTeam||'',
+        teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
+        isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
+      };
+    }).sort((a,b)=>b.pts-a.pts);
+    document.getElementById('lb-sub').textContent=FR[ri].n;
+    if(entries.length&&entries[0].pts>0){
+      prizeEl.style.display='flex';
+      prizeEl.innerHTML=`<span style="font-size:20px">🍺</span><span><strong>${entries[0].name}</strong> — ${FR[ri].n} nugalėtojas, laimi Carlsberg dėžę!</span>`;
+    }else{
+      prizeEl.style.display='none';
+    }
+  }else{
+    entries=allUsers.map(u=>{
+      const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},STATE.DB);
+      return {
+        name:u.name||u.email||'Žaidėjas',
+        uid:u.id,
+        pts:totalPts,
+        rounds:roundsPlayed,
+        favTeam:u.favTeam||'',
+        teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
+        isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
+      };
+    }).sort((a,b)=>b.pts-a.pts);
+    document.getElementById('lb-sub').textContent=`${entries.length} dalyvių`;
+    prizeEl.style.display='none';
+  }
   const medals=['🥇','🥈','🥉'];
   document.getElementById('lb-list').innerHTML=entries.map((r,i)=>`
     <div class="lbrow ${r.isMe?'me':''}">
@@ -1470,7 +1556,7 @@ async function renderLB(){
         <div class="lbname">${r.name}${r.isMe?' (Tu)':''}</div>
         <div class="lbteamname">${r.teamName}${r.favTeam?' · '+r.favTeam:''}</div>
       </div>
-      <span class="lbr">${r.rounds} turų</span>
+      <span class="lbr">${LB_MODE==='round'?'':(r.rounds+' turų')}</span>
       <span class="lbpts">${r.pts}</span>
     </div>`).join('')||'<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">Dar nėra dalyvių</div>';
 }
