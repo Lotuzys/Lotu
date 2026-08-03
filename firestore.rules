@@ -31,19 +31,14 @@ service cloud.firestore {
       };
     }
 
-    // ── Per-user squad/points integrity ─────────────────────────────────
-    // These only run on UPDATE (the doc already exists) — the very first
-    // write, at onboarding, is a plain `create` with no history to protect.
-
-    // Once a round's score exists, it can never be changed by a later write.
-    function roundPtsLocked(key) {
-      let before = resource.data.get('myRoundPts', {});
-      let after  = request.resource.data.get('myRoundPts', {});
-      return !(key in before) || (key in after && after[key] == before[key]);
-    }
-
-    // A round's locked-in squad snapshot can only be created or changed
-    // before that round's deadline; after the deadline it's frozen.
+    // ── Per-user squad integrity ─────────────────────────────────────────
+    // Points are never stored — the client always derives them from a
+    // round's frozen squad snapshot (mySquads) plus the shared match-results
+    // doc (admin-only-writable), recomputed fresh on every read. So the only
+    // thing worth protecting here is the squad snapshot itself: once a
+    // round's deadline passes, its entry in mySquads is frozen. This runs
+    // only on UPDATE — the very first write, at onboarding, is a plain
+    // `create` with no history to protect.
     function roundSquadOk(key) {
       let beforeSquads = resource.data.get('mySquads', {});
       let afterSquads  = request.resource.data.get('mySquads', {});
@@ -53,46 +48,17 @@ service cloud.firestore {
       return unchanged || request.time < DEADLINES()[key];
     }
 
-    function newPts(key, before, after) {
-      return (!(key in before) && (key in after)) ? after[key] : 0;
-    }
-    function newCount(key, before, after) {
-      return (!(key in before) && (key in after)) ? 1 : 0;
-    }
-
-    // myTotalPts/myRoundsPlayed can only move by exactly one newly-added
-    // round's worth per write — never set directly to an arbitrary number,
-    // and never for more than one round at a time (matches how the app
-    // actually plays: calcMyPts() finalizes one round at a time).
-    function totalsConsistent() {
-      let beforeRP = resource.data.get('myRoundPts', {});
-      let afterRP  = request.resource.data.get('myRoundPts', {});
-      let sumNew = newPts('0',beforeRP,afterRP) + newPts('1',beforeRP,afterRP) + newPts('2',beforeRP,afterRP) +
-                   newPts('3',beforeRP,afterRP) + newPts('4',beforeRP,afterRP) + newPts('5',beforeRP,afterRP) +
-                   newPts('6',beforeRP,afterRP) + newPts('7',beforeRP,afterRP) + newPts('8',beforeRP,afterRP) +
-                   newPts('9',beforeRP,afterRP) + newPts('10',beforeRP,afterRP);
-      let cntNew = newCount('0',beforeRP,afterRP) + newCount('1',beforeRP,afterRP) + newCount('2',beforeRP,afterRP) +
-                   newCount('3',beforeRP,afterRP) + newCount('4',beforeRP,afterRP) + newCount('5',beforeRP,afterRP) +
-                   newCount('6',beforeRP,afterRP) + newCount('7',beforeRP,afterRP) + newCount('8',beforeRP,afterRP) +
-                   newCount('9',beforeRP,afterRP) + newCount('10',beforeRP,afterRP);
-      return cntNew <= 1
-        && request.resource.data.get('myTotalPts', 0) == resource.data.get('myTotalPts', 0) + sumNew
-        && request.resource.data.get('myRoundsPlayed', 0) == resource.data.get('myRoundsPlayed', 0) + cntNew;
-    }
-
     function squadStateValid() {
-      return roundPtsLocked('0') && roundPtsLocked('1') && roundPtsLocked('2') && roundPtsLocked('3') &&
-             roundPtsLocked('4') && roundPtsLocked('5') && roundPtsLocked('6') && roundPtsLocked('7') &&
-             roundPtsLocked('8') && roundPtsLocked('9') && roundPtsLocked('10') &&
-             roundSquadOk('0') && roundSquadOk('1') && roundSquadOk('2') && roundSquadOk('3') &&
+      return roundSquadOk('0') && roundSquadOk('1') && roundSquadOk('2') && roundSquadOk('3') &&
              roundSquadOk('4') && roundSquadOk('5') && roundSquadOk('6') && roundSquadOk('7') &&
-             roundSquadOk('8') && roundSquadOk('9') && roundSquadOk('10') &&
-             totalsConsistent();
+             roundSquadOk('8') && roundSquadOk('9') && roundSquadOk('10');
     }
 
-    // Each player's own squad/points. Everyone signed in can read (needed for
-    // the leaderboard and rank). Writing your own doc is allowed, but past
-    // rounds' scores and squads are frozen, and totals can't be forged.
+    // Each player's own squad. Everyone signed in can read (needed for the
+    // leaderboard — every viewer recomputes every user's points client-side
+    // from this plus the shared results doc). Writing your own doc is
+    // allowed, but a round's squad is frozen once that round's deadline
+    // passes.
     match /users/{uid} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == uid;

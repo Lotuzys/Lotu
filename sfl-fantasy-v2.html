@@ -860,14 +860,18 @@ function finishOnboard(){
 // STATE
 // ═══════════════════════════════════════════════
 function freshTeams(){const t={};TEAMS_KEYS.forEach(k=>t[k]={pts:0,w:0,d:0,l:0,gf:0,ga:0,cs:0});return t;}
+// Points are never stored — myRoundPts/myTotalPts/myRoundsPlayed are always
+// derived from mySquads (frozen per round) + STATE.DB (shared match results)
+// via computeScoring() below, so they're automatically correct the moment
+// new results come in, and there's nothing for a user to forge by editing
+// their own document.
 const STATE={
   slots:{G:[null],D:[null,null],M:[null,null],F:[null,null]},
   taken:new Set(),takenTeams:new Set(),captain:null,
   activePos:null,activePosIdx:null,activePosF:'Visos',activeTeamF:'Visos',
-  curRound:0,adminRound:0,squadLocked:false,
-  mySquads:{},myRoundPts:{},myRoundDetail:{},
+  curRound:0,adminRound:0,
+  mySquads:{},
   DB:{},teams:null,savedMatches:new Set(),
-  myTotalPts:0,myRoundsPlayed:0,
   favTeam:'',fantasyTeamName:'',
 };
 STATE.teams=freshTeams();
@@ -876,21 +880,20 @@ function resetStateData(){
   STATE.slots={G:[null],D:[null,null],M:[null,null],F:[null,null]};
   STATE.taken=new Set();STATE.takenTeams=new Set();STATE.captain=null;
   STATE.activePos=null;STATE.activePosIdx=null;STATE.activePosF='Visos';STATE.activeTeamF='Visos';
-  STATE.curRound=0;STATE.adminRound=0;STATE.squadLocked=false;
-  STATE.mySquads={};STATE.myRoundPts={};STATE.myRoundDetail={};
+  STATE.curRound=0;STATE.adminRound=0;
+  STATE.mySquads={};
   STATE.DB={};STATE.teams=freshTeams();STATE.savedMatches=new Set();
-  STATE.myTotalPts=0;STATE.myRoundsPlayed=0;STATE.favTeam='';STATE.fantasyTeamName='';
+  STATE.favTeam='';STATE.fantasyTeamName='';
 }
 
-// Per-user document (squads, personal points). Shared match data (DB/teams/savedMatches)
+// Per-user document (squad picks only). Shared match data (DB/teams/savedMatches)
 // lives in the separate league/state document — see LEAGUE STATE section below.
 function stateToObj(){
   return {
     name:CURRENT_USER?CURRENT_USER.name:undefined,
     email:CURRENT_USER?CURRENT_USER.email:undefined,
-    curRound:STATE.curRound,adminRound:STATE.adminRound,squadLocked:STATE.squadLocked,
-    mySquads:STATE.mySquads,myRoundPts:STATE.myRoundPts,myRoundDetail:STATE.myRoundDetail,
-    myTotalPts:STATE.myTotalPts,myRoundsPlayed:STATE.myRoundsPlayed,
+    curRound:STATE.curRound,adminRound:STATE.adminRound,
+    mySquads:STATE.mySquads,
     favTeam:STATE.favTeam,fantasyTeamName:STATE.fantasyTeamName,
     captain:STATE.captain,
     slots:Object.fromEntries(Object.entries(STATE.slots).map(([k,v])=>[k,v.map(p=>p?p.id:null)])),
@@ -899,9 +902,8 @@ function stateToObj(){
 }
 
 function loadStateFromObj(s){
-  STATE.curRound=s.curRound??0;STATE.adminRound=s.adminRound??0;STATE.squadLocked=s.squadLocked??false;
-  STATE.mySquads=s.mySquads??{};STATE.myRoundPts=s.myRoundPts??{};STATE.myRoundDetail=s.myRoundDetail??{};
-  STATE.myTotalPts=s.myTotalPts??0;STATE.myRoundsPlayed=s.myRoundsPlayed??0;
+  STATE.curRound=s.curRound??0;STATE.adminRound=s.adminRound??0;
+  STATE.mySquads=s.mySquads??{};
   STATE.favTeam=s.favTeam??'';STATE.fantasyTeamName=s.fantasyTeamName??'';
   STATE.captain=s.captain??null;
   if(s.slots)Object.entries(s.slots).forEach(([pos,ids])=>{STATE.slots[pos]=ids.map(id=>id?PLAYERS.find(p=>p.id===id)||null:null);});
@@ -948,14 +950,62 @@ function subscribeLeagueState(){
     if(!snap.exists)return;
     const d=snap.data();
     STATE.DB=d.DB??{};STATE.teams=d.teams??freshTeams();STATE.savedMatches=new Set(d.savedMatches??[]);
-    if(document.getElementById('page-squad')?.classList.contains('on'))renderFixtures();
+    // Match results just changed — everyone's derived points may have moved,
+    // so re-render whatever's currently on screen that shows them.
+    if(document.getElementById('page-squad')?.classList.contains('on')){renderSquadMsg();renderFixtures();renderStMini();}
+    if(document.getElementById('page-dash')?.classList.contains('on'))renderDash();
+    if(document.getElementById('page-history')?.classList.contains('on'))renderHistory();
+    if(document.getElementById('page-leaders')?.classList.contains('on'))renderLB();
     if(document.getElementById('page-standings')?.classList.contains('on'))renderStFull();
-    if(document.getElementById('page-dash')?.classList.contains('on'))renderStMini();
     if(document.getElementById('page-admin')?.classList.contains('on')&&isAdmin())renderAdmin();
   },e=>console.error('League listener error',e));
 }
 
 function unsubscribeLeagueState(){if(leagueUnsub){leagueUnsub();leagueUnsub=null;}}
+
+// ═══════════════════════════════════════════════
+// SCORING — pure function of (mySquads, match-results DB), never stored.
+// Called fresh everywhere points are shown, so results updating live in
+// STATE.DB (via subscribeLeagueState's listener) automatically recomputes
+// everyone's points — no manual "claim" step, nothing to go stale.
+// ═══════════════════════════════════════════════
+function computeScoring(mySquads,db){
+  const roundPts={},roundDetail={};
+  let totalPts=0,roundsPlayed=0;
+  Object.keys(mySquads).forEach(riStr=>{
+    const ri=parseInt(riStr);
+    const snap=mySquads[riStr];
+    const r=FR[ri];
+    if(!snap||!r)return;
+    const scorerGoals={},teamGA={},teamResults={};
+    r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
+      const saved=db[ri]?.[di]?.[mi];if(!saved)return;
+      saved.scorers.forEach(sc=>{scorerGoals[sc.pid]=(scorerGoals[sc.pid]||0)+sc.cnt;});
+      const hg=saved.hg,ag=saved.ag;
+      teamGA[m[0]]=(teamGA[m[0]]||0)+ag;teamGA[m[1]]=(teamGA[m[1]]||0)+hg;
+      if(!teamResults[m[0]])teamResults[m[0]]=[];if(!teamResults[m[1]])teamResults[m[1]]=[];
+      if(hg>ag){teamResults[m[0]].push('W');teamResults[m[1]].push('L');}
+      else if(ag>hg){teamResults[m[1]].push('W');teamResults[m[0]].push('L');}
+      else{teamResults[m[0]].push('D');teamResults[m[1]].push('D');}
+    }));
+    let total=0;const detail=[];
+    Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
+      if(!p)return;
+      const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+      const mult=isC?CONFIG.CAPTAIN_MULT:1;
+      const goals=scorerGoals[p.id]||0;const ga=teamGA[p.team]||0;
+      const res=teamResults[p.team]||[];const wins=res.filter(x=>x==='W').length;const losses=res.filter(x=>x==='L').length;
+      let pts=goals*CONFIG.PTS_POS[pos];
+      if(pos==='G'||pos==='D'){if(ga===0)pts+=CONFIG.CS_PTS;else if(ga===1)pts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
+      pts+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;pts=Math.max(0,pts);
+      const final=pts*mult;total+=final;
+      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,ga,isC});
+    }));
+    roundPts[ri]=total;roundDetail[ri]=detail;
+    totalPts+=total;roundsPlayed++;
+  });
+  return {roundPts,roundDetail,totalPts,roundsPlayed};
+}
 
 function saveLeagueState(){
   if(!isAdmin())return;
@@ -967,7 +1017,7 @@ function saveLeagueState(){
 function usedBudget(){return Object.values(STATE.slots).flat().filter(Boolean).reduce((s,p)=>s+p.price,0);}
 function filledSlots(){return Object.values(STATE.slots).flat().filter(Boolean).length;}
 function isCaptain(pos,idx){return STATE.captain&&STATE.captain.pos===pos&&STATE.captain.idx===idx;}
-function isLocked(){return STATE.squadLocked||STATE.myRoundPts[STATE.curRound]!==undefined||isPastDeadline(STATE.curRound);}
+function isLocked(){return STATE.mySquads[STATE.curRound]!==undefined||isPastDeadline(STATE.curRound);}
 
 // Slot mutations
 function setSlot(pos,idx,player){
@@ -1018,7 +1068,6 @@ function showMainApp(){
   document.getElementById('bbar').style.display='none';
   renderDash();renderStMini();renderLB();renderSquadMsg();renderFixtures();updateBottomBar();renderAllSlots();renderFilters();renderList();
   document.getElementById('d-players').textContent=PLAYERS.length;
-  document.getElementById('hdr-pts').textContent=STATE.myTotalPts;
   if(STATE.fantasyTeamName)document.getElementById('squad-panel-title').textContent=STATE.fantasyTeamName;
 }
 
@@ -1034,20 +1083,21 @@ async function fetchAllUsers(){
 
 async function renderDash(){
   document.getElementById('d-players').textContent=PLAYERS.length;
-  document.getElementById('d-mypts').textContent=STATE.myTotalPts;
-  document.getElementById('hdr-pts').textContent=STATE.myTotalPts;
+  const {roundPts,totalPts}=computeScoring(STATE.mySquads,STATE.DB);
+  document.getElementById('d-mypts').textContent=totalPts;
+  document.getElementById('hdr-pts').textContent=totalPts;
   if(STATE.fantasyTeamName)document.getElementById('dash-title').textContent=STATE.fantasyTeamName;
-  // Rank
+  // Rank — each user's total is derived from their own squads + the same shared results
   const allUsers=await fetchAllUsers();
-  const scores=allUsers.map(u=>u.myTotalPts||0).sort((a,b)=>b-a);
-  const rank=scores.indexOf(STATE.myTotalPts)+1;
+  const scores=allUsers.map(u=>computeScoring(u.mySquads||{},STATE.DB).totalPts).sort((a,b)=>b-a);
+  const rank=scores.indexOf(totalPts)+1;
   document.getElementById('d-rank').textContent=rank>0?'#'+rank:'#1';
   document.getElementById('d-rounds').innerHTML=FR.map((r,i)=>{
-    const done=STATE.myRoundPts[i]!==undefined;
-    const isCur=i===STATE.curRound&&!STATE.squadLocked;
+    const done=STATE.mySquads[i]!==undefined;
+    const isCur=i===STATE.curRound&&!done;
     return `<div class="rtile ${done?'done':''} ${isCur?'cur':''}" onclick="goRound(${i})">
       <div class="rtn">${r.n}</div><div class="rts">${r.days[0].l} + ${r.days[1].l}</div>
-      <div class="rtpt ${done?'':'em'}">${done?STATE.myRoundPts[i]+'pts':'Laukiama'}</div>
+      <div class="rtpt ${done?'':'em'}">${done?roundPts[i]+'pts':'Laukiama'}</div>
     </div>`;
   }).join('');
 }
@@ -1058,16 +1108,14 @@ function goRound(i){STATE.curRound=i;showPage('squad',document.querySelectorAll(
 // ═══════════════════════════════════════════════
 function renderSquadMsg(){
   const el=document.getElementById('squad-msg');
-  const scored=STATE.myRoundPts[STATE.curRound]!==undefined;
+  const hasSquad=STATE.mySquads[STATE.curRound]!==undefined;
   const deadlinePassed=isPastDeadline(STATE.curRound);
-  if(scored){
-    el.innerHTML=`<div class="scored-msg"><div class="sm-pts">${STATE.myRoundPts[STATE.curRound]}</div>
-      <div class="sm-txt"><strong>${FR[STATE.curRound].n}</strong> — surinkti taškai. Pereikite į kitą turą.</div>
+  if(hasSquad){
+    const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
+    const pts=roundPts[STATE.curRound]||0;
+    el.innerHTML=`<div class="scored-msg"><div class="sm-pts">${pts}</div>
+      <div class="sm-txt"><strong>${FR[STATE.curRound].n}</strong> — taškai gyvai atsinaujina, kai administratorius suveda rezultatus.</div>
       <button class="lm-btn" onclick="goNextRound()">Kitas turas →</button></div>`;
-  }else if(STATE.squadLocked){
-    el.innerHTML=`<div class="locked-msg"><div class="lm-icon">🔒</div>
-      <div class="lm-txt"><strong>${FR[STATE.curRound].n}</strong> komanda užfiksuota. Kai admin suvedins rezultatus — spauskite mygtuką.</div>
-      <button class="lm-btn" onclick="calcMyPts()">Gauti taškus ▶</button></div>`;
   }else if(deadlinePassed){
     el.innerHTML=`<div class="locked-msg"><div class="lm-icon">⏱️</div>
       <div class="lm-txt"><strong>${FR[STATE.curRound].n}</strong> terminas praėjo (${formatDeadline(STATE.curRound)}) — komanda nebuvo pateikta laiku, šis turas bus 0 taškų.</div></div>`;
@@ -1219,10 +1267,10 @@ function updateBottomBar(){
   document.getElementById('slot-cnt').textContent=`${f}/7`;
   document.getElementById('bb-n').textContent=f;
   document.getElementById('bb-b').textContent=`Biudžetas: ${left.toFixed(1)}M`;
-  document.getElementById('hdr-pts').textContent=STATE.myTotalPts;
+  document.getElementById('hdr-pts').textContent=computeScoring(STATE.mySquads,STATE.DB).totalPts;
   const btn=document.getElementById('bb-btn');
   btn.disabled=f<7||isLocked();
-  btn.textContent=STATE.squadLocked?'Komanda pateikta ✓':(isPastDeadline(STATE.curRound)?'Terminas praėjo':'Pateikti komandą ▶');
+  btn.textContent=STATE.mySquads[STATE.curRound]!==undefined?'Komanda pateikta ✓':(isPastDeadline(STATE.curRound)?'Terminas praėjo':'Pateikti komandą ▶');
   // Single stat: estimated total pts
   let tot=0;
   Object.entries(STATE.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
@@ -1242,59 +1290,13 @@ function submitSquad(){
   const slotsCopy={};
   Object.entries(STATE.slots).forEach(([pos,arr])=>{slotsCopy[pos]=arr.map(p=>p?{...p}:null);});
   STATE.mySquads[STATE.curRound]={slots:slotsCopy,captain:{...STATE.captain}};
-  STATE.squadLocked=true;
   renderAllSlots();updateBottomBar();renderSquadMsg();
   toast(`${FR[STATE.curRound].n} komanda užfiksuota! 🔒`);saveCurrentState();
 }
 
-function calcMyPts(){
-  const snap=STATE.mySquads[STATE.curRound];if(!snap){toast('Komanda nepateikta!');return;}
-  const r=FR[STATE.curRound];
-  const scorerGoals={};const teamGA={};const teamResults={};
-  r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
-    const saved=STATE.DB[STATE.curRound]?.[di]?.[mi];if(!saved)return;
-    saved.scorers.forEach(sc=>{scorerGoals[sc.pid]=(scorerGoals[sc.pid]||0)+sc.cnt;});
-    const hg=saved.hg,ag=saved.ag;
-    teamGA[m[0]]=(teamGA[m[0]]||0)+ag;teamGA[m[1]]=(teamGA[m[1]]||0)+hg;
-    if(!teamResults[m[0]])teamResults[m[0]]=[];if(!teamResults[m[1]])teamResults[m[1]]=[];
-    if(hg>ag){teamResults[m[0]].push('W');teamResults[m[1]].push('L');}
-    else if(ag>hg){teamResults[m[1]].push('W');teamResults[m[0]].push('L');}
-    else{teamResults[m[0]].push('D');teamResults[m[1]].push('D');}
-  }));
-  let total=0;const detail=[];
-  Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
-    if(!p)return;
-    const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
-    const mult=isC?CONFIG.CAPTAIN_MULT:1;
-    const goals=scorerGoals[p.id]||0;const ga=teamGA[p.team]||0;
-    const res=teamResults[p.team]||[];const wins=res.filter(x=>x==='W').length;const losses=res.filter(x=>x==='L').length;
-    let pts=goals*CONFIG.PTS_POS[pos];
-    if(pos==='G'||pos==='D'){if(ga===0)pts+=CONFIG.CS_PTS;else if(ga===1)pts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
-    pts+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;pts=Math.max(0,pts);
-    const final=pts*mult;total+=final;
-    detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,ga,isC});
-  }));
-  STATE.myRoundPts[STATE.curRound]=total;STATE.myRoundDetail[STATE.curRound]=detail;
-  STATE.myTotalPts+=total;STATE.myRoundsPlayed++;
-  document.getElementById('hdr-pts').textContent=STATE.myTotalPts;
-  // Show result
-  document.getElementById('res-score').textContent=total;
-  document.getElementById('res-emo').textContent=total>50?'🔥':total>25?'👏':'😅';
-  document.getElementById('res-lbl').textContent=`fantasy taškų — ${FR[STATE.curRound].n}`;
-  document.getElementById('res-grid').innerHTML=detail.map(d=>`
-    <div class="rc ${d.pts>0?'good':''} ${d.isC?'cap':''}">
-      <div class="rcname">${d.isC?'⭐ ':''}${d.name}</div><div class="rcteam">${d.team} · ${POS_FL[d.pos]}</div>
-      <div class="rcpts ${d.pts===0?'z':''} ${d.isC?'cap':''}">${d.pts>0?'+':''}${d.pts}pts${d.isC?' (×2)':''}</div>
-      <div class="rcdet">${d.goals>0?d.goals+'⚽ ':''}${d.wins>0?d.wins+'P ':''}${d.losses>0?d.losses+'Pr ':''}${d.ga===0&&(d.pos==='G'||d.pos==='D')?'CS🔒':d.ga===1&&(d.pos==='G'||d.pos==='D')?'1pr+5':''}</div>
-    </div>`).join('');
-  document.getElementById('res-panel').classList.add('open');
-  renderDash();renderSquadMsg();updateBottomBar();saveCurrentState();
-}
-
 function goNextRound(){
-  document.getElementById('res-panel').classList.remove('open');
   if(STATE.curRound<FR.length-1)STATE.curRound++;
-  STATE.squadLocked=false;STATE.captain=null;STATE.activePos=null;STATE.activePosIdx=null;
+  STATE.captain=null;STATE.activePos=null;STATE.activePosIdx=null;
   STATE.activePosF='Visos';STATE.activeTeamF='Visos';
   clearAllSlots();renderFilters();renderList();renderAllSlots();updateBottomBar();renderSquadMsg();renderFixtures();
   toast(`${FR[STATE.curRound].n} — rinkis naują komandą!`);saveCurrentState();
@@ -1304,12 +1306,13 @@ function goNextRound(){
 // HISTORY
 // ═══════════════════════════════════════════════
 function renderHistory(){
-  document.getElementById('hist-sub').textContent=`${STATE.myRoundsPlayed} turų sužaista`;
+  const {roundPts,roundDetail,roundsPlayed}=computeScoring(STATE.mySquads,STATE.DB);
+  document.getElementById('hist-sub').textContent=`${roundsPlayed} turų sužaista`;
   const el=document.getElementById('hist-content');
-  if(!STATE.myRoundsPlayed&&!STATE.squadLocked){el.innerHTML=`<div class="empty-hist">⚽<br><br>Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!</div>`;return;}
+  if(!roundsPlayed){el.innerHTML=`<div class="empty-hist">⚽<br><br>Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!</div>`;return;}
   let html='<div class="hist-grid">';
   FR.forEach((r,i)=>{
-    const snap=STATE.mySquads[i];const pts=STATE.myRoundPts[i];const detail=STATE.myRoundDetail[i];
+    const snap=STATE.mySquads[i];const pts=roundPts[i];const detail=roundDetail[i];
     html+=`<div class="hcard ${i===STATE.curRound?'cur':''}">
       <div class="hcard-head"><div class="hcard-title">${r.n}${i===STATE.curRound?' (einamasis)':''}</div>
       <div class="hcard-pts ${pts===undefined?'em':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
@@ -1351,15 +1354,18 @@ function renderStFull(){
 // ═══════════════════════════════════════════════
 async function renderLB(){
   const allUsers=await fetchAllUsers();
-  const entries=allUsers.map(u=>({
-    name:u.name||u.email||'Žaidėjas',
-    uid:u.id,
-    pts:u.myTotalPts||0,
-    rounds:u.myRoundsPlayed||0,
-    favTeam:u.favTeam||'',
-    teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
-    isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
-  })).sort((a,b)=>b.pts-a.pts);
+  const entries=allUsers.map(u=>{
+    const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},STATE.DB);
+    return {
+      name:u.name||u.email||'Žaidėjas',
+      uid:u.id,
+      pts:totalPts,
+      rounds:roundsPlayed,
+      favTeam:u.favTeam||'',
+      teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
+      isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
+    };
+  }).sort((a,b)=>b.pts-a.pts);
   document.getElementById('lb-sub').textContent=`${entries.length} dalyvių`;
   const medals=['🥇','🥈','🥉'];
   document.getElementById('lb-list').innerHTML=entries.map((r,i)=>`
@@ -1386,8 +1392,9 @@ function openProfile(){
   document.getElementById('prof-sub').textContent=CURRENT_USER.email;
   document.getElementById('prof-teamname').textContent=STATE.fantasyTeamName||'—';
   document.getElementById('prof-favteam').textContent=STATE.favTeam||'—';
-  document.getElementById('prof-pts').textContent=STATE.myTotalPts;
-  document.getElementById('prof-rounds').textContent=STATE.myRoundsPlayed;
+  const {totalPts,roundsPlayed}=computeScoring(STATE.mySquads,STATE.DB);
+  document.getElementById('prof-pts').textContent=totalPts;
+  document.getElementById('prof-rounds').textContent=roundsPlayed;
   document.getElementById('prof-bg').classList.add('open');
 }
 
