@@ -968,14 +968,14 @@ function resetStateData(){
   STATE.favTeam='';STATE.fantasyTeamName='';
 }
 
-// Per-user document (squad picks only). Shared match data (DB/teams/savedMatches)
-// lives in the separate league/state document — see LEAGUE STATE section below.
+// Per-user document (profile + in-progress pitch builder only — NOT
+// mySquads, see below). Shared match data (DB/teams/savedMatches) lives in
+// the separate league/state document — see LEAGUE STATE section below.
 function stateToObj(){
   return {
     name:CURRENT_USER?CURRENT_USER.name:undefined,
     email:CURRENT_USER?CURRENT_USER.email:undefined,
     curRound:STATE.curRound,adminRound:STATE.adminRound,
-    mySquads:STATE.mySquads,
     favTeam:STATE.favTeam,fantasyTeamName:STATE.fantasyTeamName,
     captain:STATE.captain,
     slots:Object.fromEntries(Object.entries(STATE.slots).map(([k,v])=>[k,v.map(p=>p?p.id:null)])),
@@ -995,13 +995,32 @@ function loadStateFromObj(s){
 // ═══════════════════════════════════════════════
 // FIRESTORE PERSISTENCE — per-user doc (users/{uid})
 // ═══════════════════════════════════════════════
+// Each round's submitted squad is its own document in a users/{uid}/squads
+// subcollection, keyed by round index — NOT one big `mySquads` map field on
+// the user doc. A write to one round's document can never touch, and never
+// needs comparing against, any other round's document: Firestore isolates
+// them for free. Keeping all rounds in a single ever-growing map field
+// instead used to force every squad submission's security-rule check to
+// diff/compare that whole map against its previous version — cost that grew
+// with every round the season had already played, and blew Firestore's
+// 1000-expression-per-request rule budget once a couple of rounds were in.
 function userDocRef(uid){return db.collection('users').doc(uid);}
+function squadDocRef(uid,round){return userDocRef(uid).collection('squads').doc(String(round));}
 
 async function getUserState(uid){
   try{
     const snap=await userDocRef(uid).get();
-    return snap.exists?snap.data():null;
+    if(!snap.exists)return null;
+    const mySquads=await fetchMySquads(uid);
+    return {...snap.data(),mySquads};
   }catch(e){console.error('Nepavyko įkelti vartotojo duomenų',e);return null;}
+}
+
+async function fetchMySquads(uid){
+  const mySquads={};
+  const squadsSnap=await userDocRef(uid).collection('squads').get();
+  squadsSnap.forEach(d=>{mySquads[d.id]=d.data();});
+  return mySquads;
 }
 
 function saveCurrentState(){
@@ -1009,6 +1028,12 @@ function saveCurrentState(){
   const obj=stateToObj();
   const p=userDocRef(CURRENT_USER.uid).set(obj,{merge:true});
   p.catch(e=>console.error('Nepavyko išsaugoti',e));
+  return p;
+}
+
+function saveSquadForRound(uid,round,squadObj){
+  const p=squadDocRef(uid,round).set(squadObj);
+  p.catch(e=>console.error('Nepavyko išsaugoti komandos',e));
   return p;
 }
 
@@ -1194,8 +1219,16 @@ function showMainApp(){
 // ═══════════════════════════════════════════════
 async function fetchAllUsers(){
   try{
-    const snap=await db.collection('users').get();
-    return snap.docs.map(d=>({id:d.id,...d.data()}));
+    const [usersSnap,squadsSnap]=await Promise.all([
+      db.collection('users').get(),
+      db.collectionGroup('squads').get(),
+    ]);
+    const squadsByUid={};
+    squadsSnap.forEach(d=>{
+      const uid=d.ref.parent.parent.id;
+      (squadsByUid[uid]??={})[d.id]=d.data();
+    });
+    return usersSnap.docs.map(d=>({id:d.id,...d.data(),mySquads:squadsByUid[d.id]??{}}));
   }catch(e){console.error('Nepavyko įkelti dalyvių sąrašo',e);return [];}
 }
 
@@ -1435,12 +1468,14 @@ async function submitSquad(){
   const prevSquad=STATE.mySquads[STATE.curRound];
   const slotsCopy={};
   Object.entries(STATE.slots).forEach(([pos,arr])=>{slotsCopy[pos]=arr.map(p=>p?{...p}:null);});
-  STATE.mySquads[STATE.curRound]={slots:slotsCopy,captain:{...STATE.captain}};
+  const newSquad={slots:slotsCopy,captain:{...STATE.captain}};
+  STATE.mySquads[STATE.curRound]=newSquad;
   renderAllSlots();updateBottomBar();renderSquadMsg();
   const btn=document.getElementById('bb-btn');
   if(btn){btn.disabled=true;btn.textContent='Saugoma...';}
   try{
-    await saveCurrentState();
+    await saveSquadForRound(CURRENT_USER.uid,STATE.curRound,newSquad);
+    saveCurrentState();
     showSquadSavedScreen(isUpdate);
   }catch(e){
     // Server rejected the write (e.g. stale/missing player index, illegal

@@ -44,15 +44,24 @@ service cloud.firestore {
       return idx[id - 1];
     }
 
-    // ── Per-user squad integrity ─────────────────────────────────────────
+    // ── Per-round squad integrity ────────────────────────────────────────
     // Points are never stored — the client always derives them from a
-    // round's frozen squad snapshot (mySquads) plus the shared match-results
-    // doc (admin-only-writable), recomputed fresh on every read. So what's
-    // worth protecting here is the squad snapshot itself: it must be a
-    // legal squad (7 correctly-positioned real players, one per club, within
-    // budget) whenever it's created or changed, and frozen once that
-    // round's deadline passes. This runs only on UPDATE — the very first
-    // write, at onboarding, is a plain `create` with no history to protect.
+    // round's frozen squad snapshot plus the shared match-results doc
+    // (admin-only-writable), recomputed fresh on every read. So what's worth
+    // protecting here is the squad snapshot itself: it must be a legal squad
+    // (7 correctly-positioned real players, one per club, within budget)
+    // whenever it's created or changed, and frozen once that round's
+    // deadline passes.
+    //
+    // Each round's squad is its OWN document — users/{uid}/squads/{round} —
+    // rather than one entry in a big map field on the user doc. A write to
+    // one round's document can't touch, and costs nothing to compare
+    // against, any other round's document; Firestore isolates them for
+    // free. The single-map-field version of this used to force every squad
+    // write's rule check to diff/compare the entire history of submitted
+    // squads against its previous version — cost that grew every round the
+    // season had already played, and blew Firestore's 1000-expression-per-
+    // request rule budget by round 2.
 
     // A single slot must be a real player (checked against the trusted
     // index by id, not by trusting the pos/team/price the client submitted
@@ -104,33 +113,36 @@ service cloud.firestore {
         && squadBudget(s, idx) <= 50.01;
     }
 
-    function roundSquadOk(key) {
-      let beforeSquads = resource.data.get('mySquads', {});
-      let afterSquads  = request.resource.data.get('mySquads', {});
-      let beforeHas = key in beforeSquads;
-      let afterHas  = key in afterSquads;
-      let unchanged = beforeHas == afterHas && (!beforeHas || afterSquads[key] == beforeSquads[key]);
-      let beforeDeadline = request.time < DEADLINES()[key];
-      return unchanged
-        || (beforeDeadline && !afterHas)
-        || (beforeDeadline && afterHas && squadLegal(afterSquads[key]));
-    }
-
-    function squadStateValid() {
-      return roundSquadOk('0') && roundSquadOk('1') && roundSquadOk('2') && roundSquadOk('3') &&
-             roundSquadOk('4') && roundSquadOk('5') && roundSquadOk('6') && roundSquadOk('7') &&
-             roundSquadOk('8') && roundSquadOk('9') && roundSquadOk('10');
-    }
-
-    // Each player's own squad. Everyone signed in can read (needed for the
-    // leaderboard — every viewer recomputes every user's points client-side
-    // from this plus the shared results doc). Writing your own doc is
-    // allowed, but a submitted/changed squad must be legal, and it's frozen
-    // once that round's deadline passes.
+    // Profile + in-progress pitch-builder state. Everyone signed in can
+    // read (needed for the leaderboard — every viewer recomputes every
+    // user's points client-side from this plus each round's squad doc and
+    // the shared results doc). No squad-legality concerns here any more —
+    // that's entirely on the squads subcollection below.
     match /users/{uid} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == uid;
-      allow update: if isSignedIn() && request.auth.uid == uid && squadStateValid();
+      allow update: if isSignedIn() && request.auth.uid == uid;
+
+      // A round's submitted squad. Writable (create or overwrite) only by
+      // its owner, only before that round's deadline, and only if legal.
+      // Once the deadline passes, neither create nor update is granted by
+      // any rule below — the round is frozen. No delete rule exists either,
+      // so deleting a submitted squad is always denied.
+      match /squads/{round} {
+        allow read: if isSignedIn();
+        allow create, update: if isSignedIn() && request.auth.uid == uid
+          && request.time < DEADLINES()[round]
+          && squadLegal(request.resource.data);
+      }
+    }
+
+    // Nested `match` blocks only govern direct-path access — a
+    // collectionGroup('squads') query (used by the leaderboard, which reads
+    // every user's squads at once) needs its own {path=**} rule to be
+    // readable at all. Read-only; writes still go through the per-user path
+    // above, which is the one that actually enforces ownership + legality.
+    match /{path=**}/squads/{round} {
+      allow read: if isSignedIn();
     }
 
     // Match results, goalscorers and league standings — shared by everyone,
