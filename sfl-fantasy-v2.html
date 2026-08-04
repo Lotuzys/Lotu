@@ -171,7 +171,7 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
 .st-logo{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:6px}
 .pi-pb{font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;color:#fff;display:inline-block;margin-top:1px}
 .pi-right{text-align:right;flex-shrink:0}
-.pi-goals{font-size:13px;font-weight:800;color:var(--or)}.pi-price{font-size:10px;color:var(--mu)}
+.pi-price-val{font-size:13px;font-weight:800;color:var(--or)}.pi-own-val{font-size:10px;color:var(--mu)}
 
 /* PITCH */
 .pw{padding:12px}
@@ -600,9 +600,9 @@ body{font-family:'Inter','Helvetica Neue',sans-serif;background:var(--bg);color:
       <button class="pmclose" onclick="document.getElementById('pm-bg').classList.remove('open')">✕</button>
     </div>
     <div class="pmstats">
-      <div class="pmst"><div class="pmstv" id="pm-goals"></div><div class="pmstl">Įvarčiai</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-goals"></div><div class="pmstl">Įvarčiai (sezonas)</div></div>
       <div class="pmst"><div class="pmstv" id="pm-price"></div><div class="pmstl">Kaina</div></div>
-      <div class="pmst"><div class="pmstv" id="pm-spts"></div><div class="pmstl">Est. tšk</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl">Nuosavybė</div></div>
     </div>
     <div class="pmact"><button class="pmadd" id="pm-add-btn">Pridėti</button></div>
   </div>
@@ -693,7 +693,6 @@ function teamLogoImg(team,size){const src=TEAM_LOGOS[team];return src?`<img clas
 
 const HIST={'Praliotas':{w:19,l:3,cs:8},'El Dorado':{w:18,l:3,cs:7},'Š-VGTU-Vilkai':{w:15,l:5,cs:5},'Navigatoriai':{w:12,l:8,cs:4},'Tornado':{w:11,l:9,cs:3},'Grija':{w:11,l:9,cs:4},'VSG United':{w:10,l:11,cs:2},'Esperanza':{w:9,l:13,cs:2},'FC Areonas':{w:7,l:13,cs:1},'Ketera':{w:6,l:12,cs:1},'Del. Euforija':{w:2,l:18,cs:0},'Gladiatoriai':{w:2,l:18,cs:0}};
 function calcPrice(g,pos,team){const pf={G:.5,D:.3,M:.25,F:.2},tb=Math.round(HIST[team].w/19*3*10)/10;return Math.round((2.5+g*pf[pos]+tb)*2)/2;}
-function playerSeasonPts(p){const h=HIST[p.team];return Math.max(0,p.goals*CONFIG.PTS_POS[p.pos]+h.w*CONFIG.WIN_PTS+((p.pos==='G'||p.pos==='D')?h.cs*CONFIG.CS_PTS:0)+h.l*CONFIG.LOSS_PTS);}
 
 // ═══════════════════════════════════════════════
 // DATA
@@ -1124,6 +1123,54 @@ function computeScoring(mySquads,db){
   return {roundPts,roundDetail,totalPts,roundsPlayed};
 }
 
+// Goals actually scored so far THIS fantasy season, from admin-entered
+// match results — distinct from PLAYERS[].goals, which is last season's
+// tally used only for initial pricing.
+function currentSeasonGoals(id){
+  let total=0;
+  Object.values(STATE.DB||{}).forEach(round=>{
+    Object.values(round||{}).forEach(day=>{
+      Object.values(day||{}).forEach(match=>{
+        (match.scorers||[]).forEach(sc=>{if(sc.pid===id)total+=sc.cnt;});
+      });
+    });
+  });
+  return total;
+}
+
+// ═══════════════════════════════════════════════
+// OWNERSHIP — % of registered fantasy managers with this player in their
+// current (or, if they haven't re-picked yet this round, most recent)
+// squad. Recomputed on demand (entering the squad page) rather than on
+// every keystroke/filter click, since it requires a Firestore round-trip
+// across every user's squads.
+// ═══════════════════════════════════════════════
+let OWNERSHIP={};
+function ownershipPct(id){return OWNERSHIP[id]??0;}
+
+async function refreshOwnership(){
+  try{
+    const allUsers=await fetchAllUsers();
+    const round=computeCurrentRound();
+    const counts={};
+    allUsers.forEach(u=>{
+      const squads=u.mySquads||{};
+      let squad=squads[round];
+      if(!squad){
+        const keys=Object.keys(squads).map(Number);
+        if(keys.length)squad=squads[Math.max(...keys)];
+      }
+      if(!squad)return;
+      Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
+    });
+    const total=allUsers.length||1;
+    const pct={};
+    PLAYERS.forEach(p=>{pct[p.id]=Math.round(((counts[p.id]||0)/total)*1000)/10;});
+    OWNERSHIP=pct;
+    renderList();
+  }catch(e){console.error('Nepavyko paskaičiuoti nuosavybės procento',e);}
+}
+
 function saveLeagueState(){
   if(!isAdmin())return;
   LEAGUE_DOC.set({DB:STATE.DB,teams:STATE.teams,savedMatches:[...STATE.savedMatches]},{merge:true})
@@ -1277,6 +1324,7 @@ function goRound(i){
   loadRoundIntoPitch(i);
   showPage('squad',document.querySelectorAll('.nb')[1]);
   renderAllSlots();renderFilters();renderList();
+  refreshOwnership();
 }
 
 // ═══════════════════════════════════════════════
@@ -1350,7 +1398,7 @@ function renderList(){
       <div class="pi-info"><div class="pi-name">${p.name}${warn}</div>
       <div class="pi-team">${teamLogoImg(p.team,14)}${p.team}</div>
       <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div>
-      <div class="pi-right"><div class="pi-goals">${p.goals}⚽</div><div class="pi-price">${p.price.toFixed(1)}M</div></div>
+      <div class="pi-right"><div class="pi-price-val">${p.price.toFixed(1)}M</div><div class="pi-own-val">${ownershipPct(p.id)}%</div></div>
     </div>`;
   }).join('')||'<div style="padding:18px;text-align:center;color:var(--mu);font-size:12px">Nerasta</div>';
 }
@@ -1363,9 +1411,9 @@ function openPlayerModal(id){
   document.getElementById('pm-name').textContent=p.name;
   document.getElementById('pm-team').innerHTML=`${teamLogoImg(p.team,16)}${p.team}`;
   const ch=document.getElementById('pm-chip');ch.textContent=POS_FL[p.pos];ch.style.background=POS_C[p.pos];
-  document.getElementById('pm-goals').textContent=p.goals;
+  document.getElementById('pm-goals').textContent=currentSeasonGoals(p.id);
   document.getElementById('pm-price').textContent=p.price.toFixed(1)+'M';
-  document.getElementById('pm-spts').textContent=Math.round(playerSeasonPts(p));
+  document.getElementById('pm-owner').textContent=ownershipPct(p.id)+'%';
   const btn=document.getElementById('pm-add-btn');
   if(isLocked()){btn.textContent='Komanda užfiksuota';btn.disabled=true;}
   else if(STATE.taken.has(p.id)){btn.textContent='Jau pasirinktas ✓';btn.disabled=true;}
