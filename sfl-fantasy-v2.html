@@ -1005,9 +1005,11 @@ async function getUserState(uid){
 }
 
 function saveCurrentState(){
-  if(!CURRENT_USER)return;
+  if(!CURRENT_USER)return Promise.resolve();
   const obj=stateToObj();
-  userDocRef(CURRENT_USER.uid).set(obj,{merge:true}).catch(e=>console.error('Nepavyko išsaugoti',e));
+  const p=userDocRef(CURRENT_USER.uid).set(obj,{merge:true});
+  p.catch(e=>console.error('Nepavyko išsaugoti',e));
+  return p;
 }
 
 // ═══════════════════════════════════════════════
@@ -1112,9 +1114,11 @@ function saveLeagueState(){
 // time the admin logs in, so it never drifts from the app's own roster.
 // ═══════════════════════════════════════════════
 function syncPlayerIndex(){
-  const idx={};
-  PLAYERS.forEach(p=>{idx[String(p.id)]={pos:p.pos,team:p.team,price:p.price};});
-  db.collection('meta').doc('players').set(idx)
+  // Must match firestore.rules' playerIndex()/playerAt(): a single `list`
+  // field, array order = id order (PLAYERS[i].id is always i+1), not a
+  // string-keyed map — the rules index into it as idx[id-1].
+  const list=PLAYERS.map(p=>({pos:p.pos,team:p.team,price:p.price}));
+  return db.collection('meta').doc('players').set({list})
     .catch(e=>console.error('Nepavyko sinchronizuoti žaidėjų indekso',e));
 }
 
@@ -1423,16 +1427,30 @@ function updateBottomBar(){
 // ═══════════════════════════════════════════════
 // SUBMIT & CALC
 // ═══════════════════════════════════════════════
-function submitSquad(){
+async function submitSquad(){
   if(isPastDeadline(STATE.curRound)){toast(`Terminas praėjo (${formatDeadline(STATE.curRound)}) — komandos pateikti nebegalima`);return;}
   if(filledSlots()<7){toast('Reikia 7 žaidėjų!');return;}
   if(!STATE.captain){toast('Pasirink kapitoną ⭐ — spaudk žvaigždutę po žaidėju');return;}
   const isUpdate=STATE.mySquads[STATE.curRound]!==undefined;
+  const prevSquad=STATE.mySquads[STATE.curRound];
   const slotsCopy={};
   Object.entries(STATE.slots).forEach(([pos,arr])=>{slotsCopy[pos]=arr.map(p=>p?{...p}:null);});
   STATE.mySquads[STATE.curRound]={slots:slotsCopy,captain:{...STATE.captain}};
-  renderAllSlots();updateBottomBar();renderSquadMsg();saveCurrentState();
-  showSquadSavedScreen(isUpdate);
+  renderAllSlots();updateBottomBar();renderSquadMsg();
+  const btn=document.getElementById('bb-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saugoma...';}
+  try{
+    await saveCurrentState();
+    showSquadSavedScreen(isUpdate);
+  }catch(e){
+    // Server rejected the write (e.g. stale/missing player index, illegal
+    // squad) — roll back so the UI never claims a save that didn't happen.
+    STATE.mySquads[STATE.curRound]=prevSquad;
+    renderAllSlots();renderSquadMsg();
+    toast('Nepavyko išsaugoti komandos — pabandyk dar kartą arba susisiek su administratoriumi');
+  }finally{
+    updateBottomBar();
+  }
 }
 
 // Full-screen confirmation that the squad really did save — shown on every
