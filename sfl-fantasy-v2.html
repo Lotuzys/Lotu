@@ -315,6 +315,9 @@ a{color:var(--or)}
 .pmst{background:var(--sur);padding:12px 5px;text-align:center}
 .pmstv{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em}.pmstl{font-size:9px;color:var(--mu);margin-top:2px;font-weight:600}
 .pmact{padding:14px}
+#rpm-breakdown{padding:4px 0 8px}
+#rpm-breakdown .rrow:last-child{border-bottom:none}
+#rpm-breakdown .rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
 .pmadd{width:100%;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}.pmadd:hover{transform:translateY(-1px)}.pmadd:disabled{opacity:.4;cursor:default;box-shadow:none}
 
 /* PROFILE MODAL */
@@ -715,6 +718,23 @@ a{color:var(--or)}
       <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl">Nuosavybė</div></div>
     </div>
     <div class="pmact"><button class="pmadd" id="pm-add-btn">Pridėti</button></div>
+  </div>
+</div>
+
+<!-- STAT MODAL — read-only player detail, reused for a historical round's
+     squad (price / round ownership / round points + breakdown) and for
+     Sezono rinktinė (price / season points). No "add" action, just info. -->
+<div class="mbg" id="rpm-bg" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="pm">
+    <div class="pmh">
+      <div class="pmav" id="rpm-av"></div>
+      <div class="pmname" id="rpm-name"></div>
+      <div class="pmteam" id="rpm-team"></div>
+      <span class="pmchip" id="rpm-chip"></span>
+      <button class="pmclose" onclick="document.getElementById('rpm-bg').classList.remove('open')">✕</button>
+    </div>
+    <div class="pmstats" id="rpm-stats"></div>
+    <div id="rpm-breakdown"></div>
   </div>
 </div>
 
@@ -1586,6 +1606,75 @@ function openPlayerModal(id){
   document.getElementById('pm-bg').classList.add('open');
 }
 
+// ═══════════════════════════════════════════════
+// READ-ONLY STAT MODAL — shared by the historical-round squad view and
+// Sezono rinktinė. Just displays whatever tiles/breakdown are handed to
+// it; no "add to squad" action like the live picker modal above.
+// ═══════════════════════════════════════════════
+function openStatModal(p,pos,tiles,breakdownHtml){
+  const av=document.getElementById('rpm-av');
+  av.style.background=POS_C[pos];av.textContent=ini(p.name);
+  av.style.fontSize='22px';av.style.fontWeight='900';av.style.color='#fff';
+  document.getElementById('rpm-name').textContent=p.name;
+  document.getElementById('rpm-team').innerHTML=`${teamLogoImg(p.team,16)}${p.team}`;
+  const ch=document.getElementById('rpm-chip');ch.textContent=POS_FL[pos];ch.style.background=POS_C[pos];
+  const statsEl=document.getElementById('rpm-stats');
+  statsEl.style.gridTemplateColumns=`repeat(${tiles.length},1fr)`;
+  statsEl.innerHTML=tiles.map(t=>`<div class="pmst"><div class="pmstv" id="${t.id||''}">${t.val}</div><div class="pmstl">${t.label}</div></div>`).join('');
+  document.getElementById('rpm-breakdown').innerHTML=breakdownHtml;
+  document.getElementById('rpm-bg').classList.add('open');
+}
+
+// Same per-slot goal/clean-sheet/win-loss rules as computeScoring(), spelled
+// out as individual line items instead of just the final total.
+function scoringBreakdownHtml(det,pos){
+  if(!det||!det.played){
+    return '<div class="rrow-empty">Šiam turui dar nėra rezultato</div>';
+  }
+  const rows=[];
+  if(det.goals>0)rows.push([`Įvarčiai (${det.goals} × ${CONFIG.PTS_POS[pos]})`,det.goals*CONFIG.PTS_POS[pos]]);
+  if(pos==='G'||pos==='D'){
+    if(det.ga===0)rows.push(['Švarus tinklelis',CONFIG.CS_PTS]);
+    else if(det.ga===1)rows.push(['Praleistas 1 įvartis',CONFIG.ONE_GOAL_AGAINST_PTS]);
+  }
+  if(det.wins>0)rows.push([`Pergalė (${det.wins}×)`,det.wins*CONFIG.WIN_PTS]);
+  if(det.losses>0)rows.push([`Pralaimėjimas (${det.losses}×)`,det.losses*CONFIG.LOSS_PTS]);
+  let html=rows.map(([lbl,val])=>`<div class="rrow"><span>${lbl}</span><span class="rp ${val<0?'neg':''}">${val>0?'+':''}${val}</span></div>`).join('');
+  if(det.isC)html+=`<div class="rrow cap-row"><span>Kapitonas</span><span class="rp cap">×2</span></div>`;
+  return html||'<div class="rrow-empty">0 taškų šį turą</div>';
+}
+
+// % of managers who had this player in their squad for a SPECIFIC round —
+// distinct from ownershipPct()/OWNERSHIP, which reflect the current round.
+async function computeOwnershipForRound(playerId,ri){
+  const allUsers=await fetchAllUsers();
+  const total=allUsers.length||1;
+  let count=0;
+  allUsers.forEach(u=>{
+    const squad=(u.mySquads||{})[ri];if(!squad)return;
+    if(Object.values(squad.slots||{}).flat().some(p=>p&&p.id===playerId))count++;
+  });
+  return Math.round((count/total)*1000)/10;
+}
+
+// Clicking a filled slot on a locked/historical round — price, that round's
+// ownership specifically (not the live figure), and a full points breakdown.
+async function openHistoricalPlayerModal(pos,idx){
+  const p=STATE.slots[pos][idx];if(!p)return;
+  const snap=STATE.mySquads[STATE.curRound];
+  const isC=!!(snap?.captain?.pos===pos&&snap?.captain?.idx===idx);
+  const {roundDetail}=computeScoring({[STATE.curRound]:snap},STATE.DB);
+  const det=roundDetail[STATE.curRound]?.find(d=>d.name===p.name)||{pts:0,goals:0,wins:0,losses:0,ga:0,played:false};
+  det.isC=isC;
+  openStatModal(p,pos,[
+    {val:p.price.toFixed(1)+'M',label:'Kaina'},
+    {val:'…',label:'Nuosavybė (to turo)',id:'rpm-round-owner'},
+    {val:det.pts+'pts',label:'Turo taškai'},
+  ],scoringBreakdownHtml(det,pos));
+  const pct=await computeOwnershipForRound(p.id,STATE.curRound);
+  const el=document.getElementById('rpm-round-owner');if(el)el.textContent=pct+'%';
+}
+
 function slotClick(pos,idx){
   if(isLocked())return;
   if(STATE.slots[pos][idx]){openPlayerModal(STATE.slots[pos][idx].id);return;}
@@ -1636,10 +1725,23 @@ function renderSlot(pos,idx){
     circle.style.background=POS_C[pos];circle.style.borderColor=cap?'#fff':POS_C[pos];circle.style.borderStyle='solid';
     const badge=TEAM_LOGOS[p.team]?`<img class="slot-badge" src="${TEAM_LOGOS[p.team]}" alt="">`:'';
     circle.innerHTML=`<span style="color:#fff;font-size:10px;font-weight:900;line-height:1.1;text-align:center">${ini(p.name)}</span><span class="spb pos-${pos}">${POS_LT[pos]}</span>${badge}`;
+    // Once a round is locked (past deadline, or simply not the round being
+    // edited), the slot shows what actually happened instead of what it
+    // cost — that round's points instead of price — and tapping it opens
+    // the round breakdown instead of the live add/remove picker.
+    const historical=isLocked()&&STATE.mySquads[STATE.curRound]!==undefined;
     if(!isLocked()){const rb=document.createElement('button');rb.className='srm';rb.innerHTML='✕';rb.onclick=ev=>{ev.stopPropagation();removePlayerFromSlot(pos,idx);};circle.appendChild(rb);}
     el.querySelector('.sn').textContent=p.name.split(' ').slice(-1)[0];
-    const sp=el.querySelector('.sp');sp.textContent=cap?`${p.price.toFixed(1)}M ⭐`:`${p.price.toFixed(1)}M`;sp.className=cap?'sp c':'sp';
-    el.onclick=()=>openPlayerModal(p.id);
+    const sp=el.querySelector('.sp');
+    if(historical){
+      const {roundDetail}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
+      const det=roundDetail[STATE.curRound]?.find(d=>d.name===p.name);
+      sp.textContent=cap?`${det?det.pts:0}pts ⭐`:`${det?det.pts:0}pts`;sp.className=cap?'sp c':'sp';
+      el.onclick=()=>openHistoricalPlayerModal(pos,idx);
+    }else{
+      sp.textContent=cap?`${p.price.toFixed(1)}M ⭐`:`${p.price.toFixed(1)}M`;sp.className=cap?'sp c':'sp';
+      el.onclick=()=>openPlayerModal(p.id);
+    }
   }else{
     el.classList.remove('filled','cap');
     const icons={G:'🧤',D:'🛡️',M:'⚙️',F:'⚡'};
@@ -1842,7 +1944,7 @@ function tsSlotHtml(entry,pos){
   }
   const p=entry.p;
   const badge=TEAM_LOGOS[p.team]?`<img class="slot-badge" src="${TEAM_LOGOS[p.team]}" alt="">`:'';
-  return `<div class="slot filled" style="cursor:default">
+  return `<div class="slot filled" onclick="openTSPlayerModal('${pos}',${p.id})">
     <div class="sc2" style="background:${POS_C[pos]};border-color:${POS_C[pos]}">
       <span style="color:#fff;font-size:10px;font-weight:900">${ini(p.name)}</span>
       <span class="spb pos-${pos}">${POS_LT[pos]}</span>${badge}
@@ -1850,6 +1952,18 @@ function tsSlotHtml(entry,pos){
     <div class="sn">${p.name.split(' ').slice(-1)[0]}</div>
     <div class="sp">${entry.pts}pts</div>
   </div>`;
+}
+
+// Sezono rinktinė player card — price + season points total, regardless of
+// whether the pitch itself is currently showing a specific round's points
+// or the season aggregate.
+function openTSPlayerModal(pos,playerId){
+  const p=PLAYERS.find(x=>x.id===playerId);if(!p)return;
+  const seasonTotal=computeSeasonPlayerPts()[playerId]||0;
+  openStatModal(p,pos,[
+    {val:p.price.toFixed(1)+'M',label:'Kaina'},
+    {val:seasonTotal+'pts',label:'Sezono taškai'},
+  ],'');
 }
 
 let TS_MODE='season';
