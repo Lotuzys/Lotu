@@ -411,16 +411,23 @@ a{color:var(--or)}
    ═══════════════════════════════════════════════ */
 @media (max-width:680px){
   .topbar{flex-wrap:wrap;height:auto;min-height:60px;padding:10px 14px;row-gap:10px}
+  .lmark{height:20px}
   .spons-top{display:none}
+  /* The points chip is toggled via inline style.display from JS
+     (updateTopbarForUser()), which always wins over a plain class rule
+     regardless of media query — needs !important to actually hide it. */
+  .pchip{display:none!important}
   .lbrand{order:1}
-  .tright{order:2;margin-left:auto}
-  .nav{order:3;flex-basis:100%;width:100%}
+  /* No margin-left:auto here (unlike desktop) — .tright flows right after
+     .lbrand instead of being pushed to the far edge, so the avatar sits
+     next to the name instead of across the row from it. */
+  .tright{order:2}
+  .nav{order:3;flex-basis:100%;width:100%;min-width:0}
   .page{min-height:calc(100vh - 118px)}
 
   #user-chip-name{display:none}
   .user-chip{padding:6px}
   .abtn{padding:7px 10px;font-size:10px}
-  .pchip{padding:5px 10px;min-width:54px}
 
   .wrap,.awrap,.hist-wrap,.lbwrap,.swrap{padding-left:12px;padding-right:12px}
   .three-col{gap:12px}
