@@ -254,6 +254,7 @@ a{color:var(--or)}
 .hist-sub{color:var(--mu);font-size:10px;margin-left:auto}
 .hist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 .hcard{background:var(--card);border:1px solid var(--bor);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh);transition:all .2s var(--ease)}
+.hcard.clk{cursor:pointer}
 .hcard:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
 .hcard.cur{border-color:var(--or);border-width:1.5px}
 .hcard-head{background:var(--sur);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bor)}
@@ -264,6 +265,7 @@ a{color:var(--or)}
 .hcp:last-child{border-bottom:none}
 .hcp-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
 .hcp-name{flex:1;font-weight:600;color:var(--ink2)}.hcp-pts{font-weight:800;color:var(--or);font-size:12px}
+.hcp-pos{font-size:9px;font-weight:700;color:var(--mu);background:var(--sur2);padding:1px 5px;border-radius:8px;margin-left:2px}
 .hcp-pts.cap{color:var(--cap)}
 .empty-hist{text-align:center;padding:44px 20px;color:var(--mu);font-size:13px}
 
@@ -432,6 +434,14 @@ a{color:var(--or)}
   .tright{order:2}
   .nav{order:3;flex-basis:100%;width:100%;min-width:0}
   .page{min-height:calc(100vh - 118px)}
+
+  /* The fixed bottom action bar (.bbar2, "Pasirinkta X/7 ... Atnaujinti
+     komandą") sits ~90px tall over the bottom of the viewport at all
+     times. Without extra clearance, scrolling the pitch into view lands
+     the forward row right underneath it — they'd look like they're
+     falling out of the pitch, cut off by the bar. Give the pitch itself
+     the breathing room instead of relying on far-away wrap padding. */
+  .pitch{padding-bottom:100px}
 
   #user-chip-name{display:none}
   .user-chip{padding:6px}
@@ -1951,15 +1961,18 @@ function renderHistory(){
   let html='<div class="hist-grid">';
   FR.forEach((r,i)=>{
     const snap=STATE.mySquads[i];const pts=roundPts[i];const detail=roundDetail[i];
-    html+=`<div class="hcard ${i===STATE.curRound?'cur':''}">
+    // Past/current rounds with a submitted squad can be tapped to jump
+    // straight to that round's pitch (goRound handles live vs. historical).
+    const clickable=!!snap;
+    html+=`<div class="hcard ${i===STATE.curRound?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
       <div class="hcard-head"><div class="hcard-title">${r.n}${i===STATE.curRound?' (einamasis)':''}</div>
       <div class="hcard-pts ${pts===undefined?'em':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
       <div class="hcard-body">`;
-    if(snap){Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
+    if(snap){['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
       if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
       const det=detail?.find(d=>d.name===p.name);
       html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
-        <div class="hcp-name">${isC?'⭐ ':''}${p.name}</div>
+        <div class="hcp-name">${isC?'⭐ ':''}${p.name} <span class="hcp-pos">${POS_LT[pos]}</span></div>
         <div class="hcp-pts ${isC?'cap':''}">${det?'+'+det.pts+'pts':''}</div></div>`;
     }));}else{html+=`<div style="font-size:11px;color:var(--mu);padding:8px 0">Komanda nepasirinkta</div>`;}
     html+=`</div></div>`;
