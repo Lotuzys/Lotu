@@ -225,9 +225,9 @@ a{color:var(--or)}
 .slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(249,115,22,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:9px;font-weight:600;color:rgba(255,255,255,.92);line-height:1.25;max-width:68px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}
-.capbtn{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:16px;background:none;border:none;cursor:pointer;display:none;filter:grayscale(1) opacity(.4);transition:all .18s var(--ease);white-space:nowrap}
-.slot.filled .capbtn{display:block}.slot.cap .capbtn{filter:none}
-.capbtn:hover{filter:none;transform:translateX(-50%) scale(1.2)}
+.capbtn{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.4);border-radius:20px;padding:1px 6px;cursor:pointer;display:none;opacity:.55;transition:all .18s var(--ease);white-space:nowrap}
+.slot.filled .capbtn{display:block}.slot.cap .capbtn{opacity:1;background:var(--cap);border-color:var(--cap)}
+.capbtn:hover{opacity:1;transform:translateX(-50%) scale(1.1)}
 .cbadge{position:absolute;top:-4px;left:-4px;width:19px;height:19px;border-radius:50%;background:var(--cap);color:#fff;font-size:9px;font-weight:900;display:none;align-items:center;justify-content:center;border:2px solid #fff;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .slot.cap .cbadge{display:flex}
 .spb{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:800;text-transform:uppercase;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
@@ -583,27 +583,27 @@ a{color:var(--or)}
             <span class="bbar-lbl">Biudžetas:</span>
             <span class="bv" id="bud-left">50.0M</span>
             <span class="bu" id="bud-used">panaudota: 0.0M</span>
-            <span class="caphint">⭐ Kapitonas ×2</span>
+            <span class="caphint">(C) Kapitonas ×2</span>
           </div>
           <div class="pitch">
             <div class="rlbl">Vartininkas</div>
             <div class="prow">
-              <div class="slot" id="s-G-0" onclick="slotClick('G',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon">🧤</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'G',0)">⭐</button></div>
+              <div class="slot" id="s-G-0" onclick="slotClick('G',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon">🧤</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'G',0)">(C)</button></div>
             </div>
             <div class="rlbl">Gynėjai</div>
             <div class="prow">
-              <div class="slot" id="s-D-0" onclick="slotClick('D',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'D',0)">⭐</button></div>
-              <div class="slot" id="s-D-1" onclick="slotClick('D',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'D',1)">⭐</button></div>
+              <div class="slot" id="s-D-0" onclick="slotClick('D',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'D',0)">(C)</button></div>
+              <div class="slot" id="s-D-1" onclick="slotClick('D',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'D',1)">(C)</button></div>
             </div>
             <div class="rlbl">Saugai</div>
             <div class="prow">
-              <div class="slot" id="s-M-0" onclick="slotClick('M',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'M',0)">⭐</button></div>
-              <div class="slot" id="s-M-1" onclick="slotClick('M',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'M',1)">⭐</button></div>
+              <div class="slot" id="s-M-0" onclick="slotClick('M',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'M',0)">(C)</button></div>
+              <div class="slot" id="s-M-1" onclick="slotClick('M',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'M',1)">(C)</button></div>
             </div>
             <div class="rlbl">Puolėjai</div>
             <div class="prow">
-              <div class="slot" id="s-F-0" onclick="slotClick('F',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'F',0)">⭐</button></div>
-              <div class="slot" id="s-F-1" onclick="slotClick('F',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'F',1)">⭐</button></div>
+              <div class="slot" id="s-F-0" onclick="slotClick('F',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'F',0)">(C)</button></div>
+              <div class="slot" id="s-F-1" onclick="slotClick('F',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div><button class="capbtn" onclick="handleCaptainClick(event,'F',1)">(C)</button></div>
             </div>
           </div>
         </div>
@@ -623,7 +623,7 @@ a{color:var(--or)}
         <div class="rrow"><span>✅ Komandos pergalė</span><span class="rp">+2</span></div>
         <div class="rrow"><span>❌ Pralaimėjimas</span><span class="rp neg">−1</span></div>
         <div class="rrow"><span>🟥 Raudona kortelė</span><span class="rp neg">−3</span></div>
-        <div class="rrow cap-row"><span>⭐ Kapitonas</span><span class="rp cap">×2</span></div>
+        <div class="rrow cap-row"><span>(C) Kapitonas</span><span class="rp cap">×2</span></div>
         <div class="rrow note-row"><span>⚠ Iš kiekvienos komandos — tik 1 žaidėjas</span></div>
       </div>
       <div class="pan">
