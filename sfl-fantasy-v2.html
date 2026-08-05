@@ -822,29 +822,28 @@ const TEAM_KIT={
   'Grija':{c1:'#22d3ee'},
   'Gladiatoriai':{c1:'#dc2626',c2:'#111827',stripes:true},
   'VSG United':{c1:'#facc15'},
-  'Esperanza':{c1:'#b91c1c'},
+  'Esperanza':{c1:'#e53935'},
   'Ketera':{c1:'#fde047'},
 };
 let kitUid=0;
-// A wider, flat-shouldered silhouette with clearly separated sleeve caps
-// and a rounded crew-neck dip — reads as an actual jersey rather than a
-// thin arrow shape at small sizes.
-const KIT_SHIRT_PATH='M16,7 L11,7 L2,12 L5,22 L13,16.5 L13,37 L27,37 L27,16.5 L35,22 L38,12 L29,7 L24,7 Q20,12.5 16,7 Z';
+// Proper crew-neck jersey silhouette (raglan sleeves, tapered body) instead
+// of the earlier hand-drawn shape — reads as an actual shirt at a glance.
+const KIT_SHIRT_PATH='M21.7,8.9L15.3,6.6L13.7,5C13.9,4.7,14,4.4,14,4A2,2,0,0,0,12,2A2,2,0,0,0,10,4C10,4.4,10.1,4.7,10.3,5L8.7,6.6L2.3,8.9C1.9,9,1.6,9.4,1.6,9.9C1.6,10.1,1.7,10.4,1.8,10.6L3.6,13.6C3.8,14,4.3,14.2,4.7,14.1L7,13.3V20C7,20.6,7.4,21,8,21H16C16.6,21,17,20.6,17,20V13.3L19.3,14.1C19.7,14.2,20.2,14,20.4,13.6L22.2,10.6C22.3,10.4,22.4,10.1,22.4,9.9C22.4,9.4,22.1,9,21.7,8.9Z';
 // Renders a small inline SVG jersey in the given team's colors. `size` is
 // the square pixel footprint; a fresh clip-path id is minted per call so
 // multiple instances of the same team's kit never collide in one document.
 function kitSvg(team,size){
   const kit=TEAM_KIT[team]||{c1:'#94a3b8'};
   const cid='kit'+(kitUid++);
-  const stripes=kit.stripes?`<rect x="8" y="0" width="8" height="40" fill="${kit.c2}"/><rect x="24" y="0" width="8" height="40" fill="${kit.c2}"/>`:'';
-  return `<svg viewBox="0 0 40 40" width="${size}" height="${size}" style="display:block;flex-shrink:0">
+  const stripes=kit.stripes?`<rect x="7" y="0" width="3.3" height="24" fill="${kit.c2}"/><rect x="13.7" y="0" width="3.3" height="24" fill="${kit.c2}"/>`:'';
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="display:block;flex-shrink:0">
     <defs><clipPath id="${cid}"><path d="${KIT_SHIRT_PATH}"/></clipPath></defs>
     <g clip-path="url(#${cid})">
-      <rect width="40" height="40" fill="${kit.c1}"/>
+      <rect width="24" height="24" fill="${kit.c1}"/>
       ${stripes}
-      <rect width="40" height="16" fill="#fff" opacity=".14"/>
+      <rect width="24" height="8" fill="#fff" opacity=".16"/>
     </g>
-    <path d="${KIT_SHIRT_PATH}" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1.6"/>
+    <path d="${KIT_SHIRT_PATH}" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="0.7"/>
   </svg>`;
 }
 const TEAM_LOGOS={
