@@ -441,7 +441,15 @@ a{color:var(--or)}
      the forward row right underneath it — they'd look like they're
      falling out of the pitch, cut off by the bar. Give the pitch itself
      the breathing room instead of relying on far-away wrap padding. */
-  .pitch{padding-bottom:100px}
+  .pitch{padding-bottom:100px;scroll-margin-top:156px}
+  /* The topbar is sticky everywhere else, but on mobile it wraps to
+     ~148px tall (brand row + nav row) and, once stuck to top:0, permanently
+     overlaps whatever content the user scrolled up to meet — most visibly
+     the goalkeeper's row, which sits right after the "Žaidėjai" search
+     panel and so is exactly what a normal scroll-down lands on. Letting it
+     scroll away like ordinary content on mobile removes that failure mode
+     entirely instead of trying to out-guess where users stop scrolling. */
+  .topbar{position:static}
 
   #user-chip-name{display:none}
   .user-chip{padding:6px}
