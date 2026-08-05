@@ -311,7 +311,7 @@ a{color:var(--or)}
 .pmchip{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;margin-top:6px}
 .pmclose{position:absolute;top:12px;right:12px;background:var(--sur);border:1px solid var(--bor);color:var(--mu);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
 .pmclose:hover{background:var(--sur2);color:var(--ink)}
-.pmstats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bor);border-top:1px solid var(--bor);border-bottom:1px solid var(--bor)}
+.pmstats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bor);border-top:1px solid var(--bor);border-bottom:1px solid var(--bor)}
 .pmst{background:var(--sur);padding:12px 5px;text-align:center}
 .pmstv{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em}.pmstl{font-size:9px;color:var(--mu);margin-top:2px;font-weight:600}
 .pmact{padding:14px}
@@ -714,6 +714,7 @@ a{color:var(--or)}
     </div>
     <div class="pmstats">
       <div class="pmst"><div class="pmstv" id="pm-goals"></div><div class="pmstl">Įvarčiai (sezonas)</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-szpts"></div><div class="pmstl">Taškai (sezonas)</div></div>
       <div class="pmst"><div class="pmstv" id="pm-price"></div><div class="pmstl">Kaina</div></div>
       <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl">Nuosavybė</div></div>
     </div>
@@ -800,7 +801,7 @@ const db=firebase.firestore();
 // ═══════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════
-const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:10,ONE_GOAL_AGAINST_PTS:5,WIN_PTS:2,LOSS_PTS:-1,CAPTAIN_MULT:2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
+const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:10,ONE_GOAL_AGAINST_PTS:5,WIN_PTS:2,LOSS_PTS:-1,RED_CARD_PTS:-3,CAPTAIN_MULT:2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
 const POS_C={G:'#f97316',D:'#3b82f6',M:'#22c55e',F:'#ef4444'};
 const POS_LT={G:'V',D:'G',M:'S',F:'P'};
 const POS_FL={G:'Vartininkas',D:'Gynėjas',M:'Saugas',F:'Puolėjas'};
@@ -1242,10 +1243,11 @@ function computeScoring(mySquads,db){
     const snap=mySquads[riStr];
     const r=FR[ri];
     if(!snap||!r)return;
-    const scorerGoals={},teamGA={},teamResults={},teamPlayed={};
+    const scorerGoals={},teamGA={},teamResults={},teamPlayed={},reds={};
     r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
       const saved=db[ri]?.[di]?.[mi];if(!saved)return;
       saved.scorers.forEach(sc=>{scorerGoals[sc.pid]=(scorerGoals[sc.pid]||0)+sc.cnt;});
+      (saved.reds||[]).forEach(pid=>{reds[pid]=(reds[pid]||0)+1;});
       const hg=saved.hg,ag=saved.ag;
       teamGA[m[0]]=(teamGA[m[0]]||0)+ag;teamGA[m[1]]=(teamGA[m[1]]||0)+hg;
       teamPlayed[m[0]]=true;teamPlayed[m[1]]=true;
@@ -1261,13 +1263,17 @@ function computeScoring(mySquads,db){
       const mult=isC?CONFIG.CAPTAIN_MULT:1;
       const goals=scorerGoals[p.id]||0;const ga=teamGA[p.team]||0;const played=!!teamPlayed[p.team];
       const res=teamResults[p.team]||[];const wins=res.filter(x=>x==='W').length;const losses=res.filter(x=>x==='L').length;
+      const redCount=reds[p.id]||0;
       let pts=goals*CONFIG.PTS_POS[pos];
       // Clean-sheet/1-conceded bonus only once a result actually exists for this
       // team this round — otherwise "no data yet" reads as "conceded nothing".
       if(played&&(pos==='G'||pos==='D')){if(ga===0)pts+=CONFIG.CS_PTS;else if(ga===1)pts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
-      pts+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;pts=Math.max(0,pts);
+      pts+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;
+      pts+=redCount*CONFIG.RED_CARD_PTS;
+      // No floor at 0 — a scoreless loss (or a red card) can legitimately
+      // take a player's round into negative points.
       const final=pts*mult;total+=final;
-      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,ga,played,isC});
+      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,ga,played,isC,redCount});
     }));
     roundPts[ri]=total;roundDetail[ri]=detail;
     totalPts+=total;roundsPlayed++;
@@ -1498,12 +1504,21 @@ function loadRoundIntoPitch(i){
   }
   STATE.activePos=null;STATE.activePosIdx=null;STATE.activePosF='Visos';STATE.activeTeamF='Visos';
 }
+// Tracks whether the round currently loaded onto the pitch was the live/
+// open one at the moment you navigated to it — see goRound() and the
+// 30s auto-advance interval near the bottom of the file.
+let ENTERED_ROUND_LIVE=false;
 function goRound(i){
   if(i>computeCurrentRound()){
     toast('Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas');
     return;
   }
   loadRoundIntoPitch(i);
+  // Only re-arm the "your round just closed, jump to the new one" auto-
+  // advance (below) if you actually arrived on the live round — browsing an
+  // already-closed round on purpose should never get yanked to the current
+  // one just because 30s went by.
+  ENTERED_ROUND_LIVE=(i===computeCurrentRound());
   showPage('squad',document.querySelectorAll('.nb')[1],{skipHistory:true});
   renderAllSlots();renderFilters();renderList();
   refreshOwnership();
@@ -1595,6 +1610,9 @@ function openPlayerModal(id){
   document.getElementById('pm-team').innerHTML=`${teamLogoImg(p.team,16)}${p.team}`;
   const ch=document.getElementById('pm-chip');ch.textContent=POS_FL[p.pos];ch.style.background=POS_C[p.pos];
   document.getElementById('pm-goals').textContent=currentSeasonGoals(p.id);
+  // Real fantasy points actually earned in matches played this season — not
+  // the old pre-season estimate, and not last season's data.
+  document.getElementById('pm-szpts').textContent=(computeSeasonPlayerPts()[p.id]||0)+'pts';
   document.getElementById('pm-price').textContent=p.price.toFixed(1)+'M';
   document.getElementById('pm-owner').textContent=ownershipPct(p.id)+'%';
   const btn=document.getElementById('pm-add-btn');
@@ -1639,6 +1657,7 @@ function scoringBreakdownHtml(det,pos){
   }
   if(det.wins>0)rows.push([`Pergalė (${det.wins}×)`,det.wins*CONFIG.WIN_PTS]);
   if(det.losses>0)rows.push([`Pralaimėjimas (${det.losses}×)`,det.losses*CONFIG.LOSS_PTS]);
+  if(det.redCount>0)rows.push([`Raudona kortelė (${det.redCount}×)`,det.redCount*CONFIG.RED_CARD_PTS]);
   let html=rows.map(([lbl,val])=>`<div class="rrow"><span>${lbl}</span><span class="rp ${val<0?'neg':''}">${val>0?'+':''}${val}</span></div>`).join('');
   if(det.isC)html+=`<div class="rrow cap-row"><span>Kapitonas</span><span class="rp cap">×2</span></div>`;
   return html||'<div class="rrow-empty">0 taškų šį turą</div>';
@@ -1897,10 +1916,11 @@ function computeAllPlayerRoundPts(ri){
   const pts={};PLAYERS.forEach(p=>pts[p.id]=0);
   const r=FR[ri];const round=STATE.DB[ri];
   if(!r||!round)return pts;
-  const scorerGoals={},teamGA={},teamResults={},teamPlayed={};
+  const scorerGoals={},teamGA={},teamResults={},teamPlayed={},reds={};
   r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
     const saved=round?.[di]?.[mi];if(!saved)return;
     saved.scorers.forEach(sc=>{scorerGoals[sc.pid]=(scorerGoals[sc.pid]||0)+sc.cnt;});
+    (saved.reds||[]).forEach(pid=>{reds[pid]=(reds[pid]||0)+1;});
     const hg=saved.hg,ag=saved.ag;
     teamGA[m[0]]=(teamGA[m[0]]||0)+ag;teamGA[m[1]]=(teamGA[m[1]]||0)+hg;
     teamPlayed[m[0]]=true;teamPlayed[m[1]]=true;
@@ -1915,7 +1935,8 @@ function computeAllPlayerRoundPts(ri){
     let val=goals*CONFIG.PTS_POS[p.pos];
     if(played&&(p.pos==='G'||p.pos==='D')){if(ga===0)val+=CONFIG.CS_PTS;else if(ga===1)val+=CONFIG.ONE_GOAL_AGAINST_PTS;}
     val+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;
-    pts[p.id]=Math.max(0,val);
+    val+=(reds[p.id]||0)*CONFIG.RED_CARD_PTS;
+    pts[p.id]=val;
   });
   return pts;
 }
@@ -1930,11 +1951,15 @@ function computeSeasonPlayerPts(){
 // One player per slot, ranked purely by points — no budget/one-per-club
 // constraint, since this is "who actually performed best", not a fantasy
 // pick. Slots with no scoring data yet come back null.
-function bestXI(ptsMap){
+// hasData distinguishes "no result entered for this round/season yet" from
+// "there's a real result and the best available score happens to be zero or
+// negative" (a red card, or a scoreless loss) — the latter is still a real
+// answer and should be shown, not hidden behind a placeholder.
+function bestXI(ptsMap,hasData){
   const byPos={G:[],D:[],M:[],F:[]};
   PLAYERS.forEach(p=>byPos[p.pos].push({p,pts:ptsMap[p.id]||0}));
   Object.values(byPos).forEach(arr=>arr.sort((a,b)=>b.pts-a.pts));
-  const top=(pos,n)=>Array.from({length:n},(_,i)=>byPos[pos][i]&&byPos[pos][i].pts>0?byPos[pos][i]:null);
+  const top=(pos,n)=>Array.from({length:n},(_,i)=>hasData&&byPos[pos][i]?byPos[pos][i]:null);
   return {G:top('G',1),D:top('D',2),M:top('M',2),F:top('F',2)};
 }
 function tsSlotHtml(entry,pos){
@@ -1996,7 +2021,8 @@ function renderTeamOfSeason(){
   }
   sub.textContent=TS_MODE==='round'?FR[TS_ROUND].n:'visas sezonas';
   const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND):computeSeasonPlayerPts();
-  const xi=bestXI(ptsMap);
+  const hasData=TS_MODE==='round'?!!STATE.DB[TS_ROUND]:pastRoundIndices().some(ri=>!!STATE.DB[ri]);
+  const xi=bestXI(ptsMap,hasData);
   pitch.innerHTML=`
     <div class="rlbl">Vartininkas</div>
     <div class="prow">${tsSlotHtml(xi.G[0],'G')}</div>
@@ -2108,6 +2134,7 @@ function openProfile(){
 // ADMIN
 // ═══════════════════════════════════════════════
 const scorerRowCount={};
+const redRowCount={};
 // Cheap: just the round-tab checkmarks. Safe to call on every remote update
 // (someone else's save, or your own write echoing back) since it never
 // touches the match-block DOM — so it can never wipe in-progress, unsaved
@@ -2133,12 +2160,17 @@ function scRow(key,idx,opts,cnt=1){
     <input class="scnt" id="sgc-${key}-${idx}" type="number" min="1" max="10" value="${cnt}">
     <button class="srm2" onclick="rmSc('${key}',${idx})">✕</button></div>`;
 }
+function rcRow(key,idx,opts){
+  return `<div class="srow" id="rr-${key}-${idx}">
+    <select class="ssel" id="rpl-${key}-${idx}"><option value="">-- Žaidėjas --</option>${opts}</select>
+    <button class="srm2" onclick="rmRc('${key}',${idx})">✕</button></div>`;
+}
 function renderAdminRound(){
   const fr=FR[STATE.adminRound];let html='';
   fr.days.forEach((day,di)=>{
     html+=`<div class="day-block"><div class="day-lbl">${day.l}</div><div class="mgrid">`;
     day.m.forEach((m,mi)=>{
-      const key=`${STATE.adminRound}-${di}-${mi}`;scorerRowCount[key]=1;
+      const key=`${STATE.adminRound}-${di}-${mi}`;scorerRowCount[key]=1;redRowCount[key]=1;
       const saved=STATE.DB[STATE.adminRound]?.[di]?.[mi];
       const hg=saved?saved.hg:0,ag=saved?saved.ag:0;
       const allP=[...getTeamPlayers(m[0]),...getTeamPlayers(m[1])];
@@ -2146,6 +2178,9 @@ function renderAdminRound(){
       let srows='';
       if(saved?.scorers?.length){scorerRowCount[key]=saved.scorers.length;saved.scorers.forEach((sc,si)=>{srows+=scRow(key,si,opts,sc.cnt);});}
       else{srows=scRow(key,0,opts,1);}
+      let rrows='';
+      if(saved?.reds?.length){redRowCount[key]=saved.reds.length;saved.reds.forEach((pid,ri)=>{rrows+=rcRow(key,ri,opts);});}
+      else{rrows=rcRow(key,0,opts);}
       html+=`<div class="mblock">
         <div class="mh"><span class="mh-teams">${teamLogoImg(m[0],16)} ${m[0]} vs ${m[1]} ${teamLogoImg(m[1],16)}</span><span class="mh-saved ${saved?'on':''}" id="sv-${key}">Išsaugota ✓</span></div>
         <div class="mbody">
@@ -2159,9 +2194,17 @@ function renderAdminRound(){
           <div class="slbl">Įvarčių autoriai</div>
           <div id="srows-${key}">${srows}</div>
           <button class="addsc" onclick="addSc('${key}','${m[0]}','${m[1]}')">+ Pridėti įvartį</button>
+          <div class="slbl" style="margin-top:10px">Raudonos kortelės</div>
+          <div id="rrows-${key}">${rrows}</div>
+          <button class="addsc" onclick="addRc('${key}','${m[0]}','${m[1]}')">+ Pridėti raudoną kortelę</button>
           <button class="savem" onclick="saveM('${key}',${STATE.adminRound},${di},${mi})">💾 Išsaugoti</button>
         </div></div>`;
-      if(saved)setTimeout(()=>saved.scorers.forEach((sc,si)=>{const el=document.getElementById(`spl-${key}-${si}`);if(el)el.value=sc.pid;}),60);
+      if(saved){
+        setTimeout(()=>{
+          saved.scorers.forEach((sc,si)=>{const el=document.getElementById(`spl-${key}-${si}`);if(el)el.value=sc.pid;});
+          (saved.reds||[]).forEach((pid,ri)=>{const el=document.getElementById(`rpl-${key}-${ri}`);if(el)el.value=pid;});
+        },60);
+      }
     });
     html+=`</div></div>`;
   });
@@ -2175,6 +2218,14 @@ function addSc(key,home,away){
   document.getElementById(`srows-${key}`).appendChild(div.firstElementChild);
 }
 function rmSc(key,idx){const el=document.getElementById(`sr-${key}-${idx}`);if(el)el.remove();}
+function addRc(key,home,away){
+  const ni=redRowCount[key]++;
+  const allP=[...getTeamPlayers(home),...getTeamPlayers(away)];
+  const opts=allP.map(p=>`<option value="${p.id}">${p.name} (${p.team})</option>`).join('');
+  const div=document.createElement('div');div.innerHTML=rcRow(key,ni,opts);
+  document.getElementById(`rrows-${key}`).appendChild(div.firstElementChild);
+}
+function rmRc(key,idx){const el=document.getElementById(`rr-${key}-${idx}`);if(el)el.remove();}
 function saveM(key,ri,di,mi){
   if(!isAdmin()){toast('Prieiga tik administratoriui');return;}
   const hg=parseInt(document.getElementById(`hg-${key}`)?.value)||0;
@@ -2184,6 +2235,12 @@ function saveM(key,ri,di,mi){
     const spl=row.querySelector('[id^="spl-"]'),sgc=row.querySelector('[id^="sgc-"]');
     if(!spl||!sgc)return;const pid=parseInt(spl.value),cnt=parseInt(sgc.value)||0;
     if(pid&&cnt>0)scorers.push({pid,cnt});
+  });
+  const reds=[];
+  document.getElementById(`rrows-${key}`)?.querySelectorAll('.srow').forEach(row=>{
+    const rpl=row.querySelector('[id^="rpl-"]');
+    if(!rpl)return;const pid=parseInt(rpl.value);
+    if(pid)reds.push(pid);
   });
   const mk=`${ri}-${di}-${mi}`;
   if(!STATE.savedMatches.has(mk)){
@@ -2196,7 +2253,7 @@ function saveM(key,ri,di,mi){
     }
   }
   if(!STATE.DB[ri])STATE.DB[ri]={};if(!STATE.DB[ri][di])STATE.DB[ri][di]={};
-  STATE.DB[ri][di][mi]={hg,ag,scorers};
+  STATE.DB[ri][di][mi]={hg,ag,scorers,reds};
   const svEl=document.getElementById(`sv-${key}`);if(svEl)svEl.classList.add('on');
   const m=FR[ri].days[di].m[mi];
   toast(`${m[0]} ${hg}:${ag} ${m[1]} — išsaugota ✓`);
@@ -2216,9 +2273,12 @@ setInterval(()=>{
   if(!CURRENT_USER)return;
   if(!document.getElementById('page-squad')?.classList.contains('on'))return;
   const live=computeCurrentRound();
-  if(STATE.curRound<live){
-    // The round being edited just closed — jump to the newly-open one and
-    // start fresh, without waiting for the player to navigate manually.
+  if(ENTERED_ROUND_LIVE&&STATE.curRound<live){
+    // The round you were editing just closed — jump to the newly-open one
+    // and start fresh, without waiting for you to navigate manually. Only
+    // fires if you arrived here on what WAS the live round — deliberately
+    // browsing an already-closed round must never get swept forward.
+    ENTERED_ROUND_LIVE=false;
     goRound(live);
     toast(`${FR[live].n} — naujas turas atidarytas, rinkis komandą!`);
   }else{
