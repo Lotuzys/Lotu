@@ -1687,7 +1687,7 @@ async function openHistoricalPlayerModal(pos,idx){
   det.isC=isC;
   openStatModal(p,pos,[
     {val:p.price.toFixed(1)+'M',label:'Kaina'},
-    {val:'…',label:'Nuosavybė (to turo)',id:'rpm-round-owner'},
+    {val:'…',label:`Nuosavybė (${STATE.curRound+1} turas)`,id:'rpm-round-owner'},
     {val:det.pts+'pts',label:'Turo taškai'},
   ],scoringBreakdownHtml(det,pos));
   const pct=await computeOwnershipForRound(p.id,STATE.curRound);
