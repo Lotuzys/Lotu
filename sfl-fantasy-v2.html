@@ -398,6 +398,40 @@ a{color:var(--or)}
   position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:30px;
   font-size:12.5px;font-weight:600;box-shadow:var(--sh-lg);display:none;white-space:nowrap;z-index:600;
 }
+
+/* ═══════════════════════════════════════════════
+   MOBILE — phone-width-only adjustments. Desktop/tablet layout above is
+   untouched; everything here is scoped to the media query.
+   The topbar used to squeeze the brand mark, sponsor logo, nav tabs and
+   admin/points/user chips onto one row with `.nav{flex:1}` absorbing
+   whatever was left over — on every common phone width that left `.nav`
+   zero pixels wide, so "Mano komanda"/"Istorija"/"Lentelė"/"Lyderiai"
+   weren't just cramped, they were completely untappable. Nav now gets its
+   own full-width row instead of fighting everything else for space.
+   ═══════════════════════════════════════════════ */
+@media (max-width:680px){
+  .topbar{flex-wrap:wrap;height:auto;min-height:60px;padding:10px 14px;row-gap:10px}
+  .spons-top{display:none}
+  .lbrand{order:1}
+  .tright{order:2;margin-left:auto}
+  .nav{order:3;flex-basis:100%;width:100%}
+  .page{min-height:calc(100vh - 118px)}
+
+  #user-chip-name{display:none}
+  .user-chip{padding:6px}
+  .abtn{padding:7px 10px;font-size:10px}
+  .pchip{padding:5px 10px;min-width:54px}
+
+  .wrap,.awrap,.hist-wrap,.lbwrap,.swrap{padding-left:12px;padding-right:12px}
+  .three-col{gap:12px}
+  .bbar2{left:8px;right:8px;bottom:10px;padding:10px 16px}
+
+  .dash-hero{padding:28px 16px 24px}
+  .dtitle{font-size:24px}
+  .dball img{height:52px}
+
+  .pm,.prof-modal{width:290px}
+}
 </style>
 </head>
 <body>
