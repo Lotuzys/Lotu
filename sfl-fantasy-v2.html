@@ -205,6 +205,7 @@ a{color:var(--or)}
 .fx-team-logo{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin:0 5px}
 .st-logo{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:6px}
 .pi-pb{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;color:#fff;display:inline-block;margin-top:2px}
+.pi-fix{font-size:9.5px;font-weight:600;color:var(--mu);margin-top:3px}
 .pi-right{text-align:right;flex-shrink:0}
 .pi-price-val{font-size:13.5px;font-weight:800;color:var(--or)}.pi-own-val{font-size:10px;color:var(--mu);margin-top:1px}
 
@@ -318,7 +319,6 @@ a{color:var(--or)}
 .pmfix-row:first-of-type{border-top:none}
 .pmfix-day{color:var(--mu);font-weight:600;font-size:11px}
 .pmfix-opp{display:flex;align-items:center;gap:5px}
-.pmfix-tag{font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase}
 .pmact{padding:14px}
 #rpm-breakdown{padding:4px 0 8px}
 #rpm-breakdown .rrow:last-child{border-bottom:none}
@@ -813,6 +813,12 @@ const POS_C={G:'#eab308',D:'#3b82f6',M:'#22c55e',F:'#ef4444'};
 const POS_LT={G:'V',D:'G',M:'S',F:'P'};
 const POS_FL={G:'Vartininkas',D:'Gynėjas',M:'Saugas',F:'Puolėjas'};
 const TEAMS_KEYS=['Praliotas','El Dorado','Š-VGTU-Vilkai','Navigatoriai','Tornado','Grija','VSG United','Esperanza','FC Areonas','Ketera','Del. Euforija','Gladiatoriai'];
+// Short 3-letter codes for compact fixture display (player list rows).
+const TEAM_ABBR={
+  'Praliotas':'PRA','El Dorado':'ELD','Š-VGTU-Vilkai':'SVG','Navigatoriai':'NAV',
+  'Tornado':'TOR','Grija':'GRI','VSG United':'VSG','Esperanza':'ESP',
+  'FC Areonas':'ARE','Ketera':'KET','Del. Euforija':'DEL','Gladiatoriai':'GLA',
+};
 
 // ═══════════════════════════════════════════════
 // TEAM KITS — each club's real shirt colors, drawn as a small stylized
@@ -1645,11 +1651,14 @@ function renderList(){
     const isTaken=STATE.taken.has(p.id);
     const teamBlocked=STATE.takenTeams.has(p.team)&&!isTaken;
     const warn=teamBlocked?'<span style="color:var(--red);font-size:9px;margin-left:4px">komanda pilna</span>':'';
+    const fx=teamFixturesForRound(p.team,STATE.curRound);
+    const fxTxt=fx.length?`vs ${fx.map(f=>TEAM_ABBR[f.opponent]||f.opponent).join(', ')}`:'';
     return `<div class="pi ${isTaken?'taken':''}" onclick="openPlayerModal(${p.id})">
       <div class="pi-av">${kitSvg(p.team,32)}</div>
       <div class="pi-info"><div class="pi-name">${p.name}${warn}</div>
       <div class="pi-team">${teamLogoImg(p.team,14)}${p.team}</div>
-      <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div>
+      <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span>
+      ${fxTxt?`<div class="pi-fix">${fxTxt}</div>`:''}</div>
       <div class="pi-right"><div class="pi-price-val">${p.price.toFixed(1)}M</div><div class="pi-own-val">${ownershipPct(p.id)}%</div></div>
     </div>`;
   }).join('')||'<div style="padding:18px;text-align:center;color:var(--mu);font-size:12px">Nerasta</div>';
@@ -1687,7 +1696,7 @@ function openPlayerModal(id){
   if(fixtures.length){
     fixEl.innerHTML=`<div class="pmfix-lbl">Šio turo rungtynės</div>`+fixtures.map(f=>
       `<div class="pmfix-row"><span class="pmfix-day">${FR[STATE.curRound].days[f.day].l}</span>
-       <span class="pmfix-opp">${teamLogoImg(f.opponent,14)}${f.opponent}<span class="pmfix-tag">${f.home?'namie':'išvykoje'}</span></span></div>`
+       <span class="pmfix-opp">${teamLogoImg(f.opponent,14)}${f.opponent}</span></div>`
     ).join('');
   }else{fixEl.innerHTML='';}
   const btn=document.getElementById('pm-add-btn');
