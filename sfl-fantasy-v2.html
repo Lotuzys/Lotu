@@ -225,16 +225,14 @@ a{color:var(--or)}
 .slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(249,115,22,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:9px;font-weight:600;color:rgba(255,255,255,.92);line-height:1.25;max-width:68px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}
-.captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:8px;font-weight:800;color:#fff;background:rgba(255,255,255,.22);border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
-.captoggle:hover{background:rgba(255,255,255,.4);transform:scale(1.15)}
-.captoggle.on{background:var(--cap)}
-.cbadge{position:absolute;top:-4px;left:-4px;width:19px;height:19px;border-radius:50%;background:var(--cap);color:#fff;font-size:9px;font-weight:900;display:none;align-items:center;justify-content:center;border:2px solid #fff;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.25)}
-.slot.cap .cbadge{display:flex}
+.captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:8px;font-weight:700;color:#fff;background:#9ca3af;border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
+.captoggle:hover{background:#6b7280;transform:scale(1.15)}
+.captoggle.on{background:var(--or);font-weight:900;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(249,115,22,.85)}
 .spb{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:800;text-transform:uppercase;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
 .slot-badge{position:absolute;top:-2px;left:-2px;width:17px;height:17px;border-radius:50%;background:#fff;border:2px solid #fff;object-fit:contain;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .srm{position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;font-weight:900;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .slot.filled .srm{display:flex}
-.pos-G{background:#f97316}.pos-D{background:#3b82f6}.pos-M{background:#22c55e}.pos-F{background:#ef4444}
+.pos-G{background:#eab308}.pos-D{background:#3b82f6}.pos-M{background:#22c55e}.pos-F{background:#ef4444}
 .slot-icon{font-size:20px}.slot-icon.sm{font-size:16px}
 
 /* SIDEBAR */
@@ -588,22 +586,22 @@ a{color:var(--or)}
           <div class="pitch">
             <div class="rlbl">Vartininkas</div>
             <div class="prow">
-              <div class="slot" id="s-G-0" onclick="slotClick('G',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon">🧤</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
+              <div class="slot" id="s-G-0" onclick="slotClick('G',0)"><div class="sc2"><span class="slot-icon">🧤</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
             </div>
             <div class="rlbl">Gynėjai</div>
             <div class="prow">
-              <div class="slot" id="s-D-0" onclick="slotClick('D',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
-              <div class="slot" id="s-D-1" onclick="slotClick('D',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
+              <div class="slot" id="s-D-0" onclick="slotClick('D',0)"><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
+              <div class="slot" id="s-D-1" onclick="slotClick('D',1)"><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
             </div>
             <div class="rlbl">Saugai</div>
             <div class="prow">
-              <div class="slot" id="s-M-0" onclick="slotClick('M',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
-              <div class="slot" id="s-M-1" onclick="slotClick('M',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
+              <div class="slot" id="s-M-0" onclick="slotClick('M',0)"><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
+              <div class="slot" id="s-M-1" onclick="slotClick('M',1)"><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
             </div>
             <div class="rlbl">Puolėjai</div>
             <div class="prow">
-              <div class="slot" id="s-F-0" onclick="slotClick('F',0)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
-              <div class="slot" id="s-F-1" onclick="slotClick('F',1)"><div class="cbadge">C</div><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
+              <div class="slot" id="s-F-0" onclick="slotClick('F',0)"><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
+              <div class="slot" id="s-F-1" onclick="slotClick('F',1)"><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div></div>
             </div>
           </div>
         </div>
@@ -803,7 +801,7 @@ const db=firebase.firestore();
 // CONFIG
 // ═══════════════════════════════════════════════
 const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:10,ONE_GOAL_AGAINST_PTS:5,WIN_PTS:2,LOSS_PTS:-1,RED_CARD_PTS:-3,CAPTAIN_MULT:2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
-const POS_C={G:'#f97316',D:'#3b82f6',M:'#22c55e',F:'#ef4444'};
+const POS_C={G:'#eab308',D:'#3b82f6',M:'#22c55e',F:'#ef4444'};
 const POS_LT={G:'V',D:'G',M:'S',F:'P'};
 const POS_FL={G:'Vartininkas',D:'Gynėjas',M:'Saugas',F:'Puolėjas'};
 const TEAMS_KEYS=['Praliotas','El Dorado','Š-VGTU-Vilkai','Navigatoriai','Tornado','Grija','VSG United','Esperanza','FC Areonas','Ketera','Del. Euforija','Gladiatoriai'];
