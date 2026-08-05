@@ -694,7 +694,6 @@ a{color:var(--or)}
   <div class="awrap">
     <div class="atitle">⚙ Rezultatų duomenų bazė</div>
     <div class="asub">Išsaugok kiekvieno mačo rezultatą ir įvarčių autorius.</div>
-    <div class="anote">ℹ️ Čia tik saugomi duomenys. Eik į <strong>Mano komanda → Gauti taškus</strong> kad pamatytum fantasy rezultatus.</div>
     <div class="rtabs" id="rtabs"></div>
     <div id="admin-content"></div>
   </div>
@@ -1502,7 +1501,7 @@ function renderSquadMsg(){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
     const pts=roundPts[STATE.curRound]||0;
     el.innerHTML=`<div class="scored-msg"><div class="sm-pts">${pts}</div>
-      <div class="sm-txt"><strong>${FR[STATE.curRound].n}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${formatDeadline(STATE.curRound)}</strong>. Taškai gyvai atsinaujina, kai administratorius suveda rezultatus.</div></div>`;
+      <div class="sm-txt"><strong>${FR[STATE.curRound].n}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${formatDeadline(STATE.curRound)}</strong>.</div></div>`;
   }else if(isLive){
     el.innerHTML=`<div class="ti"><div class="ti-n">${STATE.curRound+1}</div>
       <div class="ti-info"><div class="ti-lbl">${FR[STATE.curRound].n}</div>
