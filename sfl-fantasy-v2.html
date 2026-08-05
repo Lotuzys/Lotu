@@ -191,6 +191,7 @@ a{color:var(--or)}
 .fg.noborder{border-bottom:none}
 .fg-lbl{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .fg-row{display:flex;gap:4px;flex-wrap:wrap}
+.pl-sort-sel{width:100%;padding:8px 10px;border-radius:10px;border:1.5px solid var(--bor2);background:var(--card);color:var(--ink);font-size:12px;font-weight:600;cursor:pointer}
 .pf{font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:20px;border:1.5px solid var(--bor2);background:var(--card);cursor:pointer;color:var(--mu);transition:all .15s var(--ease);white-space:nowrap}
 .pf:hover{color:var(--or);border-color:var(--or)}.pf.on{background:var(--or-grad);border-color:transparent;color:#fff;box-shadow:var(--sh-xs)}
 .pl-list{max-height:420px;overflow-y:auto}
@@ -215,7 +216,7 @@ a{color:var(--or)}
 .bv{font-size:15px;font-weight:800;color:var(--or)}.bv.low{color:var(--red)}
 .bu{font-size:11px;color:var(--mu);margin-left:auto}
 .caphint{font-size:10px;color:var(--cap);font-weight:700;background:var(--capbg);padding:3px 9px;border-radius:20px;border:1px solid rgba(139,92,246,.25)}
-.pitch{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDIwIj48cmVjdCB4PSI2IiB5PSI2IiB3aWR0aD0iMjg4IiBoZWlnaHQ9IjQwOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LC40KSIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjYiIHkxPSIyMTAiIHgyPSIyOTQiIHkyPSIyMTAiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxjaXJjbGUgY3g9IjE1MCIgY3k9IjIxMCIgcj0iNDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxjaXJjbGUgY3g9IjE1MCIgY3k9IjIxMCIgcj0iMyIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwuNTUpIi8+PHJlY3QgeD0iNjQiIHk9IjYiIHdpZHRoPSIxNzIiIGhlaWdodD0iNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjEwOCIgeT0iNiIgd2lkdGg9Ijg0IiBoZWlnaHQ9IjI2IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjQpIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxNTAiIGN5PSI1OCIgcj0iMyIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwuNTUpIi8+PHBhdGggZD0iTSAxMDcgNjYgQSA0NCA0NCAwIDAgMCAxOTMgNjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjY0IiB5PSIzNTQiIHdpZHRoPSIxNzIiIGhlaWdodD0iNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjEwOCIgeT0iMzg4IiB3aWR0aD0iODQiIGhlaWdodD0iMjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxjaXJjbGUgY3g9IjE1MCIgY3k9IjM2MiIgcj0iMyIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwuNTUpIi8+PHBhdGggZD0iTSAxMDcgMzU0IEEgNDQgNDQgMCAwIDEgMTkzIDM1NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LC40KSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTSA2IDI0IEEgMTQgMTQgMCAwIDAgMjAgNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LC40KSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTSAyODAgNiBBIDE0IDE0IDAgMCAwIDI5NCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LC40KSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTSA2IDM5NiBBIDE0IDE0IDAgMCAxIDIwIDQxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LC40KSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTSAyODAgNDE0IEEgMTQgMTQgMCAwIDEgMjk0IDM5NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LC40KSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+'),linear-gradient(180deg,#16613a 0%,#1a7a49 45%,#1a7a49 55%,#16613a 100%);background-size:100% 100%,cover;background-position:center,center;background-repeat:no-repeat,no-repeat;border-radius:20px;padding:16px 8px;position:relative;border:none;min-height:400px;box-shadow:var(--sh-lg),inset 0 0 0 3px rgba(255,255,255,.5)}
+.pitch{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDIwIiB2aWV3Qm94PSIwIDAgMzAwIDQyMCI+PHJlY3QgeD0iNiIgeT0iNiIgd2lkdGg9IjI4OCIgaGVpZ2h0PSI0MDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSI2IiB5MT0iMjEwIiB4Mj0iMjk0IiB5Mj0iMjEwIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjQpIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxNTAiIGN5PSIyMTAiIHI9IjQ0IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjQpIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxNTAiIGN5PSIyMTAiIHI9IjMiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsLjU1KSIvPjxyZWN0IHg9IjY0IiB5PSI2IiB3aWR0aD0iMTcyIiBoZWlnaHQ9IjQ2IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjQpIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSIxMTQiIHk9IjYiIHdpZHRoPSI3MiIgaGVpZ2h0PSIxOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LC40KSIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iMTUwIiBjeT0iNDYiIHI9IjMiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsLjU1KSIvPjxwYXRoIGQ9Ik0gMTEyIDUyIEEgMzggMzggMCAwIDAgMTg4IDUyIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjQpIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSI2NCIgeT0iMzY4IiB3aWR0aD0iMTcyIiBoZWlnaHQ9IjQ2IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjQpIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSIxMTQiIHk9IjM5NiIgd2lkdGg9IjcyIiBoZWlnaHQ9IjE4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsLjQpIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxNTAiIGN5PSIzNzQiIHI9IjMiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsLjU1KSIvPjxwYXRoIGQ9Ik0gMTEyIDM2OCBBIDM4IDM4IDAgMCAxIDE4OCAzNjgiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0gNiAyNCBBIDE0IDE0IDAgMCAwIDIwIDYiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0gMjgwIDYgQSAxNCAxNCAwIDAgMCAyOTQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0gNiAzOTYgQSAxNCAxNCAwIDAgMSAyMCA0MTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0gMjgwIDQxNCBBIDE0IDE0IDAgMCAxIDI5NCAzOTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwuNCkiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg=='),linear-gradient(180deg,#16613a 0%,#1a7a49 45%,#1a7a49 55%,#16613a 100%);background-size:100% 100%,cover;background-position:center,center;background-repeat:no-repeat,no-repeat;border-radius:20px;padding:28px 8px 16px;position:relative;border:none;min-height:400px;box-shadow:var(--sh-lg),inset 0 0 0 3px rgba(255,255,255,.5)}
 .prow{display:flex;justify-content:center;gap:30px;margin-bottom:16px}.prow:last-child{margin-bottom:0}
 .rlbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);text-align:center;margin-bottom:5px}
 .slot{width:74px;text-align:center;cursor:pointer;position:relative}
@@ -322,8 +323,17 @@ a{color:var(--or)}
 .pmfix-row:first-of-type{border-top:none}
 .pmfix-day{color:var(--mu);font-weight:600;font-size:11px}
 .pmfix-opp{display:flex;align-items:center;gap:5px}
+.pmhistlink{display:block;width:calc(100% - 28px);margin:12px 14px 0;padding:10px;background:var(--sur2);border:1px solid var(--bor);border-radius:12px;color:var(--ink2);font-size:12.5px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
+.pmhistlink:hover{background:var(--sur);border-color:var(--or)}
 .pmact{padding:14px}
 #rpm-breakdown{padding:4px 0 8px}
+.phist-list{max-height:60vh;overflow-y:auto;padding:6px 0 14px}
+.phist-total{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;font-size:13px;font-weight:800;color:var(--ink);background:var(--sur2);border-bottom:1px solid var(--bor)}
+.phist-row{display:flex;justify-content:space-between;align-items:center;padding:9px 15px;border-bottom:1px solid var(--bor);font-size:12px;color:var(--ink2);font-weight:600}
+.phist-row:last-child{border-bottom:none}
+.phist-row.em{color:var(--mu);font-weight:500}
+.phist-row.cur{background:var(--ordim)}
+.phist-row .neg{color:var(--red)}
 #rpm-breakdown .rrow:last-child{border-bottom:none}
 #rpm-breakdown .rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
 .pmadd{width:100%;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}.pmadd:hover{transform:translateY(-1px)}.pmadd:disabled{opacity:.4;cursor:default;box-shadow:none}
@@ -591,6 +601,9 @@ a{color:var(--or)}
       <div class="pan">
         <div class="ph"><h3>Žaidėjai</h3><span class="sub" id="pl-cnt"></span></div>
         <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." oninput="renderList()"></div>
+        <div class="fg noborder"><div class="fg-lbl">Rikiuoti pagal</div>
+          <select class="pl-sort-sel" id="sort-f" onchange="renderList()"></select>
+        </div>
         <div class="fg"><div class="fg-lbl">Pozicija</div><div class="fg-row" id="pos-f"></div></div>
         <div class="fg noborder"><div class="fg-lbl">Komanda</div><div class="fg-row" id="team-f"></div></div>
         <div class="pl-list" id="pl-list"></div>
@@ -744,7 +757,23 @@ a{color:var(--or)}
       <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl">Nuosavybė</div></div>
     </div>
     <div class="pmfix" id="pm-fixtures"></div>
+    <button class="pmhistlink" id="pm-hist-link" onclick="openPlayerHistoryModal()">📊 Turų taškų istorija</button>
     <div class="pmact"><button class="pmadd" id="pm-add-btn">Pridėti</button></div>
+  </div>
+</div>
+
+<!-- Separate sub-page: one player's points broken down round by round —
+     opened from the live picker card via "Turų taškų istorija", without
+     touching what the card itself shows. -->
+<div class="mbg" id="phist-bg" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="pm">
+    <div class="pmh">
+      <div class="pmav" id="phist-av"></div>
+      <div class="pmname" id="phist-name"></div>
+      <div class="pmteam" id="phist-team"></div>
+      <button class="pmclose" onclick="document.getElementById('phist-bg').classList.remove('open')">✕</button>
+    </div>
+    <div class="phist-list" id="phist-list"></div>
   </div>
 </div>
 
@@ -1665,9 +1694,22 @@ function renderFilters(){
     `<button class="pf ${STATE.activePosF===p?'on':''}" onclick="setPosF('${p}')">${p==='Visos'?'Visos':POS_FL[p]}</button>`).join('');
   document.getElementById('team-f').innerHTML=['Visos',...TEAMS_KEYS].map(t=>
     `<button class="pf ${STATE.activeTeamF===t?'on':''}" onclick="setTeamF('${t}')">${TEAM_LOGOS[t]?`<img class="pf-logo" src="${TEAM_LOGOS[t]}" alt="">`:''}${t}</button>`).join('');
+  renderSortOptions();
 }
 function setPosF(p){STATE.activePosF=p;renderFilters();renderList();}
 function setTeamF(t){STATE.activeTeamF=t;renderFilters();renderList();}
+
+// Sort-by dropdown: price (default), season total points, or any single
+// round's points — only rounds with actual results entered are offered,
+// so sorting never silently ranks everyone as 0.
+function renderSortOptions(){
+  const sel=document.getElementById('sort-f');if(!sel)return;
+  const cur=sel.value;
+  const roundOpts=FR.map((r,ri)=>ri).filter(ri=>STATE.DB[ri])
+    .map(ri=>`<option value="r${ri}">${FR[ri].n}${ri===STATE.curRound?' (einamasis)':''}</option>`).join('');
+  sel.innerHTML=`<option value="price">Kaina</option><option value="total">Taškai (viso)</option>${roundOpts}`;
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+}
 
 function renderList(){
   const q=document.getElementById('srch').value.toLowerCase();
@@ -1677,7 +1719,17 @@ function renderList(){
     if(q&&!p.name.toLowerCase().includes(q)&&!p.team.toLowerCase().includes(q))return false;
     return true;
   });
-  list.sort((a,b)=>b.price-a.price);
+  const sortMode=document.getElementById('sort-f')?.value||'price';
+  if(sortMode==='total'){
+    const totals=computeSeasonPlayerPts();
+    list.sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0));
+  }else if(sortMode[0]==='r'){
+    const ri=parseInt(sortMode.slice(1));
+    const roundPts=computeAllPlayerRoundPts(ri);
+    list.sort((a,b)=>(roundPts[b.id]||0)-(roundPts[a.id]||0));
+  }else{
+    list.sort((a,b)=>b.price-a.price);
+  }
   document.getElementById('pl-cnt').textContent=list.length+' žaid.';
   document.getElementById('pl-list').innerHTML=list.map(p=>{
     const isTaken=STATE.taken.has(p.id);
@@ -1707,8 +1759,10 @@ function teamFixturesForRound(team,ri){
   });
   return fixtures;
 }
+let PM_CURRENT_ID=null;
 function openPlayerModal(id){
   const p=PLAYERS.find(x=>x.id===id);if(!p)return;
+  PM_CURRENT_ID=id;
   const av=document.getElementById('pm-av');
   av.style.background='transparent';av.innerHTML=kitSvg(p.team,70);
   document.getElementById('pm-name').textContent=p.name;
@@ -1735,6 +1789,26 @@ function openPlayerModal(id){
   else{btn.textContent=`Pridėti (${p.price.toFixed(1)}M)`;btn.disabled=false;
     btn.onclick=()=>{selectPlayer(p.id);document.getElementById('pm-bg').classList.remove('open');};}
   document.getElementById('pm-bg').classList.add('open');
+}
+
+// Separate sub-page (not the card itself) — this player's points broken
+// down round by round, same spirit as the Istorija tab but for any player
+// you're browsing in the picker, not just your own picks.
+function openPlayerHistoryModal(){
+  const id=PM_CURRENT_ID;const p=PLAYERS.find(x=>x.id===id);if(!p)return;
+  document.getElementById('phist-av').innerHTML=kitSvg(p.team,58);
+  document.getElementById('phist-name').textContent=p.name;
+  document.getElementById('phist-team').innerHTML=`${teamLogoImg(p.team,16)}${p.team}`;
+  const listEl=document.getElementById('phist-list');
+  let total=0,roundsWithData=0;
+  const rowsHtml=FR.map((r,ri)=>{
+    if(!STATE.DB[ri])return `<div class="phist-row em"><span>${r.n}</span><span>—</span></div>`;
+    const pts=computeAllPlayerRoundPts(ri)[id]||0;
+    total+=pts;roundsWithData++;
+    return `<div class="phist-row ${ri===STATE.curRound?'cur':''}"><span>${r.n}${ri===STATE.curRound?' (einamasis)':''}</span><span class="${pts<0?'neg':''}">${pts}pts</span></div>`;
+  }).join('');
+  listEl.innerHTML=`<div class="phist-total"><span>Iš viso (${roundsWithData} turai)</span><span>${total}pts</span></div>${rowsHtml}`;
+  document.getElementById('phist-bg').classList.add('open');
 }
 
 // ═══════════════════════════════════════════════
