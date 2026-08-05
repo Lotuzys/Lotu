@@ -454,8 +454,9 @@ a{color:var(--or)}
     <button class="nb on" onclick="showPage('dash',this)">Pagrindinis</button>
     <button class="nb" onclick="goRound(computeCurrentRound())">Mano komanda</button>
     <button class="nb" onclick="showPage('history',this)">Istorija</button>
-    <button class="nb" onclick="showPage('standings',this)">Lentelė</button>
+    <button class="nb" onclick="showPage('teamseason',this)">Sezono rinktinė</button>
     <button class="nb" onclick="showPage('leaders',this)">Lyderiai</button>
+    <button class="nb" onclick="showPage('standings',this)">Lentelė</button>
   </nav>
   <div class="tright">
     <button class="abtn" id="admbtn" style="display:none" onclick="showPage('admin',this)">⚙ Admin</button>
@@ -667,6 +668,24 @@ a{color:var(--or)}
     </div>
     <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
+  </div></div>
+</div>
+
+<!-- TEAM OF THE SEASON — best real 1-2-2-2 XI by actual match points, not
+     anyone's fantasy picks; filterable to a single round's best XI. -->
+<div class="page" id="page-teamseason">
+  <div class="lbwrap"><div class="pan">
+    <div class="ph"><h3>Sezono rinktinė</h3><span class="sub" id="ts-sub"></span></div>
+    <div class="lb-filters">
+      <div class="lb-mode">
+        <button class="lb-mb on" id="tsm-season" onclick="setTSMode('season')">Sezono rinktinė</button>
+        <button class="lb-mb" id="tsm-round" onclick="setTSMode('round')">Turo rinktinė</button>
+      </div>
+      <div class="rtabs" id="ts-rounds" style="display:none;margin-bottom:0"></div>
+    </div>
+    <div class="pw">
+      <div class="pitch" id="ts-pitch" style="min-height:460px"></div>
+    </div>
   </div></div>
 </div>
 
@@ -1366,6 +1385,7 @@ function showPage(name,btn,opts){
   if(name==='history')  renderHistory();
   if(name==='standings')renderStFull();
   if(name==='leaders')  renderLB();
+  if(name==='teamseason')renderTeamOfSeason();
   if(name==='admin')    renderAdmin();
   saveCurrentState();
   if(!opts.skipHistory)history.pushState({page:name},'','#'+name);
@@ -1385,7 +1405,7 @@ function showMainApp(){
 // Maps a page name back to the nav button that should show as active when
 // arriving via browser back/forward (popstate carries no DOM reference).
 function navBtnFor(name){
-  const idx={dash:0,history:2,standings:3,leaders:4}[name];
+  const idx={dash:0,history:2,teamseason:3,leaders:4,standings:5}[name];
   if(idx!==undefined)return document.querySelectorAll('.nb')[idx];
   if(name==='admin')return document.getElementById('admbtn');
   return null;
@@ -1764,6 +1784,117 @@ let LB_ROUND=null;
 // a round-leaders table for — a still-open round has no winner yet, so it
 // isn't offered as a tab at all rather than showing an empty/zero table.
 function pastRoundIndices(){return FR.map((_,i)=>i).filter(i=>isPastDeadline(i));}
+
+// ═══════════════════════════════════════════════
+// TEAM OF THE SEASON — the best real 1-2-2-2 XI by actual match points,
+// independent of anyone's fantasy picks. Same per-player scoring rules as
+// computeScoring() (goals by position, clean-sheet/1-conceded bonus,
+// win/loss bonus), just evaluated for every real player against the shared
+// results doc instead of only the players inside someone's squad.
+// ═══════════════════════════════════════════════
+function computeAllPlayerRoundPts(ri){
+  const pts={};PLAYERS.forEach(p=>pts[p.id]=0);
+  const r=FR[ri];const round=STATE.DB[ri];
+  if(!r||!round)return pts;
+  const scorerGoals={},teamGA={},teamResults={},teamPlayed={};
+  r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
+    const saved=round?.[di]?.[mi];if(!saved)return;
+    saved.scorers.forEach(sc=>{scorerGoals[sc.pid]=(scorerGoals[sc.pid]||0)+sc.cnt;});
+    const hg=saved.hg,ag=saved.ag;
+    teamGA[m[0]]=(teamGA[m[0]]||0)+ag;teamGA[m[1]]=(teamGA[m[1]]||0)+hg;
+    teamPlayed[m[0]]=true;teamPlayed[m[1]]=true;
+    if(!teamResults[m[0]])teamResults[m[0]]=[];if(!teamResults[m[1]])teamResults[m[1]]=[];
+    if(hg>ag){teamResults[m[0]].push('W');teamResults[m[1]].push('L');}
+    else if(ag>hg){teamResults[m[1]].push('W');teamResults[m[0]].push('L');}
+    else{teamResults[m[0]].push('D');teamResults[m[1]].push('D');}
+  }));
+  PLAYERS.forEach(p=>{
+    const goals=scorerGoals[p.id]||0;const ga=teamGA[p.team]||0;const played=!!teamPlayed[p.team];
+    const res=teamResults[p.team]||[];const wins=res.filter(x=>x==='W').length;const losses=res.filter(x=>x==='L').length;
+    let val=goals*CONFIG.PTS_POS[p.pos];
+    if(played&&(p.pos==='G'||p.pos==='D')){if(ga===0)val+=CONFIG.CS_PTS;else if(ga===1)val+=CONFIG.ONE_GOAL_AGAINST_PTS;}
+    val+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;
+    pts[p.id]=Math.max(0,val);
+  });
+  return pts;
+}
+function computeSeasonPlayerPts(){
+  const totals={};PLAYERS.forEach(p=>totals[p.id]=0);
+  pastRoundIndices().forEach(ri=>{
+    const rp=computeAllPlayerRoundPts(ri);
+    PLAYERS.forEach(p=>totals[p.id]+=rp[p.id]);
+  });
+  return totals;
+}
+// One player per slot, ranked purely by points — no budget/one-per-club
+// constraint, since this is "who actually performed best", not a fantasy
+// pick. Slots with no scoring data yet come back null.
+function bestXI(ptsMap){
+  const byPos={G:[],D:[],M:[],F:[]};
+  PLAYERS.forEach(p=>byPos[p.pos].push({p,pts:ptsMap[p.id]||0}));
+  Object.values(byPos).forEach(arr=>arr.sort((a,b)=>b.pts-a.pts));
+  const top=(pos,n)=>Array.from({length:n},(_,i)=>byPos[pos][i]&&byPos[pos][i].pts>0?byPos[pos][i]:null);
+  return {G:top('G',1),D:top('D',2),M:top('M',2),F:top('F',2)};
+}
+function tsSlotHtml(entry,pos){
+  const icons={G:'🧤',D:'🛡️',M:'⚙️',F:'⚡'};
+  if(!entry){
+    return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">${icons[pos]}</span></div><div class="sn">—</div><div class="sp">Nėra duomenų</div></div>`;
+  }
+  const p=entry.p;
+  const badge=TEAM_LOGOS[p.team]?`<img class="slot-badge" src="${TEAM_LOGOS[p.team]}" alt="">`:'';
+  return `<div class="slot filled" style="cursor:default">
+    <div class="sc2" style="background:${POS_C[pos]};border-color:${POS_C[pos]}">
+      <span style="color:#fff;font-size:10px;font-weight:900">${ini(p.name)}</span>
+      <span class="spb pos-${pos}">${POS_LT[pos]}</span>${badge}
+    </div>
+    <div class="sn">${p.name.split(' ').slice(-1)[0]}</div>
+    <div class="sp">${entry.pts}pts</div>
+  </div>`;
+}
+
+let TS_MODE='season';
+let TS_ROUND=null;
+function setTSMode(mode){
+  TS_MODE=mode;
+  if(mode==='round'&&TS_ROUND===null){
+    const past=pastRoundIndices();
+    TS_ROUND=past.length?past[past.length-1]:null;
+  }
+  document.getElementById('tsm-season').classList.toggle('on',mode==='season');
+  document.getElementById('tsm-round').classList.toggle('on',mode==='round');
+  document.getElementById('ts-rounds').style.display=mode==='round'?'flex':'none';
+  if(mode==='round')renderTSRoundTabs();
+  renderTeamOfSeason();
+}
+function renderTSRoundTabs(){
+  document.getElementById('ts-rounds').innerHTML=pastRoundIndices().map(i=>
+    `<button class="rtb ${i===TS_ROUND?'on':''}" onclick="setTSRound(${i})">${i+1} turas</button>`).join('');
+}
+function setTSRound(i){TS_ROUND=i;renderTSRoundTabs();renderTeamOfSeason();}
+
+function renderTeamOfSeason(){
+  const pitch=document.getElementById('ts-pitch');
+  const sub=document.getElementById('ts-sub');
+  if(TS_MODE==='round'&&TS_ROUND===null){
+    sub.textContent='';
+    pitch.innerHTML='<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.75);font-size:13px">Dar nėra pasibaigusių turų</div>';
+    return;
+  }
+  sub.textContent=TS_MODE==='round'?FR[TS_ROUND].n:'visas sezonas';
+  const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND):computeSeasonPlayerPts();
+  const xi=bestXI(ptsMap);
+  pitch.innerHTML=`
+    <div class="rlbl">Vartininkas</div>
+    <div class="prow">${tsSlotHtml(xi.G[0],'G')}</div>
+    <div class="rlbl">Gynėjai</div>
+    <div class="prow">${xi.D.map(e=>tsSlotHtml(e,'D')).join('')}</div>
+    <div class="rlbl">Saugai</div>
+    <div class="prow">${xi.M.map(e=>tsSlotHtml(e,'M')).join('')}</div>
+    <div class="rlbl">Puolėjai</div>
+    <div class="prow">${xi.F.map(e=>tsSlotHtml(e,'F')).join('')}</div>
+  `;
+}
 
 function setLBMode(mode){
   LB_MODE=mode;
