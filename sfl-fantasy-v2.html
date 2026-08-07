@@ -329,11 +329,22 @@ a{color:var(--or)}
 #rpm-breakdown{padding:4px 0 8px}
 .phist-list{max-height:60vh;overflow-y:auto;padding:6px 0 14px}
 .phist-total{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;font-size:13px;font-weight:800;color:var(--ink);background:var(--sur2);border-bottom:1px solid var(--bor)}
-.phist-row{display:flex;justify-content:space-between;align-items:center;padding:9px 15px;border-bottom:1px solid var(--bor);font-size:12px;color:var(--ink2);font-weight:600}
-.phist-row:last-child{border-bottom:none}
-.phist-row.em{color:var(--mu);font-weight:500}
+.phist-row{display:flex;justify-content:space-between;align-items:center;padding:9px 15px;border-bottom:1px solid var(--bor);font-size:12px;color:var(--ink2);font-weight:600;cursor:pointer}
+.phist-row.em{cursor:default;color:var(--mu);font-weight:500}
 .phist-row.cur{background:var(--ordim)}
 .phist-row .neg{color:var(--red)}
+.phist-rw:last-child .phist-row{border-bottom:none}
+.phist-rw.open .phist-row{border-bottom-color:transparent}
+.phist-row-r{display:flex;align-items:center;gap:8px}
+.phist-chev{font-size:9px;color:var(--mu);transition:transform .15s var(--ease)}
+.phist-rw.open .phist-chev{transform:rotate(180deg)}
+.phist-sub{display:none;background:var(--sur2);border-bottom:1px solid var(--bor)}
+.phist-rw.open .phist-sub{display:block}
+.phist-rw:last-child.open .phist-sub{border-bottom:none}
+.phist-subrow{display:flex;justify-content:space-between;padding:7px 15px 7px 26px;font-size:11.5px;color:var(--ink2);border-top:1px solid var(--bor)}
+.phist-subrow:first-child{border-top:none}
+.phist-subrow.em{color:var(--mu)}
+.phist-subrow .neg{color:var(--red)}
 #rpm-breakdown .rrow:last-child{border-bottom:none}
 #rpm-breakdown .rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
 .pmadd{width:100%;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}.pmadd:hover{transform:translateY(-1px)}.pmadd:disabled{opacity:.4;cursor:default;box-shadow:none}
@@ -1824,10 +1835,63 @@ function openPlayerHistoryModal(){
     if(!STATE.DB[ri])return `<div class="phist-row em"><span>${r.n}</span><span>—</span></div>`;
     const pts=computeAllPlayerRoundPts(ri)[id]||0;
     total+=pts;roundsWithData++;
-    return `<div class="phist-row ${ri===STATE.curRound?'cur':''}"><span>${r.n}${ri===STATE.curRound?' (einamasis)':''}</span><span class="${pts<0?'neg':''}">${pts}pts</span></div>`;
+    // Expandable — chevron reveals this round's 2 matches individually,
+    // same idea as the historical squad breakdown, but for any player.
+    return `<div class="phist-rw">
+      <div class="phist-row ${ri===STATE.curRound?'cur':''}" onclick="togglePhistRound(this,${id},${ri})">
+        <span>${r.n}${ri===STATE.curRound?' (einamasis)':''}</span>
+        <span class="phist-row-r"><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
+      </div>
+      <div class="phist-sub"></div>
+    </div>`;
   }).join('');
   listEl.innerHTML=`<div class="phist-total"><span>Iš viso (${roundsWithData} turai)</span><span>${total}pts</span></div>${rowsHtml}`;
   document.getElementById('phist-bg').classList.add('open');
+}
+
+// Per-match breakdown for one player in one round — same scoring rules as
+// computeScoring()/computeAllPlayerRoundPts(), just scoped to a single
+// player+round instead of a whole squad, for the history sub-page's
+// expand-to-2-matches toggle.
+function computePlayerMatchBreakdown(playerId,ri){
+  const p=PLAYERS.find(x=>x.id===playerId);if(!p)return[];
+  const r=FR[ri];const round=STATE.DB[ri];if(!r||!round)return[];
+  const results=[];
+  r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
+    if(m[0]!==p.team&&m[1]!==p.team)return;
+    const saved=round?.[di]?.[mi];if(!saved)return;
+    const isHome=m[0]===p.team;
+    const opponent=isHome?m[1]:m[0];
+    const ga=isHome?saved.ag:saved.hg;
+    let result;
+    if(saved.hg===saved.ag)result='D';else result=((saved.hg>saved.ag)===isHome)?'W':'L';
+    const goals=(saved.scorers||[]).filter(sc=>sc.pid===playerId).reduce((s,sc)=>s+sc.cnt,0);
+    const redCount=(saved.reds||[]).filter(pid=>pid===playerId).length;
+    let pts=goals*CONFIG.PTS_POS[p.pos];
+    let cs=false,one=false;
+    if(p.pos==='G'||p.pos==='D'){
+      if(ga===0){cs=true;pts+=CONFIG.CS_PTS;}
+      else if(ga===1){one=true;pts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
+    }
+    if(result==='W')pts+=CONFIG.WIN_PTS;else if(result==='L')pts+=CONFIG.LOSS_PTS;
+    pts+=redCount*CONFIG.RED_CARD_PTS;
+    results.push({di,opponent,goals,result,cs,one,redCount,pts});
+  }));
+  return results;
+}
+
+function togglePhistRound(rowEl,playerId,ri){
+  const wrap=rowEl.closest('.phist-rw');
+  const sub=wrap.querySelector('.phist-sub');
+  const opening=!wrap.classList.contains('open');
+  if(opening&&!sub.dataset.loaded){
+    const matches=computePlayerMatchBreakdown(playerId,ri);
+    sub.innerHTML=matches.length?matches.map((m,i)=>
+      `<div class="phist-subrow"><span>${i+1} rungtynės — vs ${m.opponent}</span><span class="${m.pts<0?'neg':''}">${m.pts}pts</span></div>`
+    ).join(''):'<div class="phist-subrow em">Nėra duomenų</div>';
+    sub.dataset.loaded='1';
+  }
+  wrap.classList.toggle('open',opening);
 }
 
 // ═══════════════════════════════════════════════
