@@ -600,12 +600,12 @@ a{color:var(--or)}
     <div>
       <div class="pan">
         <div class="ph"><h3>Žaidėjai</h3><span class="sub" id="pl-cnt"></span></div>
-        <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." oninput="renderList()"></div>
         <div class="fg noborder"><div class="fg-lbl">Rikiuoti pagal</div>
           <select class="pl-sort-sel" id="sort-f" onchange="renderList()"></select>
         </div>
         <div class="fg"><div class="fg-lbl">Pozicija</div><div class="fg-row" id="pos-f"></div></div>
         <div class="fg noborder"><div class="fg-lbl">Komanda</div><div class="fg-row" id="team-f"></div></div>
+        <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." oninput="renderList()"></div>
         <div class="pl-list" id="pl-list"></div>
       </div>
     </div>
@@ -1718,11 +1718,14 @@ function setTeamF(t){STATE.activeTeamF=t;renderFilters();renderList();}
 // so sorting never silently ranks everyone as 0.
 function renderSortOptions(){
   const sel=document.getElementById('sort-f');if(!sel)return;
-  const cur=sel.value;
+  // Default sort is season points, not price — that's what actually helps
+  // decide who to pick. Only falls back to price as a secondary tiebreak
+  // (see renderList) once points run out, e.g. before a round with data.
+  const cur=sel.value||'total';
   const roundOpts=FR.map((r,ri)=>ri).filter(ri=>STATE.DB[ri])
     .map(ri=>`<option value="r${ri}">${FR[ri].n}${ri===STATE.curRound?' (einamasis)':''}</option>`).join('');
-  sel.innerHTML=`<option value="price">Kaina</option><option value="total">Taškai (viso)</option>${roundOpts}`;
-  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+  sel.innerHTML=`<option value="total">Taškai (viso)</option><option value="price">Kaina</option>${roundOpts}`;
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'total';
 }
 
 function renderList(){
@@ -1733,14 +1736,16 @@ function renderList(){
     if(q&&!p.name.toLowerCase().includes(q)&&!p.team.toLowerCase().includes(q))return false;
     return true;
   });
-  const sortMode=document.getElementById('sort-f')?.value||'price';
+  const sortMode=document.getElementById('sort-f')?.value||'total';
   if(sortMode==='total'){
     const totals=computeSeasonPlayerPts();
-    list.sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0));
+    // Tied on points (most commonly everyone at 0, before any results are
+    // in) falls back to price, instead of leaving the order arbitrary.
+    list.sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0)||b.price-a.price);
   }else if(sortMode[0]==='r'){
     const ri=parseInt(sortMode.slice(1));
     const roundPts=computeAllPlayerRoundPts(ri);
-    list.sort((a,b)=>(roundPts[b.id]||0)-(roundPts[a.id]||0));
+    list.sort((a,b)=>(roundPts[b.id]||0)-(roundPts[a.id]||0)||b.price-a.price);
   }else{
     list.sort((a,b)=>b.price-a.price);
   }
