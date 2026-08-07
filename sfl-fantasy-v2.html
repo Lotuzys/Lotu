@@ -1140,7 +1140,20 @@ auth.onAuthStateChanged(async user=>{
 });
 
 async function loginUser(user){
-  const doc=await getUserState(user.uid);
+  let doc;
+  try{
+    doc=await getUserState(user.uid);
+  }catch(e){
+    // A failed fetch (network blip, transient Firestore error) is NOT the
+    // same thing as "this account has no profile yet" — treating it as
+    // isNew here used to wipe favTeam/fantasyTeamName locally and shove
+    // returning users back through onboarding, silently overwriting their
+    // real saved choice the moment onboarding was completed again. Bail
+    // out instead and let them retry rather than guess at "new user".
+    console.error('Nepavyko įkelti vartotojo duomenų prisijungimo metu',e);
+    toast('Nepavyko įkelti profilio — patikrink interneto ryšį ir perkrauk puslapį');
+    return;
+  }
   const isNew=!doc;
   if(doc){loadStateFromObj(doc);}else{resetStateData();}
   CURRENT_USER={uid:user.uid,email:user.email,name:(doc&&doc.name)||pendingRegisterName||user.displayName||user.email.split('@')[0]};
@@ -1267,13 +1280,14 @@ function loadStateFromObj(s){
 function userDocRef(uid){return db.collection('users').doc(uid);}
 function squadDocRef(uid,round){return userDocRef(uid).collection('squads').doc(String(round));}
 
+// Throws on failure instead of swallowing errors — a transient read
+// failure must never be mistaken for "this account doesn't exist yet".
+// See loginUser() for why that distinction matters.
 async function getUserState(uid){
-  try{
-    const snap=await userDocRef(uid).get();
-    if(!snap.exists)return null;
-    const mySquads=await fetchMySquads(uid);
-    return {...snap.data(),mySquads};
-  }catch(e){console.error('Nepavyko įkelti vartotojo duomenų',e);return null;}
+  const snap=await userDocRef(uid).get();
+  if(!snap.exists)return null;
+  const mySquads=await fetchMySquads(uid);
+  return {...snap.data(),mySquads};
 }
 
 async function fetchMySquads(uid){
