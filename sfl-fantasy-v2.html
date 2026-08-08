@@ -346,12 +346,18 @@ a{color:var(--or)}
 .phist-sub{display:none;background:var(--sur2);border-bottom:1px solid var(--bor)}
 .phist-rw.open .phist-sub{display:block}
 .phist-rw:last-child.open .phist-sub{border-bottom:none}
-.phist-subrow{display:flex;justify-content:space-between;padding:7px 15px 7px 26px;font-size:11.5px;color:var(--ink2);border-top:1px solid var(--bor)}
-.phist-subrow:first-child{border-top:none}
-.phist-subrow.em{color:var(--mu)}
+.phist-own-row{padding:8px 15px;font-size:10.5px;font-weight:700;color:var(--mu)}
+.phist-own-row b{color:var(--or)}
+.phist-mrw{border-top:1px solid var(--bor)}
+.phist-mrw:first-child{border-top:none}
+.phist-subrow{display:flex;justify-content:space-between;align-items:center;padding:7px 15px 7px 26px;font-size:11.5px;color:var(--ink2);cursor:pointer}
+.phist-subrow.em{color:var(--mu);cursor:default}
 .phist-subrow .neg{color:var(--red)}
+.phist-mrw.open .phist-chev{transform:rotate(180deg)}
+.phist-mdetail{display:none;background:var(--sur)}
+.phist-mrw.open .phist-mdetail{display:block}
 #rpm-breakdown .rrow:last-child{border-bottom:none}
-#rpm-breakdown .rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
+.rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
 .pmadd{width:100%;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}.pmadd:hover{transform:translateY(-1px)}.pmadd:disabled{opacity:.4;cursor:default;box-shadow:none}
 
 /* PROFILE MODAL */
@@ -1986,13 +1992,30 @@ function togglePhistRound(rowEl,playerId,ri){
   const sub=wrap.querySelector('.phist-sub');
   const opening=!wrap.classList.contains('open');
   if(opening&&!sub.dataset.loaded){
+    const p=PLAYERS.find(x=>x.id===playerId);
     const matches=computePlayerMatchBreakdown(playerId,ri);
-    sub.innerHTML=matches.length?matches.map((m,i)=>
-      `<div class="phist-subrow"><span>${i+1} rungtynės — vs ${m.opponent}</span><span class="${m.pts<0?'neg':''}">${m.pts}pts</span></div>`
+    const matchesHtml=matches.length?matches.map((m,i)=>`
+      <div class="phist-mrw">
+        <div class="phist-subrow" onclick="togglePhistMatch(this)">
+          <span>${i+1} rungtynės — vs ${m.opponent}</span>
+          <span class="phist-row-r"><span class="${m.pts<0?'neg':''}">${m.pts}pts</span><span class="phist-chev">▾</span></span>
+        </div>
+        <div class="phist-mdetail">${matchStatRowsHtml(m,p.pos)}</div>
+      </div>`
     ).join(''):'<div class="phist-subrow em">Nėra duomenų</div>';
+    const ownId=`phist-own-${playerId}-${ri}`;
+    sub.innerHTML=`<div class="phist-own-row">Nuosavybė šį turą: <b id="${ownId}">…</b></div>${matchesHtml}`;
     sub.dataset.loaded='1';
+    computeOwnershipForRound(playerId,ri).then(pct=>{
+      const el=document.getElementById(ownId);if(el)el.textContent=pct+'%';
+    });
   }
   wrap.classList.toggle('open',opening);
+}
+// Nested one level under a round — expands a single match to show the
+// line-item breakdown of what its points were actually earned for.
+function togglePhistMatch(rowEl){
+  rowEl.closest('.phist-mrw').classList.toggle('open');
 }
 
 // ═══════════════════════════════════════════════
@@ -2018,6 +2041,23 @@ function openStatModal(p,pos,tiles,breakdownHtml){
 // Same per-slot goal/clean-sheet/win-loss rules as computeScoring(), spelled
 // out as individual line items — one section per matchday, since a round
 // is 2 separate matches and points are earned (or lost) match by match.
+// Line items (goal, clean sheet/1-conceded, win/loss, red card) that made
+// up one match's points for a player at the given position — shared by the
+// squad-history breakdown below and the player-history sub-page's
+// per-match expand.
+function matchStatRowsHtml(m,pos){
+  const rows=[];
+  if(m.goals>0)rows.push([`Įvarčiai (${m.goals} × ${CONFIG.PTS_POS[pos]})`,m.goals*CONFIG.PTS_POS[pos]]);
+  if(pos==='G'||pos==='D'){
+    if(m.cs)rows.push(['Švarus tinklelis',CONFIG.CS_PTS]);
+    else if(m.one)rows.push(['Praleistas 1 įvartis',CONFIG.ONE_GOAL_AGAINST_PTS]);
+  }
+  if(m.result==='W')rows.push(['Pergalė',CONFIG.WIN_PTS]);
+  else if(m.result==='L')rows.push(['Pralaimėjimas',CONFIG.LOSS_PTS]);
+  if(m.redCount>0)rows.push([`Raudona kortelė (${m.redCount}×)`,m.redCount*CONFIG.RED_CARD_PTS]);
+  return rows.map(([lbl,val])=>`<div class="rrow"><span>${lbl}</span><span class="rp ${val<0?'neg':''}">${val>0?'+':''}${val}</span></div>`).join('')
+    ||'<div class="rrow-empty">0 taškų</div>';
+}
 function scoringBreakdownHtml(det,pos){
   if(!det||!det.played){
     return '<div class="rrow-empty">Šiam turui dar nėra rezultato</div>';
@@ -2025,20 +2065,9 @@ function scoringBreakdownHtml(det,pos){
   if(!det.matches||!det.matches.length){
     return '<div class="rrow-empty">0 taškų šį turą</div>';
   }
-  let html=det.matches.map((m,i)=>{
-    const rows=[];
-    if(m.goals>0)rows.push([`Įvarčiai (${m.goals} × ${CONFIG.PTS_POS[pos]})`,m.goals*CONFIG.PTS_POS[pos]]);
-    if(pos==='G'||pos==='D'){
-      if(m.cs)rows.push(['Švarus tinklelis',CONFIG.CS_PTS]);
-      else if(m.one)rows.push(['Praleistas 1 įvartis',CONFIG.ONE_GOAL_AGAINST_PTS]);
-    }
-    if(m.result==='W')rows.push(['Pergalė',CONFIG.WIN_PTS]);
-    else if(m.result==='L')rows.push(['Pralaimėjimas',CONFIG.LOSS_PTS]);
-    if(m.redCount>0)rows.push([`Raudona kortelė (${m.redCount}×)`,m.redCount*CONFIG.RED_CARD_PTS]);
-    const rowsHtml=rows.map(([lbl,val])=>`<div class="rrow"><span>${lbl}</span><span class="rp ${val<0?'neg':''}">${val>0?'+':''}${val}</span></div>`).join('')
-      ||'<div class="rrow-empty">0 taškų</div>';
-    return `<div class="rrow-match-lbl">${i+1} rungtynės — vs ${m.opponent}</div>${rowsHtml}`;
-  }).join('');
+  let html=det.matches.map((m,i)=>
+    `<div class="rrow-match-lbl">${i+1} rungtynės — vs ${m.opponent}</div>${matchStatRowsHtml(m,pos)}`
+  ).join('');
   if(det.isC)html+=`<div class="rrow cap-row"><span>Kapitonas</span><span class="rp cap">×2</span></div>`;
   return html;
 }
