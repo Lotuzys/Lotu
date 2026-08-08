@@ -346,8 +346,7 @@ a{color:var(--or)}
 .phist-sub{display:none;background:var(--sur2);border-bottom:1px solid var(--bor)}
 .phist-rw.open .phist-sub{display:block}
 .phist-rw:last-child.open .phist-sub{border-bottom:none}
-.phist-own-row{padding:8px 15px;font-size:10.5px;font-weight:700;color:var(--mu)}
-.phist-own-row b{color:var(--or)}
+.phist-own-mini{font-size:10.5px;font-weight:700;color:var(--mu)}
 .phist-mrw{border-top:1px solid var(--bor)}
 .phist-mrw:first-child{border-top:none}
 .phist-subrow{display:flex;justify-content:space-between;align-items:center;padding:7px 15px 7px 26px;font-size:11.5px;color:var(--ink2);cursor:pointer}
@@ -1938,22 +1937,34 @@ function openPlayerHistoryModal(idArg){
   document.getElementById('phist-team').innerHTML=`${teamLogoImg(p.team,16)}${p.team}`;
   const listEl=document.getElementById('phist-list');
   let total=0,roundsWithData=0;
+  const withDataRounds=[];
   const rowsHtml=FR.map((r,ri)=>{
     if(!STATE.DB[ri])return `<div class="phist-row em"><span>${r.n}</span><span>—</span></div>`;
     const pts=computeAllPlayerRoundPts(ri)[id]||0;
-    total+=pts;roundsWithData++;
+    total+=pts;roundsWithData++;withDataRounds.push(ri);
+    const ownId=`phist-ownmini-${id}-${ri}`;
     // Expandable — chevron reveals this round's 2 matches individually,
     // same idea as the historical squad breakdown, but for any player.
+    // Ownership is shown right on this row (filled in below), not gated
+    // behind expanding it — it's the one figure worth seeing at a glance.
     return `<div class="phist-rw">
       <div class="phist-row ${ri===STATE.curRound?'cur':''}" onclick="togglePhistRound(this,${id},${ri})">
         <span>${r.n}${ri===STATE.curRound?' (einamasis)':''}</span>
-        <span class="phist-row-r"><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
+        <span class="phist-row-r"><span class="phist-own-mini" id="${ownId}">…</span><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
       </div>
       <div class="phist-sub"></div>
     </div>`;
   }).join('');
   listEl.innerHTML=`<div class="phist-total"><span>Iš viso (${roundsWithData} turai)</span><span>${total}pts</span></div>${rowsHtml}`;
   document.getElementById('phist-bg').classList.add('open');
+  // One real fetchAllUsers() read (the rest hit its short client-side
+  // cache) fills in every round's ownership without waiting for each row
+  // to be expanded first.
+  withDataRounds.forEach(ri=>{
+    computeOwnershipForRound(id,ri).then(pct=>{
+      const el=document.getElementById(`phist-ownmini-${id}-${ri}`);if(el)el.textContent=pct+'%';
+    });
+  });
 }
 
 // Per-match breakdown for one player in one round — same scoring rules as
@@ -2003,12 +2014,8 @@ function togglePhistRound(rowEl,playerId,ri){
         <div class="phist-mdetail">${matchStatRowsHtml(m,p.pos)}</div>
       </div>`
     ).join(''):'<div class="phist-subrow em">Nėra duomenų</div>';
-    const ownId=`phist-own-${playerId}-${ri}`;
-    sub.innerHTML=`<div class="phist-own-row">Nuosavybė šį turą: <b id="${ownId}">…</b></div>${matchesHtml}`;
+    sub.innerHTML=matchesHtml;
     sub.dataset.loaded='1';
-    computeOwnershipForRound(playerId,ri).then(pct=>{
-      const el=document.getElementById(ownId);if(el)el.textContent=pct+'%';
-    });
   }
   wrap.classList.toggle('open',opening);
 }
