@@ -327,6 +327,9 @@ a{color:var(--or)}
 .pmfix-day{color:var(--mu);font-weight:600;font-size:11px}
 .pmfix-opp{display:flex;align-items:center;gap:5px}
 .pmhistlink{display:block;width:calc(100% - 28px);margin:12px 14px 0;padding:10px;background:var(--sur2);border:1px solid var(--bor);border-radius:12px;color:var(--ink2);font-size:12.5px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
+.pmcapbtn{display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:10px;background:var(--capbg);border:1px solid rgba(139,92,246,.3);border-radius:12px;color:var(--cap);font-size:12.5px;font-weight:800;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
+.pmcapbtn:hover{background:rgba(139,92,246,.15)}
+.pmcapbtn.on{background:var(--cap);color:#fff;border-color:var(--cap)}
 .pmhistlink:hover{background:var(--sur);border-color:var(--or)}
 .pmact{padding:14px}
 #rpm-breakdown{padding:4px 0 8px}
@@ -774,6 +777,7 @@ a{color:var(--or)}
     </div>
     <div class="pmfix" id="pm-fixtures"></div>
     <button class="pmhistlink" id="pm-hist-link" onclick="openPlayerHistoryModal()">📊 Turų taškų istorija</button>
+    <button class="pmcapbtn" id="pm-cap-btn" style="display:none"></button>
     <div class="pmact"><button class="pmadd" id="pm-add-btn">Pridėti</button></div>
   </div>
 </div>
@@ -1882,6 +1886,19 @@ function openPlayerModal(id){
   else if(STATE.takenTeams.has(p.team)){btn.textContent='Komanda jau atstovaujama';btn.disabled=true;}
   else{btn.textContent=`Pridėti (${p.price.toFixed(1)}M)`;btn.disabled=false;
     btn.onclick=()=>{selectPlayer(p.id);document.getElementById('pm-bg').classList.remove('open');};}
+  // Captain button — only makes sense for a player already in your squad,
+  // and only while the round is still editable.
+  const capBtn=document.getElementById('pm-cap-btn');
+  const ownIdx=STATE.taken.has(p.id)?STATE.slots[p.pos].findIndex(s=>s&&s.id===p.id):-1;
+  if(ownIdx!==-1&&!isLocked()){
+    const isCap=isCaptain(p.pos,ownIdx);
+    capBtn.style.display='block';
+    capBtn.classList.toggle('on',isCap);
+    capBtn.textContent=isCap?'✓ Kapitonas — spausk pašalinti':'⭐ Skirti kapitonu';
+    capBtn.onclick=()=>{toggleCaptainForPlayer(p.id);openPlayerModal(p.id);};
+  }else{
+    capBtn.style.display='none';
+  }
   document.getElementById('pm-bg').classList.add('open');
 }
 
@@ -2075,13 +2092,28 @@ function removePlayerFromSlot(pos,idx){
   setSlot(pos,idx,null);renderSlot(pos,idx);updateBottomBar();renderList();saveCurrentState();
 }
 
-function handleCaptainClick(e,pos,idx){
-  if(isLocked())return;e.stopPropagation();
+// Shared by the pitch avatar's "C" toggle and the player card's captain
+// button below — both just need to flip STATE.captain for a given slot.
+function setCaptainSlot(pos,idx){
+  if(isLocked())return;
   if(!STATE.slots[pos][idx])return;
   STATE.captain=isCaptain(pos,idx)?null:{pos,idx};
   renderAllSlots();updateBottomBar();
   toast(STATE.captain?`${STATE.slots[pos][idx].name} — Kapitonas ⭐ ×2`:'Kapitonas pašalintas');
   saveCurrentState();
+}
+function handleCaptainClick(e,pos,idx){
+  e.stopPropagation();
+  setCaptainSlot(pos,idx);
+}
+// Captain button on the player card — finds which slot this (already
+// picked) player occupies and toggles captain there, same as tapping the
+// "C" badge on the pitch avatar.
+function toggleCaptainForPlayer(playerId){
+  for(const pos of['G','D','M','F']){
+    const idx=STATE.slots[pos].findIndex(p=>p&&p.id===playerId);
+    if(idx!==-1){setCaptainSlot(pos,idx);return;}
+  }
 }
 
 function renderSlot(pos,idx){
@@ -2158,7 +2190,7 @@ function updateBottomBar(){
 async function submitSquad(){
   if(isPastDeadline(STATE.curRound)){toast(`Terminas praėjo (${formatDeadline(STATE.curRound)}) — komandos pateikti nebegalima`);return;}
   if(filledSlots()<7){toast('Reikia 7 žaidėjų!');return;}
-  if(!STATE.captain){toast('Pasirink kapitoną ⭐ — spaudk žvaigždutę po žaidėju');return;}
+  if(!STATE.captain){toast('Pasirink kapitoną — spausk C ženkliuką ant žaidėjo');return;}
   const isUpdate=STATE.mySquads[STATE.curRound]!==undefined;
   const prevSquad=STATE.mySquads[STATE.curRound];
   const slotsCopy={};
@@ -2656,6 +2688,22 @@ setInterval(()=>{
     renderSquadMsg();updateBottomBar();renderAllSlots();
   }
 },30000);
+
+// Auto-logout after 1h of inactivity. LAST_ACTIVITY_AT resets on any real
+// user interaction; checked once a minute rather than on every event, so
+// this doesn't need a fresh timer per keystroke/tap.
+let LAST_ACTIVITY_AT=Date.now();
+const INACTIVITY_LIMIT_MS=60*60*1000;
+['click','keydown','touchstart','mousemove','scroll','wheel'].forEach(evt=>{
+  window.addEventListener(evt,()=>{LAST_ACTIVITY_AT=Date.now();},{passive:true});
+});
+setInterval(()=>{
+  if(!CURRENT_USER)return;
+  if(Date.now()-LAST_ACTIVITY_AT>=INACTIVITY_LIMIT_MS){
+    toast('Atsijungta dėl neaktyvumo (1 val.) — prisijunk iš naujo');
+    doLogout();
+  }
+},60000);
 </script>
 </body>
 </html>
