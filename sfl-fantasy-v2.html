@@ -141,7 +141,8 @@ a{color:var(--or)}
 .rtile.future{opacity:.5;cursor:not-allowed}
 .rtile.future:hover{border-color:var(--bor);box-shadow:var(--sh);transform:none}
 .rtn{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}
-.rts{font-size:11.5px;font-weight:600;color:var(--ink2);margin:4px 0}
+.rts{font-size:11.5px;font-weight:600;color:var(--ink2);margin:4px 0 1px}
+.rtdl{font-size:10px;font-weight:600;color:var(--mu);margin-bottom:5px}
 .rtpt{font-size:18px;font-weight:800;color:var(--or);letter-spacing:-.01em}.rtpt.em{color:var(--mu);font-size:11px;font-weight:500}
 
 /* LAYOUT */
@@ -397,6 +398,7 @@ a{color:var(--or)}
 .lb-mb{flex:1;padding:8px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--mu);border-radius:8px;cursor:pointer;transition:all .18s var(--ease)}
 .lb-mb.on{background:var(--card);color:var(--or);box-shadow:var(--sh-xs)}
 .lb-prize{background:#fff5eb;border:1.5px solid var(--orbor);border-radius:var(--r);padding:10px 14px;margin:0 16px 13px;font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:8px}
+.lb-sponsor-note{background:#fdf6e8;border:1.5px solid rgba(217,119,6,.25);border-radius:var(--r);padding:9px 14px;margin:0 16px 13px;font-size:11.5px;color:var(--ink2)}
 .lbrow{display:grid;grid-template-columns:36px 24px 1fr auto auto;gap:8px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--bor);font-size:12px;transition:all .15s var(--ease)}
 .lbrow:hover{background:var(--sur)}.lbrow.me{background:linear-gradient(90deg,var(--ordim),transparent)!important;border-left:3px solid var(--or)}
 .lbrow:last-child{border-bottom:none}
@@ -720,6 +722,7 @@ a{color:var(--or)}
       </div>
       <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
     </div>
+    <div class="lb-sponsor-note">🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!</div>
     <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
   </div></div>
@@ -1677,6 +1680,7 @@ async function renderDash(){
     const isCur=i===STATE.curRound&&!done;
     return `<div class="rtile ${done?'done':''} ${isCur?'cur':''} ${future?'future':''}" onclick="goRound(${i})">
       <div class="rtn">${r.n}</div><div class="rts">${r.days[0].l} + ${r.days[1].l}</div>
+      <div class="rtdl">⏱ ${formatDeadline(i)}</div>
       <div class="rtpt ${done?'':'em'}">${future?'🔒 Uždaryta':(done?roundPts[i]+'pts':'Laukiama')}</div>
     </div>`;
   }).join('');
@@ -1773,15 +1777,21 @@ function setTeamF(t){STATE.activeTeamF=t;renderFilters();renderList();}
 // Sort-by dropdown: price (default), season total points, or any single
 // round's points — only rounds with actual results entered are offered,
 // so sorting never silently ranks everyone as 0.
+// Which round to use for the "Paskutinis turas" sort option — the most
+// recent round that actually has results entered, not just the highest
+// round index.
+function lastRoundWithData(){
+  const withData=FR.map((r,ri)=>ri).filter(ri=>STATE.DB[ri]);
+  return withData.length?withData[withData.length-1]:null;
+}
 function renderSortOptions(){
   const sel=document.getElementById('sort-f');if(!sel)return;
   // Default sort is season points, not price — that's what actually helps
   // decide who to pick. Only falls back to price as a secondary tiebreak
   // (see renderList) once points run out, e.g. before a round with data.
   const cur=sel.value||'total';
-  const roundOpts=FR.map((r,ri)=>ri).filter(ri=>STATE.DB[ri])
-    .map(ri=>`<option value="r${ri}">${FR[ri].n}${ri===STATE.curRound?' (einamasis)':''}</option>`).join('');
-  sel.innerHTML=`<option value="total">Taškai (viso)</option><option value="price">Kaina</option>${roundOpts}`;
+  const lastOpt=lastRoundWithData()!==null?`<option value="last">Paskutinis turas</option>`:'';
+  sel.innerHTML=`<option value="total">Taškai (viso)</option><option value="price">Kaina</option>${lastOpt}`;
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:'total';
 }
 
@@ -1794,15 +1804,22 @@ function renderList(){
     return true;
   });
   const sortMode=document.getElementById('sort-f')?.value||'total';
+  // When sorting by a points metric, that same metric becomes the headline
+  // number on the right (replacing price) — otherwise price stays there as
+  // before. pointsFor(id) is null when sorting by price, so the row
+  // template below knows which to show.
+  let pointsFor=null;
   if(sortMode==='total'){
     const totals=computeSeasonPlayerPts();
     // Tied on points (most commonly everyone at 0, before any results are
     // in) falls back to price, instead of leaving the order arbitrary.
     list.sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0)||b.price-a.price);
-  }else if(sortMode[0]==='r'){
-    const ri=parseInt(sortMode.slice(1));
-    const roundPts=computeAllPlayerRoundPts(ri);
+    pointsFor=id=>totals[id]||0;
+  }else if(sortMode==='last'){
+    const ri=lastRoundWithData();
+    const roundPts=ri!==null?computeAllPlayerRoundPts(ri):{};
     list.sort((a,b)=>(roundPts[b.id]||0)-(roundPts[a.id]||0)||b.price-a.price);
+    pointsFor=id=>roundPts[id]||0;
   }else{
     list.sort((a,b)=>b.price-a.price);
   }
@@ -1811,12 +1828,13 @@ function renderList(){
     const isTaken=STATE.taken.has(p.id);
     const teamBlocked=STATE.takenTeams.has(p.team)&&!isTaken;
     const warn=teamBlocked?'<span style="color:var(--red);font-size:9px;margin-left:4px">komanda pilna</span>':'';
+    const headline=pointsFor?`${pointsFor(p.id)}pts`:`${p.price.toFixed(1)}M`;
     return `<div class="pi ${isTaken?'taken':''}" onclick="openPlayerModal(${p.id})">
       <div class="pi-av">${kitSvg(p.team,32)}</div>
       <div class="pi-info"><div class="pi-name">${p.name}${warn}</div>
       <div class="pi-team">${teamLogoImg(p.team,14)}${p.team}</div>
       <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div>
-      <div class="pi-right"><div class="pi-price-val">${p.price.toFixed(1)}M</div><div class="pi-own-val">${ownershipPct(p.id)}%</div></div>
+      <div class="pi-right"><div class="pi-price-val">${headline}</div><div class="pi-own-val">${ownershipPct(p.id)}%</div></div>
     </div>`;
   }).join('')||'<div style="padding:18px;text-align:center;color:var(--mu);font-size:12px">Nerasta</div>';
 }
@@ -2025,7 +2043,13 @@ function slotClick(pos,idx){
   if(STATE.slots[pos][idx]){openPlayerModal(STATE.slots[pos][idx].id);return;}
   STATE.activePos=pos;STATE.activePosIdx=idx;STATE.activePosF=pos;
   renderFilters();renderList();
-  toast(`Pasirink ${POS_FL[pos].toLowerCase()}ą iš sąrašo kairėje ←`);
+  // On mobile the three columns stack, so the player list sits ABOVE the
+  // pitch, not beside it — the hint (and where we scroll to) needs to
+  // match wherever the list actually ended up.
+  const isMobile=window.matchMedia('(max-width:680px)').matches;
+  if(isMobile)document.getElementById('srch')?.scrollIntoView({behavior:'smooth',block:'start'});
+  const posAcc={G:'vartininką',D:'gynėją',M:'saugą',F:'puolėją'};
+  toast(`Pasirink ${posAcc[pos]} iš sąrašo ${isMobile?'aukščiau ↑':'kairėje ←'}`);
 }
 
 function selectPlayer(id){
