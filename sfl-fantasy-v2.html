@@ -61,6 +61,17 @@ a{color:var(--or)}
 .user-chip:hover{border-color:var(--or);box-shadow:var(--sh-xs);transform:translateY(-1px)}
 .user-av{width:26px;height:26px;border-radius:50%;background:var(--or-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
 
+/* LANGUAGE SWITCHER */
+.lang-sw{position:relative}
+.lang-btn{background:var(--card);border:1.5px solid var(--bor2);color:var(--ink2);font-size:12px;font-weight:700;padding:7px 11px;border-radius:10px;cursor:pointer;transition:all .18s var(--ease);display:flex;align-items:center;gap:5px}
+.lang-btn:hover{border-color:var(--or);box-shadow:var(--sh-xs)}
+.lang-car{font-size:8px;color:var(--mu)}
+.lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--bor);border-radius:12px;box-shadow:var(--sh-lg);overflow:hidden;min-width:150px;z-index:400}
+.lang-menu.open{display:block;animation:fadein .15s var(--ease)}
+.lang-opt{padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;transition:background .12s var(--ease);white-space:nowrap}
+.lang-opt:hover{background:var(--sur)}
+.lang-opt.sel{color:var(--or);font-weight:800;background:var(--ordim)}
+
 /* SPONSOR */
 .spons-top{margin-right:16px;padding-right:16px;border-right:1px solid var(--bor);display:flex;align-items:center;flex-shrink:0}
 .spons-top img{width:40px;height:40px;border-radius:11px;display:block;box-shadow:var(--sh-xs)}
@@ -504,25 +515,32 @@ a{color:var(--or)}
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="lbrand" onclick="goHome()" title="Į pagrindinį">
+  <div class="lbrand" onclick="goHome()" data-i18n-title="brand_tooltip" title="Į pagrindinį">
     <div class="lmark" id="lmark"></div>
-    <div class="ltxt"><div class="lname">Betsson 7x7 Fantasy</div><div class="lsub">A Divizionas · 2026/27</div></div>
+    <div class="ltxt"><div class="lname">Betsson 7x7 Fantasy</div><div class="lsub" data-i18n="league_sub">A Divizionas · 2026/27</div></div>
   </div>
-  <div class="spons-top" id="spons-top" title="Sezono rėmėjas"></div>
+  <div class="spons-top" id="spons-top" data-i18n-title="sponsor_tooltip" title="Sezono rėmėjas"></div>
   <nav class="nav" id="main-nav" style="display:none">
-    <button class="nb on" onclick="showPage('dash',this)">Pagrindinis</button>
-    <button class="nb" onclick="goRound(computeCurrentRound())">Mano komanda</button>
-    <button class="nb" onclick="showPage('history',this)">Istorija</button>
-    <button class="nb" onclick="showPage('teamseason',this)">Sezono rinktinė</button>
-    <button class="nb" onclick="showPage('leaders',this)">Lyderiai</button>
-    <button class="nb" onclick="showPage('standings',this)">Lentelė</button>
+    <button class="nb on" onclick="showPage('dash',this)" data-i18n="nav_dash">Pagrindinis</button>
+    <button class="nb" onclick="goRound(computeCurrentRound())" data-i18n="nav_myteam">Mano komanda</button>
+    <button class="nb" onclick="showPage('history',this)" data-i18n="nav_history">Istorija</button>
+    <button class="nb" onclick="showPage('teamseason',this)" data-i18n="nav_teamseason">Sezono rinktinė</button>
+    <button class="nb" onclick="showPage('leaders',this)" data-i18n="nav_leaders">Lyderiai</button>
+    <button class="nb" onclick="showPage('standings',this)" data-i18n="nav_standings">Lentelė</button>
   </nav>
   <div class="tright">
+    <div class="lang-sw" id="lang-sw">
+      <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu()">🇱🇹 LT <span class="lang-car">▾</span></button>
+      <div class="lang-menu" id="lang-menu">
+        <div class="lang-opt" data-lang="lt" onclick="setLang('lt')">🇱🇹 Lietuvių</div>
+        <div class="lang-opt" data-lang="en" onclick="setLang('en')">🇬🇧 English</div>
+      </div>
+    </div>
     <button class="abtn" id="admbtn" style="display:none" onclick="showPage('admin',this)">⚙ Admin</button>
-    <div class="pchip" id="pts-chip" style="display:none"><div class="pchip-v" id="hdr-pts">0</div><div class="pchip-l">Taškai</div></div>
+    <div class="pchip" id="pts-chip" style="display:none"><div class="pchip-v" id="hdr-pts">0</div><div class="pchip-l" data-i18n="pts_label">Taškai</div></div>
     <div class="user-chip" id="user-chip" style="display:none" onclick="openProfile()">
       <div class="user-av" id="user-av">?</div>
-      <span id="user-chip-name">Mano paskyra</span>
+      <span id="user-chip-name" data-i18n="my_account">Mano paskyra</span>
     </div>
   </div>
 </div>
@@ -533,42 +551,42 @@ a{color:var(--or)}
     <div class="login-box">
       <div class="login-logo" id="login-logo"></div>
       <div class="login-title">Betsson 7x7 Fantasy</div>
-      <div class="login-sub">Prisijunk ir rink taškus kiekvieną turą</div>
+      <div class="login-sub" data-i18n="login_sub">Prisijunk ir rink taškus kiekvieną turą</div>
       <div class="login-tabs">
-        <button class="ltab on" id="ltab-in" onclick="switchLoginTab('in')">Prisijungti</button>
-        <button class="ltab" id="ltab-up" onclick="switchLoginTab('up')">Registruotis</button>
+        <button class="ltab on" id="ltab-in" onclick="switchLoginTab('in')" data-i18n="tab_login">Prisijungti</button>
+        <button class="ltab" id="ltab-up" onclick="switchLoginTab('up')" data-i18n="tab_register">Registruotis</button>
       </div>
       <!-- LOGIN FORM -->
       <div id="form-login">
         <div class="form-group">
-          <label class="form-label">El. paštas</label>
+          <label class="form-label" data-i18n="label_email">El. paštas</label>
           <input class="form-input" id="li-email" type="email" placeholder="vardas@email.com">
         </div>
         <div class="form-group">
-          <label class="form-label">Slaptažodis</label>
+          <label class="form-label" data-i18n="label_password">Slaptažodis</label>
           <input class="form-input" id="li-pass" type="password" placeholder="••••••••">
         </div>
-        <div class="forgot-link"><a onclick="doPasswordReset()">Pamiršai slaptažodį?</a></div>
-        <div class="form-err" id="li-err">Neteisingi prisijungimo duomenys</div>
-        <div class="form-ok" id="li-ok">Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.</div>
-        <button class="form-btn" onclick="doLogin()">Prisijungti →</button>
+        <div class="forgot-link"><a onclick="doPasswordReset()" data-i18n="forgot_pw">Pamiršai slaptažodį?</a></div>
+        <div class="form-err" id="li-err" data-i18n="err_login">Neteisingi prisijungimo duomenys</div>
+        <div class="form-ok" id="li-ok" data-i18n="ok_pw_reset">Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.</div>
+        <button class="form-btn" onclick="doLogin()" data-i18n="btn_login">Prisijungti →</button>
       </div>
       <!-- REGISTER FORM -->
       <div id="form-register" style="display:none">
         <div class="form-group">
-          <label class="form-label">Vardas</label>
-          <input class="form-input" id="reg-name" type="text" placeholder="Tavo vardas">
+          <label class="form-label" data-i18n="label_name">Vardas</label>
+          <input class="form-input" id="reg-name" type="text" placeholder="Tavo vardas" data-i18n-ph="ph_name">
         </div>
         <div class="form-group">
-          <label class="form-label">El. paštas</label>
+          <label class="form-label" data-i18n="label_email">El. paštas</label>
           <input class="form-input" id="reg-email" type="email" placeholder="vardas@email.com">
         </div>
         <div class="form-group">
-          <label class="form-label">Slaptažodis</label>
-          <input class="form-input" id="reg-pass" type="password" placeholder="Min. 6 simboliai">
+          <label class="form-label" data-i18n="label_password">Slaptažodis</label>
+          <input class="form-input" id="reg-pass" type="password" placeholder="Min. 6 simboliai" data-i18n-ph="ph_password_min">
         </div>
-        <div class="form-err" id="reg-err">Toks el. paštas jau užregistruotas</div>
-        <button class="form-btn" onclick="doRegister()">Registruotis →</button>
+        <div class="form-err" id="reg-err" data-i18n="err_register">Toks el. paštas jau užregistruotas</div>
+        <button class="form-btn" onclick="doRegister()" data-i18n="btn_register">Registruotis →</button>
       </div>
     </div>
   </div>
@@ -578,16 +596,16 @@ a{color:var(--or)}
 <div class="page" id="page-onboard">
   <div class="onboard-wrap">
     <div class="onboard-box">
-      <div class="onboard-step">1 žingsnis iš 2</div>
-      <div class="onboard-title">Pasirink mėgstamiausią komandą</div>
-      <div class="onboard-sub">Ji bus rodoma lyderių lentelėje šalia tavo vardo</div>
+      <div class="onboard-step" data-i18n="ob_step1">1 žingsnis iš 2</div>
+      <div class="onboard-title" data-i18n="ob_title1">Pasirink mėgstamiausią komandą</div>
+      <div class="onboard-sub" data-i18n="ob_sub1">Ji bus rodoma lyderių lentelėje šalia tavo vardo</div>
       <div class="team-grid" id="onboard-teams"></div>
-      <div class="onboard-step" style="margin-top:20px">2 žingsnis iš 2</div>
-      <div class="onboard-title" style="font-size:18px;margin-bottom:6px">Fantasy komandos pavadinimas</div>
+      <div class="onboard-step" style="margin-top:20px" data-i18n="ob_step2">2 žingsnis iš 2</div>
+      <div class="onboard-title" style="font-size:18px;margin-bottom:6px" data-i18n="ob_title2">Fantasy komandos pavadinimas</div>
       <div class="form-group">
-        <input class="form-input" id="ob-teamname" type="text" placeholder="pvz. Osetrovų Genijus FC" maxlength="30">
+        <input class="form-input" id="ob-teamname" type="text" placeholder="pvz. Osetrovų Genijus FC" data-i18n-ph="ph_teamname" maxlength="30">
       </div>
-      <button class="form-btn" onclick="finishOnboard()">Pradėti žaisti →</button>
+      <button class="form-btn" onclick="finishOnboard()" data-i18n="btn_start">Pradėti žaisti →</button>
     </div>
   </div>
 </div>
@@ -597,21 +615,21 @@ a{color:var(--or)}
   <div class="dash-hero">
     <div class="dball" id="dball"></div>
     <div class="dtitle" id="dash-title">Betsson 7x7 Fantasy</div>
-    <div class="dsub">A Divizionas · 11 fantasy turų · 22 rungtynių dienos</div>
+    <div class="dsub" data-i18n="dash_subtitle">A Divizionas · 11 fantasy turų · 22 rungtynių dienos</div>
     <div class="dactions">
-      <button class="btnp" onclick="goRound(computeCurrentRound())">Sudaryti komandą →</button>
-      <button class="btns" onclick="showPage('history',document.querySelectorAll('.nb')[2])">Mano istorija</button>
+      <button class="btnp" onclick="goRound(computeCurrentRound())" data-i18n="btn_build_squad">Sudaryti komandą →</button>
+      <button class="btns" onclick="showPage('history',document.querySelectorAll('.nb')[2])" data-i18n="btn_my_history">Mano istorija</button>
     </div>
-    <div class="dspons" id="dspons"><span class="dspons-lbl">Sezono rėmėjas</span></div>
+    <div class="dspons" id="dspons"><span class="dspons-lbl" data-i18n="sponsor_tooltip">Sezono rėmėjas</span></div>
   </div>
   <div class="dstats">
-    <div class="sc"><div class="sv">11</div><div class="sl">Fantasy turų</div></div>
-    <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl">Fantasy komandų</div></div>
-    <div class="sc"><div class="sv">600€</div><div class="sl">Prizai</div></div>
-    <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl">Tavo taškai</div></div>
-    <div class="sc"><div class="sv" id="d-rank">—</div><div class="sl">Vieta</div></div>
+    <div class="sc"><div class="sv">11</div><div class="sl" data-i18n="stat_rounds">Fantasy turų</div></div>
+    <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl" data-i18n="stat_teams">Fantasy komandų</div></div>
+    <div class="sc"><div class="sv">600€</div><div class="sl" data-i18n="stat_prizes">Prizai</div></div>
+    <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl" data-i18n="stat_mypts">Tavo taškai</div></div>
+    <div class="sc"><div class="sv" id="d-rank">—</div><div class="sl" data-i18n="stat_rank">Vieta</div></div>
   </div>
-  <div class="dsec"><div class="sec-title">Fantasy turų tvarkaraštis</div><div class="rgrid" id="d-rounds"></div></div>
+  <div class="dsec"><div class="sec-title" data-i18n="sched_title">Fantasy turų tvarkaraštis</div><div class="rgrid" id="d-rounds"></div></div>
 </div>
 
 <!-- SQUAD PAGE -->
@@ -621,48 +639,48 @@ a{color:var(--or)}
   <div class="three-col">
     <div>
       <div class="pan">
-        <div class="ph"><h3>Žaidėjai</h3><span class="sub" id="pl-cnt"></span></div>
-        <div class="fg noborder"><div class="fg-lbl">Rikiuoti pagal</div>
+        <div class="ph"><h3 data-i18n="players_header">Žaidėjai</h3><span class="sub" id="pl-cnt"></span></div>
+        <div class="fg noborder"><div class="fg-lbl" data-i18n="sort_by">Rikiuoti pagal</div>
           <select class="pl-sort-sel" id="sort-f" onchange="renderList()"></select>
         </div>
-        <div class="fg"><div class="fg-lbl">Pozicija</div><div class="fg-row" id="pos-f"></div></div>
-        <div class="fg noborder"><div class="fg-lbl">Komanda</div><div class="fg-row" id="team-f"></div></div>
-        <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." oninput="renderList()"></div>
+        <div class="fg"><div class="fg-lbl" data-i18n="position_label">Pozicija</div><div class="fg-row" id="pos-f"></div></div>
+        <div class="fg noborder"><div class="fg-lbl" data-i18n="team_label">Komanda</div><div class="fg-row" id="team-f"></div></div>
+        <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." data-i18n-ph="search_ph" oninput="renderList()"></div>
         <div class="pl-list" id="pl-list"></div>
       </div>
     </div>
     <div>
       <div class="pan">
         <div class="ph">
-          <h3 id="squad-panel-title">Tavo komanda</h3>
+          <h3 id="squad-panel-title" data-i18n="your_team">Tavo komanda</h3>
           <span class="sub" id="slot-cnt">0/7</span>
         </div>
         <div class="pw">
           <div class="pitch-top">
-            <span class="bbar-lbl">Biudžetas:</span>
+            <span class="bbar-lbl" data-i18n="budget_label">Biudžetas:</span>
             <span class="bv" id="bud-left">50.0M</span>
             <span class="bu" id="bud-used">panaudota: 0.0M</span>
-            <button class="autobtn" onclick="autoFillSquad()" title="Sumesti atsitiktinę komandą">🎲 Auto</button>
+            <button class="autobtn" onclick="autoFillSquad()" data-i18n-title="auto_title" title="Sumesti atsitiktinę komandą">🎲 Auto</button>
           </div>
           <div class="pitch">
-            <div class="rlbl">Vartininkas</div>
+            <div class="rlbl" data-i18n="rlbl_gk">Vartininkas</div>
             <div class="prow">
-              <div class="slot" id="s-G-0" onclick="slotClick('G',0)"><div class="sc2"><span class="slot-icon">🧤</span></div><div class="sn">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
+              <div class="slot" id="s-G-0" onclick="slotClick('G',0)"><div class="sc2"><span class="slot-icon">🧤</span></div><div class="sn" data-i18n="slot_pick">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
             </div>
-            <div class="rlbl">Gynėjai</div>
+            <div class="rlbl" data-i18n="rlbl_def">Gynėjai</div>
             <div class="prow">
-              <div class="slot" id="s-D-0" onclick="slotClick('D',0)"><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
-              <div class="slot" id="s-D-1" onclick="slotClick('D',1)"><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
+              <div class="slot" id="s-D-0" onclick="slotClick('D',0)"><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn" data-i18n="slot_pick">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
+              <div class="slot" id="s-D-1" onclick="slotClick('D',1)"><div class="sc2"><span class="slot-icon sm">🛡️</span></div><div class="sn" data-i18n="slot_pick">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
             </div>
-            <div class="rlbl">Saugai</div>
+            <div class="rlbl" data-i18n="rlbl_mid">Saugai</div>
             <div class="prow">
-              <div class="slot" id="s-M-0" onclick="slotClick('M',0)"><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
-              <div class="slot" id="s-M-1" onclick="slotClick('M',1)"><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
+              <div class="slot" id="s-M-0" onclick="slotClick('M',0)"><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn" data-i18n="slot_pick">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
+              <div class="slot" id="s-M-1" onclick="slotClick('M',1)"><div class="sc2"><span class="slot-icon sm">⚙️</span></div><div class="sn" data-i18n="slot_pick">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
             </div>
-            <div class="rlbl">Puolėjai</div>
+            <div class="rlbl" data-i18n="rlbl_fwd">Puolėjai</div>
             <div class="prow">
-              <div class="slot" id="s-F-0" onclick="slotClick('F',0)"><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
-              <div class="slot" id="s-F-1" onclick="slotClick('F',1)"><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
+              <div class="slot" id="s-F-0" onclick="slotClick('F',0)"><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn" data-i18n="slot_pick">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
+              <div class="slot" id="s-F-1" onclick="slotClick('F',1)"><div class="sc2"><span class="slot-icon sm">⚡</span></div><div class="sn" data-i18n="slot_pick">Pasirink</div><div class="sp"></div><div class="sfx"></div></div>
             </div>
           </div>
         </div>
@@ -672,31 +690,31 @@ a{color:var(--or)}
     </div>
     <div>
       <div class="pan">
-        <div class="ph"><h3>Taškų sistema</h3></div>
-        <div class="rrow"><span>🧤 Vartininko įvartis</span><span class="rp">+10</span></div>
-        <div class="rrow"><span>🛡 Gynėjo įvartis</span><span class="rp">+6</span></div>
-        <div class="rrow"><span>⚙ Saugo įvartis</span><span class="rp">+5</span></div>
-        <div class="rrow"><span>⚡ Puolėjo įvartis</span><span class="rp">+4</span></div>
-        <div class="rrow"><span>🔒 Clean sheet (GK/DEF)</span><span class="rp">+10</span></div>
-        <div class="rrow"><span>1️⃣ Praleistas 1 įvartis (GK/DEF)</span><span class="rp">+5</span></div>
-        <div class="rrow"><span>✅ Komandos pergalė</span><span class="rp">+2</span></div>
-        <div class="rrow"><span>❌ Pralaimėjimas</span><span class="rp neg">−1</span></div>
-        <div class="rrow"><span>🟥 Raudona kortelė</span><span class="rp neg">−3</span></div>
-        <div class="rrow cap-row"><span>C Kapitonas</span><span class="rp cap">×2</span></div>
-        <div class="rrow note-row"><span>⚠ Iš kiekvienos komandos — tik 1 žaidėjas</span></div>
+        <div class="ph"><h3 data-i18n="scoring_title">Taškų sistema</h3></div>
+        <div class="rrow"><span data-i18n="sc_gk_goal">🧤 Vartininko įvartis</span><span class="rp">+10</span></div>
+        <div class="rrow"><span data-i18n="sc_def_goal">🛡 Gynėjo įvartis</span><span class="rp">+6</span></div>
+        <div class="rrow"><span data-i18n="sc_mid_goal">⚙ Saugo įvartis</span><span class="rp">+5</span></div>
+        <div class="rrow"><span data-i18n="sc_fwd_goal">⚡ Puolėjo įvartis</span><span class="rp">+4</span></div>
+        <div class="rrow"><span data-i18n="sc_cs">🔒 Clean sheet (GK/DEF)</span><span class="rp">+10</span></div>
+        <div class="rrow"><span data-i18n="sc_one">1️⃣ Praleistas 1 įvartis (GK/DEF)</span><span class="rp">+5</span></div>
+        <div class="rrow"><span data-i18n="sc_win">✅ Komandos pergalė</span><span class="rp">+2</span></div>
+        <div class="rrow"><span data-i18n="sc_loss">❌ Pralaimėjimas</span><span class="rp neg">−1</span></div>
+        <div class="rrow"><span data-i18n="sc_red">🟥 Raudona kortelė</span><span class="rp neg">−3</span></div>
+        <div class="rrow cap-row"><span data-i18n="sc_cap">C Kapitonas</span><span class="rp cap">×2</span></div>
+        <div class="rrow note-row"><span data-i18n="sc_note">⚠ Iš kiekvienos komandos — tik 1 žaidėjas</span></div>
       </div>
       <div class="pan">
-        <div class="ph"><h3>Prizai</h3></div>
-        <div class="rrow"><span>🥇 1 vieta</span><span class="rp lg">300€</span></div>
-        <div class="rrow"><span>🥈 2 vieta</span><span class="rp lg">200€</span></div>
-        <div class="rrow"><span>🥉 3 vieta</span><span class="rp lg">100€</span></div>
-        <div class="prize-note">Startinio mokesčio sumažinimas</div>
+        <div class="ph"><h3 data-i18n="prizes_title">Prizai</h3></div>
+        <div class="rrow"><span data-i18n="prize_1">🥇 1 vieta</span><span class="rp lg">300€</span></div>
+        <div class="rrow"><span data-i18n="prize_2">🥈 2 vieta</span><span class="rp lg">200€</span></div>
+        <div class="rrow"><span data-i18n="prize_3">🥉 3 vieta</span><span class="rp lg">100€</span></div>
+        <div class="prize-note" data-i18n="prize_note">Startinio mokesčio sumažinimas</div>
       </div>
       <div class="pan">
-        <div class="ph"><h3>Rėmėjas</h3></div>
+        <div class="ph"><h3 data-i18n="sponsor_panel_title">Rėmėjas</h3></div>
         <div class="spons-panel-body" id="spons-panel-body"></div>
       </div>
-      <div class="pan"><div class="ph"><h3>A grupė</h3></div><div id="stand-mini"></div></div>
+      <div class="pan"><div class="ph"><h3 data-i18n="group_a_title">A grupė</h3></div><div id="stand-mini"></div></div>
     </div>
   </div>
 </div>
@@ -850,9 +868,9 @@ a{color:var(--or)}
 </div>
 
 <div class="bbar2" id="bbar" style="display:none">
-  <div class="bb-i">Pasirinkta: <span class="bb-n" id="bb-n">0</span>/7</div>
+  <div class="bb-i"><span data-i18n="bb_selected">Pasirinkta:</span> <span class="bb-n" id="bb-n">0</span>/7</div>
   <div class="bb-b" id="bb-b"></div>
-  <button class="bb-btn" id="bb-btn" disabled onclick="submitSquad()">Pateikti komandą ▶</button>
+  <button class="bb-btn" id="bb-btn" disabled onclick="submitSquad()" data-i18n="bb_submit">Pateikti komandą ▶</button>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -892,6 +910,163 @@ const TEAM_ABBR={
   'Tornado':'TOR','Grija':'GRI','VSG United':'VSG','Esperanza':'ESP',
   'FC Areonas':'ARE','Ketera':'KET','Del. Euforija':'DEL','Gladiatoriai':'GLA',
 };
+
+// ═══════════════════════════════════════════════
+// I18N — LT (default) + EN. Covers the core participant flow: nav, auth,
+// onboarding, dashboard, squad builder. Everything else (player modal
+// detail, history, leaders, standings, admin) stays LT for now and is
+// planned as a follow-up pass.
+// ═══════════════════════════════════════════════
+const LANG_KEY='sflLang';
+let LANG=localStorage.getItem(LANG_KEY)==='en'?'en':'lt';
+const I18N={
+  lt:{
+    nav_dash:'Pagrindinis',nav_myteam:'Mano komanda',nav_history:'Istorija',nav_teamseason:'Sezono rinktinė',
+    nav_leaders:'Lyderiai',nav_standings:'Lentelė',pts_label:'Taškai',my_account:'Mano paskyra',
+    brand_tooltip:'Į pagrindinį',league_sub:'A Divizionas · 2026/27',sponsor_tooltip:'Sezono rėmėjas',
+    login_sub:'Prisijunk ir rink taškus kiekvieną turą',tab_login:'Prisijungti',tab_register:'Registruotis',
+    label_email:'El. paštas',label_password:'Slaptažodis',forgot_pw:'Pamiršai slaptažodį?',
+    err_login:'Neteisingi prisijungimo duomenys',
+    ok_pw_reset:'Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.',
+    btn_login:'Prisijungti →',label_name:'Vardas',ph_name:'Tavo vardas',ph_password_min:'Min. 6 simboliai',
+    err_register:'Toks el. paštas jau užregistruotas',btn_register:'Registruotis →',
+    ob_step1:'1 žingsnis iš 2',ob_step2:'2 žingsnis iš 2',ob_title1:'Pasirink mėgstamiausią komandą',
+    ob_sub1:'Ji bus rodoma lyderių lentelėje šalia tavo vardo',ob_title2:'Fantasy komandos pavadinimas',
+    ph_teamname:'pvz. Osetrovų Genijus FC',btn_start:'Pradėti žaisti →',
+    dash_subtitle:'A Divizionas · 11 fantasy turų · 22 rungtynių dienos',btn_build_squad:'Sudaryti komandą →',
+    btn_my_history:'Mano istorija',stat_rounds:'Fantasy turų',stat_teams:'Fantasy komandų',stat_prizes:'Prizai',
+    stat_mypts:'Tavo taškai',stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
+    rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',
+    players_header:'Žaidėjai',sort_by:'Rikiuoti pagal',position_label:'Pozicija',team_label:'Komanda',
+    search_ph:'Ieškoti žaidėjo ar komandos...',pos_all:'Visos',your_team:'Tavo komanda',
+    budget_label:'Biudžetas:',budget_used:'panaudota:',auto_title:'Sumesti atsitiktinę komandą',
+    rlbl_gk:'Vartininkas',rlbl_def:'Gynėjai',rlbl_mid:'Saugai',rlbl_fwd:'Puolėjai',slot_pick:'Pasirink',
+    scoring_title:'Taškų sistema',sc_gk_goal:'🧤 Vartininko įvartis',sc_def_goal:'🛡 Gynėjo įvartis',
+    sc_mid_goal:'⚙ Saugo įvartis',sc_fwd_goal:'⚡ Puolėjo įvartis',sc_cs:'🔒 Clean sheet (GK/DEF)',
+    sc_one:'1️⃣ Praleistas 1 įvartis (GK/DEF)',sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',
+    sc_red:'🟥 Raudona kortelė',sc_cap:'C Kapitonas',sc_note:'⚠ Iš kiekvienos komandos — tik 1 žaidėjas',
+    prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
+    prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',group_a_title:'A grupė',
+    sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Nuosavybė',sort_goals:'Įmušti įvarčiai',
+    msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
+    msg_open_badge:'Atviras',
+    msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
+    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (istorija) — surinkta <strong>${pts}</strong> taškų.`,
+    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> terminas praėjo (${dl}) — komanda nebuvo pateikta laiku, šis turas — 0 taškų.`,
+    fix_title:r=>`🗓 ${r} — rungtynės`,fix_vs:'vs',
+    toast_pick_pos:(pos,dir)=>`Pasirink ${pos} iš sąrašo ${dir}`,toast_dir_above:'aukščiau ↑',toast_dir_left:'kairėje ←',
+    posAcc:{G:'vartininką',D:'gynėją',M:'saugą',F:'puolėją'},
+    toast_team_taken:t=>`${t} jau atstovaujama! Tik 1 žaidėjas iš komandos.`,
+    toast_no_free_slot:pos=>`Nėra laisvų ${pos} vietų`,toast_wrong_pos:pos=>`Šis žaidėjas yra ${pos}`,
+    toast_budget_short:m=>`Nepakanka biudžeto! Trūksta ${m}M`,toast_added:(n,t)=>`${n} (${t}) pridėtas ✓`,
+    toast_need7:'Reikia 7 žaidėjų!',toast_need_captain:'Pasirink kapitoną — spausk C ženkliuką ant žaidėjo',
+    toast_deadline_submit:dl=>`Terminas praėjo (${dl}) — komandos pateikti nebegalima`,
+    toast_save_fail:'Nepavyko išsaugoti komandos — pabandyk dar kartą arba susisiek su administratoriumi',
+    toast_captain_set:n=>`${n} — Kapitonas ⭐ ×2`,toast_captain_removed:'Kapitonas pašalintas',
+    toast_auto_fail:'Nepavyko sudaryti komandos — pabandyk dar kartą',
+    toast_auto_ok:'Atsitiktinė komanda sudaryta ✓ Nepamiršk pasirinkti kapitono!',
+    bb_selected:'Pasirinkta:',bb_review:'Peržiūra (istorija)',bb_deadline_passed:'Terminas praėjo',
+    bb_update:'Atnaujinti komandą ✓',bb_submit:'Pateikti komandą ▶',bb_saving:'Saugoma...',
+    toast_round_not_open:'Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas',
+    players_count_suffix:'žaid.',team_full:'komanda pilna',not_found:'Nerasta',
+    res_lbl:(r,isUpdate)=>`${r} — komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
+  },
+  en:{
+    nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
+    nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',my_account:'My Account',
+    brand_tooltip:'Go to home',league_sub:'A Division · 2026/27',sponsor_tooltip:'Season Sponsor',
+    login_sub:'Log in and score points every round',tab_login:'Log In',tab_register:'Register',
+    label_email:'Email',label_password:'Password',forgot_pw:'Forgot your password?',
+    err_login:'Incorrect login credentials',
+    ok_pw_reset:'Password reset email sent — check your inbox.',
+    btn_login:'Log In →',label_name:'Name',ph_name:'Your name',ph_password_min:'Min. 6 characters',
+    err_register:'This email is already registered',btn_register:'Register →',
+    ob_step1:'Step 1 of 2',ob_step2:'Step 2 of 2',ob_title1:'Pick your favorite team',
+    ob_sub1:'Shown next to your name on the leaderboard',ob_title2:'Fantasy team name',
+    ph_teamname:'e.g. Osetrov\'s Genius FC',btn_start:'Start Playing →',
+    dash_subtitle:'A Division · 11 fantasy rounds · 22 match days',btn_build_squad:'Build Your Team →',
+    btn_my_history:'My History',stat_rounds:'Fantasy Rounds',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
+    stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Round Schedule',
+    rt_locked:'🔒 Locked',rt_waiting:'Pending',
+    players_header:'Players',sort_by:'Sort by',position_label:'Position',team_label:'Team',
+    search_ph:'Search player or team...',pos_all:'All',your_team:'Your Team',
+    budget_label:'Budget:',budget_used:'used:',auto_title:'Generate a random team',
+    rlbl_gk:'Goalkeeper',rlbl_def:'Defenders',rlbl_mid:'Midfielders',rlbl_fwd:'Forwards',slot_pick:'Pick',
+    scoring_title:'Scoring System',sc_gk_goal:'🧤 Goalkeeper goal',sc_def_goal:'🛡 Defender goal',
+    sc_mid_goal:'⚙ Midfielder goal',sc_fwd_goal:'⚡ Forward goal',sc_cs:'🔒 Clean sheet (GK/DEF)',
+    sc_one:'1️⃣ Conceded 1 goal (GK/DEF)',sc_win:'✅ Team win',sc_loss:'❌ Loss',
+    sc_red:'🟥 Red card',sc_cap:'C Captain',sc_note:'⚠ Only 1 player per club',
+    prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
+    prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',group_a_title:'Group A',
+    sort_total:'Points (total)',sort_price:'Price',sort_last:'Last round',sort_own:'Ownership',sort_goals:'Goals scored',
+    msg_saved:(r,d)=>`<strong>${r}</strong> team saved — change it as many times as you like until <strong>${d}</strong>.`,
+    msg_open_badge:'Open',
+    msg_open_sub:(d1,d2,dl)=>`${d1} and ${d2} · deadline ${dl}`,
+    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (history) — scored <strong>${pts}</strong> points.`,
+    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> deadline passed (${dl}) — team wasn't submitted in time, 0 points this round.`,
+    fix_title:r=>`🗓 ${r} — matches`,fix_vs:'vs',
+    toast_pick_pos:(pos,dir)=>`Pick a ${pos} from the list ${dir}`,toast_dir_above:'above ↑',toast_dir_left:'on the left ←',
+    posAcc:{G:'goalkeeper',D:'defender',M:'midfielder',F:'forward'},
+    toast_team_taken:t=>`${t} is already represented! Only 1 player per club.`,
+    toast_no_free_slot:pos=>`No free ${pos} slots`,toast_wrong_pos:pos=>`This player is a ${pos}`,
+    toast_budget_short:m=>`Not enough budget! Short by ${m}M`,toast_added:(n,t)=>`${n} (${t}) added ✓`,
+    toast_need7:'You need 7 players!',toast_need_captain:'Pick a captain — tap the C badge on a player',
+    toast_deadline_submit:dl=>`Deadline passed (${dl}) — you can no longer submit a team`,
+    toast_save_fail:'Failed to save team — try again or contact the admin',
+    toast_captain_set:n=>`${n} — Captain ⭐ ×2`,toast_captain_removed:'Captain removed',
+    toast_auto_fail:'Couldn\'t build a team — try again',
+    toast_auto_ok:'Random team generated ✓ Don\'t forget to pick a captain!',
+    bb_selected:'Selected:',bb_review:'Review (history)',bb_deadline_passed:'Deadline passed',
+    bb_update:'Update Team ✓',bb_submit:'Submit Team ▶',bb_saving:'Saving...',
+    toast_round_not_open:'This round isn\'t open yet — wait for the previous one to close',
+    players_count_suffix:'players',team_full:'team full',not_found:'No results',
+    res_lbl:(r,isUpdate)=>`${r} — team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
+  },
+};
+function t(key,...args){
+  const entry=(I18N[LANG]&&I18N[LANG][key])!==undefined?I18N[LANG][key]:I18N.lt[key];
+  return typeof entry==='function'?entry(...args):entry;
+}
+// Position-label lookups used all over the app (pitch, filters, player
+// list, modals, history) — mutated in place on language switch so every
+// existing POS_LT[pos]/POS_FL[pos] call site picks up the new language
+// with no call-site changes needed.
+function applyPosLabels(){
+  Object.assign(POS_LT,LANG==='en'?{G:'G',D:'D',M:'M',F:'F'}:{G:'V',D:'G',M:'S',F:'P'});
+  Object.assign(POS_FL,LANG==='en'?{G:'Goalkeeper',D:'Defender',M:'Midfielder',F:'Forward'}:{G:'Vartininkas',D:'Gynėjas',M:'Saugas',F:'Puolėjas'});
+}
+function applyStaticI18n(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{el.title=t(el.dataset.i18nTitle);});
+  applyPosLabels();
+}
+function renderLangSwitcher(){
+  const btn=document.getElementById('lang-btn');if(!btn)return;
+  btn.innerHTML=LANG==='en'?'🇬🇧 EN <span class="lang-car">▾</span>':'🇱🇹 LT <span class="lang-car">▾</span>';
+  document.querySelectorAll('.lang-opt').forEach(el=>el.classList.toggle('sel',el.dataset.lang===LANG));
+}
+function toggleLangMenu(){document.getElementById('lang-menu')?.classList.toggle('open');}
+function setLang(l){
+  LANG=l==='en'?'en':'lt';
+  localStorage.setItem(LANG_KEY,LANG);
+  document.getElementById('lang-menu')?.classList.remove('open');
+  applyStaticI18n();
+  renderLangSwitcher();
+  // Re-render whatever dynamic content is currently on screen so it picks
+  // up the new language too, not just the static chrome around it.
+  if(typeof refreshDynamicI18n==='function')refreshDynamicI18n();
+}
+document.addEventListener('click',e=>{
+  const sw=document.getElementById('lang-sw');
+  if(sw&&!sw.contains(e.target))document.getElementById('lang-menu')?.classList.remove('open');
+});
+// Localize the static chrome (including the login page) immediately on
+// load — this must not wait for auth.onAuthStateChanged, since a visitor
+// sees the login screen before any auth state resolves.
+applyStaticI18n();
+renderLangSwitcher();
 
 // ═══════════════════════════════════════════════
 // TEAM KITS — each club's real shirt colors, drawn as a small stylized
@@ -1037,7 +1212,7 @@ FR.forEach(r=>{ r.deadline=new Date(r.days[0].date+'T13:30:00+03:00').getTime();
 function roundDeadline(i){ return FR[i].deadline; }
 function isPastDeadline(i){ return Date.now()>=FR[i].deadline; }
 function formatDeadline(i){
-  return new Intl.DateTimeFormat('lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(FR[i].deadline);
+  return new Intl.DateTimeFormat(LANG==='en'?'en-GB':'lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(FR[i].deadline);
 }
 
 // ═══════════════════════════════════════════════
@@ -1578,12 +1753,12 @@ function autoFillSquad(){
     }
     if(ok)best=picks;
   }
-  if(!best){toast('Nepavyko sudaryti komandos — pabandyk dar kartą');return;}
+  if(!best){toast(t('toast_auto_fail'));return;}
   clearAllSlots();
   const idxByPos={G:0,D:0,M:0,F:0};
   best.forEach(p=>{setSlot(p.pos,idxByPos[p.pos]++,p);});
   renderAllSlots();updateBottomBar();renderFilters();renderList();
-  toast('Atsitiktinė komanda sudaryta ✓ Nepamiršk pasirinkti kapitono!');
+  toast(t('toast_auto_ok'));
   saveCurrentState();
 }
 
@@ -1700,7 +1875,7 @@ async function renderDash(){
     return `<div class="rtile ${done?'done':''} ${isCur?'cur':''} ${future?'future':''}" onclick="goRound(${i})">
       <div class="rtn">${r.n}</div><div class="rts">${r.days[0].l} + ${r.days[1].l}</div>
       <div class="rtdl">⏱ ${formatDeadline(i)}</div>
-      <div class="rtpt ${done?'':'em'}">${future?'🔒 Uždaryta':(done?roundPts[i]+'pts':'Laukiama')}</div>
+      <div class="rtpt ${done?'':'em'}">${future?t('rt_locked'):(done?roundPts[i]+'pts':t('rt_waiting'))}</div>
     </div>`;
   }).join('');
 }
@@ -1725,7 +1900,7 @@ function loadRoundIntoPitch(i){
 let ENTERED_ROUND_LIVE=false;
 function goRound(i){
   if(i>computeCurrentRound()){
-    toast('Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas');
+    toast(t('toast_round_not_open'));
     return;
   }
   loadRoundIntoPitch(i);
@@ -1751,31 +1926,31 @@ function renderSquadMsg(){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
     const pts=roundPts[STATE.curRound]||0;
     el.innerHTML=`<div class="scored-msg"><div class="sm-pts">${pts}</div>
-      <div class="sm-txt"><strong>${FR[STATE.curRound].n}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${formatDeadline(STATE.curRound)}</strong>.</div></div>`;
+      <div class="sm-txt">${t('msg_saved',FR[STATE.curRound].n,formatDeadline(STATE.curRound))}</div></div>`;
   }else if(isLive){
     el.innerHTML=`<div class="ti"><div class="ti-n">${STATE.curRound+1}</div>
       <div class="ti-info"><div class="ti-lbl">${FR[STATE.curRound].n}</div>
-      <div class="ti-sub">${FR[STATE.curRound].days[0].l} ir ${FR[STATE.curRound].days[1].l} · terminas ${formatDeadline(STATE.curRound)}</div></div>
-      <span class="ti-badge open">Atviras</span></div>`;
+      <div class="ti-sub">${t('msg_open_sub',FR[STATE.curRound].days[0].l,FR[STATE.curRound].days[1].l,formatDeadline(STATE.curRound))}</div></div>
+      <span class="ti-badge open">${t('msg_open_badge')}</span></div>`;
   }else if(hasSquad){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
     const pts=roundPts[STATE.curRound]||0;
     el.innerHTML=`<div class="locked-msg"><div class="lm-icon">📋</div>
-      <div class="lm-txt"><strong>${FR[STATE.curRound].n}</strong> (istorija) — surinkta <strong>${pts}</strong> taškų.</div></div>`;
+      <div class="lm-txt">${t('msg_history_pts',FR[STATE.curRound].n,pts)}</div></div>`;
   }else{
     el.innerHTML=`<div class="locked-msg"><div class="lm-icon">⏱️</div>
-      <div class="lm-txt"><strong>${FR[STATE.curRound].n}</strong> terminas praėjo (${formatDeadline(STATE.curRound)}) — komanda nebuvo pateikta laiku, šis turas — 0 taškų.</div></div>`;
+      <div class="lm-txt">${t('msg_deadline_passed',FR[STATE.curRound].n,formatDeadline(STATE.curRound))}</div></div>`;
   }
 }
 
 function renderFixtures(){
   const r=FR[STATE.curRound];
-  let html=`<div class="fix-box"><div class="fix-title">🗓 ${r.n} — rungtynės</div>`;
+  let html=`<div class="fix-box"><div class="fix-title">${t('fix_title',r.n)}</div>`;
   r.days.forEach((day,di)=>{
     html+=`<div class="fix-day"><div class="fix-day-lbl">${day.l}</div>`;
     day.m.forEach((m,mi)=>{
       const saved=STATE.DB[STATE.curRound]?.[di]?.[mi];
-      const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>`:`<span class="fix-vs">vs</span>`;
+      const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>`:`<span class="fix-vs">${t('fix_vs')}</span>`;
       html+=`<div class="fix-match"><span class="fix-home">${teamLogoImg(m[0],20)}${m[0]}</span>${mid}<span class="fix-away">${m[1]}${teamLogoImg(m[1],20)}</span></div>`;
     });
     html+=`</div>`;
@@ -1785,9 +1960,9 @@ function renderFixtures(){
 
 function renderFilters(){
   document.getElementById('pos-f').innerHTML=['Visos','G','D','M','F'].map(p=>
-    `<button class="pf ${STATE.activePosF===p?'on':''}" onclick="setPosF('${p}')">${p==='Visos'?'Visos':POS_FL[p]}</button>`).join('');
-  document.getElementById('team-f').innerHTML=['Visos',...TEAMS_KEYS].map(t=>
-    `<button class="pf ${STATE.activeTeamF===t?'on':''}" onclick="setTeamF('${t}')">${TEAM_LOGOS[t]?`<img class="pf-logo" src="${TEAM_LOGOS[t]}" alt="">`:''}${t}</button>`).join('');
+    `<button class="pf ${STATE.activePosF===p?'on':''}" onclick="setPosF('${p}')">${p==='Visos'?t('pos_all'):POS_FL[p]}</button>`).join('');
+  document.getElementById('team-f').innerHTML=['Visos',...TEAMS_KEYS].map(tm=>
+    `<button class="pf ${STATE.activeTeamF===tm?'on':''}" onclick="setTeamF('${tm}')">${TEAM_LOGOS[tm]?`<img class="pf-logo" src="${TEAM_LOGOS[tm]}" alt="">`:''}${tm==='Visos'?t('pos_all'):tm}</button>`).join('');
   renderSortOptions();
 }
 function setPosF(p){STATE.activePosF=p;renderFilters();renderList();}
@@ -1809,8 +1984,8 @@ function renderSortOptions(){
   // decide who to pick. Only falls back to price as a secondary tiebreak
   // (see renderList) once points run out, e.g. before a round with data.
   const cur=sel.value||'total';
-  const lastOpt=lastRoundWithData()!==null?`<option value="last">Paskutinis turas</option>`:'';
-  sel.innerHTML=`<option value="total">Taškai (viso)</option><option value="price">Kaina</option>${lastOpt}<option value="ownership">Nuosavybė</option><option value="goals">Įmušti įvarčiai</option>`;
+  const lastOpt=lastRoundWithData()!==null?`<option value="last">${t('sort_last')}</option>`:'';
+  sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>${lastOpt}<option value="ownership">${t('sort_own')}</option><option value="goals">${t('sort_goals')}</option>`;
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:'total';
 }
 
@@ -1852,11 +2027,11 @@ function renderList(){
   }else{
     list.sort((a,b)=>b.price-a.price);
   }
-  document.getElementById('pl-cnt').textContent=list.length+' žaid.';
+  document.getElementById('pl-cnt').textContent=list.length+' '+t('players_count_suffix');
   document.getElementById('pl-list').innerHTML=list.map(p=>{
     const isTaken=STATE.taken.has(p.id);
     const teamBlocked=STATE.takenTeams.has(p.team)&&!isTaken;
-    const warn=teamBlocked?'<span style="color:var(--red);font-size:9px;margin-left:4px">komanda pilna</span>':'';
+    const warn=teamBlocked?`<span style="color:var(--red);font-size:9px;margin-left:4px">${t('team_full')}</span>`:'';
     const headline=headlineFor?headlineFor(p):`${p.price.toFixed(1)}M`;
     return `<div class="pi ${isTaken?'taken':''}" onclick="openPlayerModal(${p.id})">
       <div class="pi-av">${kitSvg(p.team,32)}</div>
@@ -1865,7 +2040,7 @@ function renderList(){
       <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div>
       <div class="pi-right"><div class="pi-price-val">${headline}</div>${showOwnRow?`<div class="pi-own-val">${ownershipPct(p.id)}%</div>`:''}</div>
     </div>`;
-  }).join('')||'<div style="padding:18px;text-align:center;color:var(--mu);font-size:12px">Nerasta</div>';
+  }).join('')||`<div style="padding:18px;text-align:center;color:var(--mu);font-size:12px">${t('not_found')}</div>`;
 }
 
 // The 2 matches (one per matchday) a team plays in a given round — used to
@@ -2120,26 +2295,25 @@ function slotClick(pos,idx){
   // match wherever the list actually ended up.
   const isMobile=window.matchMedia('(max-width:680px)').matches;
   if(isMobile)document.getElementById('srch')?.scrollIntoView({behavior:'smooth',block:'start'});
-  const posAcc={G:'vartininką',D:'gynėją',M:'saugą',F:'puolėją'};
-  toast(`Pasirink ${posAcc[pos]} iš sąrašo ${isMobile?'aukščiau ↑':'kairėje ←'}`);
+  toast(t('toast_pick_pos',t('posAcc')[pos],isMobile?t('toast_dir_above'):t('toast_dir_left')));
 }
 
 function selectPlayer(id){
   if(isLocked())return;
   const p=PLAYERS.find(x=>x.id===id);if(!p||STATE.taken.has(p.id))return;
-  if(STATE.takenTeams.has(p.team)){toast(`${p.team} jau atstovaujama! Tik 1 žaidėjas iš komandos.`);return;}
+  if(STATE.takenTeams.has(p.team)){toast(t('toast_team_taken',p.team));return;}
   if(!STATE.activePos){
     const ei=STATE.slots[p.pos].findIndex(s=>!s);
-    if(ei===-1){toast(`Nėra laisvų ${POS_FL[p.pos].toLowerCase()} vietų`);return;}
+    if(ei===-1){toast(t('toast_no_free_slot',POS_FL[p.pos].toLowerCase()));return;}
     STATE.activePos=p.pos;STATE.activePosIdx=ei;
   }
-  if(p.pos!==STATE.activePos){toast(`Šis žaidėjas yra ${POS_FL[p.pos]}`);return;}
+  if(p.pos!==STATE.activePos){toast(t('toast_wrong_pos',POS_FL[p.pos]));return;}
   const left=CONFIG.BUDGET-usedBudget();
-  if(p.price>left+.01){toast(`Nepakanka biudžeto! Trūksta ${(p.price-left).toFixed(1)}M`);return;}
+  if(p.price>left+.01){toast(t('toast_budget_short',(p.price-left).toFixed(1)));return;}
   setSlot(STATE.activePos,STATE.activePosIdx,p);
   STATE.activePos=null;STATE.activePosIdx=null;STATE.activePosF='Visos';
   renderAllSlots();updateBottomBar();renderList();
-  toast(`${p.name} (${p.team}) pridėtas ✓`);saveCurrentState();
+  toast(t('toast_added',p.name,p.team));saveCurrentState();
 }
 
 function removePlayerFromSlot(pos,idx){
@@ -2154,7 +2328,7 @@ function setCaptainSlot(pos,idx){
   if(!STATE.slots[pos][idx])return;
   STATE.captain=isCaptain(pos,idx)?null:{pos,idx};
   renderAllSlots();updateBottomBar();
-  toast(STATE.captain?`${STATE.slots[pos][idx].name} — Kapitonas ⭐ ×2`:'Kapitonas pašalintas');
+  toast(STATE.captain?t('toast_captain_set',STATE.slots[pos][idx].name):t('toast_captain_removed'));
   saveCurrentState();
 }
 function handleCaptainClick(e,pos,idx){
@@ -2206,7 +2380,7 @@ function renderSlot(pos,idx){
       // price — visible on the pitch itself, no need to open the card.
       if(sfx){
         const fx=teamFixturesForRound(p.team,STATE.curRound);
-        sfx.textContent=fx.length?`vs ${fx.map(f=>TEAM_ABBR[f.opponent]||f.opponent).join(', ')}`:'';
+        sfx.textContent=fx.length?`${t('fix_vs')} ${fx.map(f=>TEAM_ABBR[f.opponent]||f.opponent).join(', ')}`:'';
       }
       el.onclick=()=>openPlayerModal(p.id);
     }
@@ -2215,37 +2389,54 @@ function renderSlot(pos,idx){
     const icons={G:'🧤',D:'🛡️',M:'⚙️',F:'⚡'};
     circle.style.background='rgba(255,255,255,.15)';circle.style.borderColor='rgba(255,255,255,.4)';circle.style.borderStyle='dashed';
     circle.innerHTML=`<span class="slot-icon ${pos==='G'?'':'sm'}">${icons[pos]}</span>`;
-    el.querySelector('.sn').textContent='Pasirink';const sp=el.querySelector('.sp');sp.textContent='';sp.className='sp';
+    el.querySelector('.sn').textContent=t('slot_pick');const sp=el.querySelector('.sp');sp.textContent='';sp.className='sp';
     const sfx=el.querySelector('.sfx');if(sfx)sfx.textContent='';
     el.onclick=()=>{if(!isLocked())slotClick(pos,idx);};
   }
 }
 function renderAllSlots(){Object.keys(STATE.slots).forEach(pos=>STATE.slots[pos].forEach((_,idx)=>renderSlot(pos,idx)));}
 
+// Called by setLang() after a language switch — re-renders whatever
+// dynamic (JS-generated) content is currently on screen so it picks up
+// the new language too, not just the static chrome around it.
+function refreshDynamicI18n(){
+  if(!CURRENT_USER)return;
+  if(document.getElementById('page-dash')?.classList.contains('on'))renderDash();
+  if(document.getElementById('page-squad')?.classList.contains('on')){
+    renderFilters();renderList();renderSquadMsg();renderFixtures();updateBottomBar();renderAllSlots();
+  }
+  // A custom fantasy team name overrides the localized placeholder title
+  // that applyStaticI18n() just reset it to — put it back.
+  if(STATE.fantasyTeamName){
+    const dt=document.getElementById('dash-title');if(dt)dt.textContent=STATE.fantasyTeamName;
+    const st=document.getElementById('squad-panel-title');if(st)st.textContent=STATE.fantasyTeamName;
+  }
+}
+
 function updateBottomBar(){
   const u=usedBudget(),f=filledSlots(),left=CONFIG.BUDGET-u;
   document.getElementById('bud-left').textContent=left.toFixed(1)+'M';
   document.getElementById('bud-left').className='bv'+(left<8?' low':'');
-  document.getElementById('bud-used').textContent=`panaudota: ${u.toFixed(1)}M`;
+  document.getElementById('bud-used').textContent=`${t('budget_used')} ${u.toFixed(1)}M`;
   document.getElementById('slot-cnt').textContent=`${f}/7`;
   document.getElementById('bb-n').textContent=f;
-  document.getElementById('bb-b').textContent=`Biudžetas: ${left.toFixed(1)}M`;
+  document.getElementById('bb-b').textContent=`${t('budget_label')} ${left.toFixed(1)}M`;
   document.getElementById('hdr-pts').textContent=computeScoring(STATE.mySquads,STATE.DB).totalPts;
   const btn=document.getElementById('bb-btn');
   const hasSquad=STATE.mySquads[STATE.curRound]!==undefined;
   btn.disabled=f<7||isLocked();
   btn.textContent=isLocked()
-    ? (hasSquad?'Peržiūra (istorija)':'Terminas praėjo')
-    : (hasSquad?'Atnaujinti komandą ✓':'Pateikti komandą ▶');
+    ? (hasSquad?t('bb_review'):t('bb_deadline_passed'))
+    : (hasSquad?t('bb_update'):t('bb_submit'));
 }
 
 // ═══════════════════════════════════════════════
 // SUBMIT & CALC
 // ═══════════════════════════════════════════════
 async function submitSquad(){
-  if(isPastDeadline(STATE.curRound)){toast(`Terminas praėjo (${formatDeadline(STATE.curRound)}) — komandos pateikti nebegalima`);return;}
-  if(filledSlots()<7){toast('Reikia 7 žaidėjų!');return;}
-  if(!STATE.captain){toast('Pasirink kapitoną — spausk C ženkliuką ant žaidėjo');return;}
+  if(isPastDeadline(STATE.curRound)){toast(t('toast_deadline_submit',formatDeadline(STATE.curRound)));return;}
+  if(filledSlots()<7){toast(t('toast_need7'));return;}
+  if(!STATE.captain){toast(t('toast_need_captain'));return;}
   const isUpdate=STATE.mySquads[STATE.curRound]!==undefined;
   const prevSquad=STATE.mySquads[STATE.curRound];
   const slotsCopy={};
@@ -2254,7 +2445,7 @@ async function submitSquad(){
   STATE.mySquads[STATE.curRound]=newSquad;
   renderAllSlots();updateBottomBar();renderSquadMsg();
   const btn=document.getElementById('bb-btn');
-  if(btn){btn.disabled=true;btn.textContent='Saugoma...';}
+  if(btn){btn.disabled=true;btn.textContent=t('bb_saving');}
   try{
     await saveSquadForRound(CURRENT_USER.uid,STATE.curRound,newSquad);
     saveCurrentState();
@@ -2264,7 +2455,7 @@ async function submitSquad(){
     // squad) — roll back so the UI never claims a save that didn't happen.
     STATE.mySquads[STATE.curRound]=prevSquad;
     renderAllSlots();renderSquadMsg();
-    toast('Nepavyko išsaugoti komandos — pabandyk dar kartą arba susisiek su administratoriumi');
+    toast(t('toast_save_fail'));
   }finally{
     updateBottomBar();
   }
@@ -2274,7 +2465,7 @@ async function submitSquad(){
 // submit, first time or a later update, per request: don't just toast it.
 function showSquadSavedScreen(isUpdate){
   const snap=STATE.mySquads[STATE.curRound];if(!snap)return;
-  document.getElementById('res-lbl').textContent=`${FR[STATE.curRound].n} — komanda ${isUpdate?'atnaujinta':'išsaugota'}`;
+  document.getElementById('res-lbl').textContent=t('res_lbl',FR[STATE.curRound].n,isUpdate);
   const cards=[];
   Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
     if(!p)return;
@@ -2282,7 +2473,7 @@ function showSquadSavedScreen(isUpdate){
     cards.push(`<div class="rc good ${isC?'cap':''}">
       <div class="rcname">${isC?'⭐ ':''}${p.name}</div>
       <div class="rcteam">${p.team} · ${POS_FL[pos]}</div>
-      <div class="rcpts ${isC?'cap':''}">${p.price.toFixed(1)}M${isC?' · kapitonas':''}</div>
+      <div class="rcpts ${isC?'cap':''}">${p.price.toFixed(1)}M${isC?' · '+t('res_captain_suffix'):''}</div>
     </div>`);
   }));
   document.getElementById('res-grid').innerHTML=cards.join('');
