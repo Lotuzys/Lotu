@@ -530,7 +530,7 @@ a{color:var(--or)}
   </nav>
   <div class="tright">
     <div class="lang-sw" id="lang-sw">
-      <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu()">🇱🇹 LT <span class="lang-car">▾</span></button>
+      <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu()">🇱🇹 <span class="lang-car">▾</span></button>
       <div class="lang-menu" id="lang-menu">
         <div class="lang-opt" data-lang="lt" onclick="setLang('lt')">🇱🇹 Lietuvių</div>
         <div class="lang-opt" data-lang="en" onclick="setLang('en')">🇬🇧 English</div>
@@ -1044,7 +1044,7 @@ function applyStaticI18n(){
 }
 function renderLangSwitcher(){
   const btn=document.getElementById('lang-btn');if(!btn)return;
-  btn.innerHTML=LANG==='en'?'🇬🇧 EN <span class="lang-car">▾</span>':'🇱🇹 LT <span class="lang-car">▾</span>';
+  btn.innerHTML=`${LANG==='en'?'🇬🇧':'🇱🇹'} <span class="lang-car">▾</span>`;
   document.querySelectorAll('.lang-opt').forEach(el=>el.classList.toggle('sel',el.dataset.lang===LANG));
 }
 function toggleLangMenu(){document.getElementById('lang-menu')?.classList.toggle('open');}
