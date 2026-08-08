@@ -1650,7 +1650,16 @@ window.addEventListener('popstate',e=>{
 // ═══════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════
-async function fetchAllUsers(){
+// Dashboard/leaders/ownership% all need the full participant+squads dataset,
+// and each independently calls this on page-open/round-switch. Without
+// sharing, one login can fire 3+ full collection reads back-to-back, and a
+// deadline-morning rush (everyone opening the app + nudging their squad at
+// once) multiplies that across every concurrent user. A short client-side
+// cache collapses repeat calls within the same burst into a single read.
+let _allUsersCache=null,_allUsersCacheAt=0;
+const ALLUSERS_CACHE_MS=20000;
+async function fetchAllUsers(forceRefresh){
+  if(!forceRefresh&&_allUsersCache&&Date.now()-_allUsersCacheAt<ALLUSERS_CACHE_MS)return _allUsersCache;
   try{
     const [usersSnap,squadsSnap]=await Promise.all([
       db.collection('users').get(),
@@ -1661,8 +1670,10 @@ async function fetchAllUsers(){
       const uid=d.ref.parent.parent.id;
       (squadsByUid[uid]??={})[d.id]=d.data();
     });
-    return usersSnap.docs.map(d=>({id:d.id,...d.data(),mySquads:squadsByUid[d.id]??{}}));
-  }catch(e){console.error('Nepavyko įkelti dalyvių sąrašo',e);return [];}
+    const result=usersSnap.docs.map(d=>({id:d.id,...d.data(),mySquads:squadsByUid[d.id]??{}}));
+    _allUsersCache=result;_allUsersCacheAt=Date.now();
+    return result;
+  }catch(e){console.error('Nepavyko įkelti dalyvių sąrašo',e);return _allUsersCache??[];}
 }
 
 async function renderDash(){
