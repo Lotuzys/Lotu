@@ -1805,7 +1805,7 @@ function renderSortOptions(){
   // (see renderList) once points run out, e.g. before a round with data.
   const cur=sel.value||'total';
   const lastOpt=lastRoundWithData()!==null?`<option value="last">Paskutinis turas</option>`:'';
-  sel.innerHTML=`<option value="total">Taškai (viso)</option><option value="price">Kaina</option>${lastOpt}`;
+  sel.innerHTML=`<option value="total">Taškai (viso)</option><option value="price">Kaina</option>${lastOpt}<option value="ownership">Nuosavybė</option><option value="goals">Įmušti įvarčiai</option>`;
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:'total';
 }
 
@@ -1818,22 +1818,30 @@ function renderList(){
     return true;
   });
   const sortMode=document.getElementById('sort-f')?.value||'total';
-  // When sorting by a points metric, that same metric becomes the headline
-  // number on the right (replacing price) — otherwise price stays there as
-  // before. pointsFor(id) is null when sorting by price, so the row
-  // template below knows which to show.
-  let pointsFor=null;
+  // Whatever metric we're sorting by becomes the headline number on the
+  // right (replacing price) — otherwise price stays there as before.
+  // headlineFor(p) is null when sorting by price, so the row template
+  // below knows which to show. Sorting by ownership makes the gray
+  // ownership-% line under the headline redundant, so it's hidden then.
+  let headlineFor=null,showOwnRow=true;
   if(sortMode==='total'){
     const totals=computeSeasonPlayerPts();
     // Tied on points (most commonly everyone at 0, before any results are
     // in) falls back to price, instead of leaving the order arbitrary.
     list.sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0)||b.price-a.price);
-    pointsFor=id=>totals[id]||0;
+    headlineFor=p=>`${totals[p.id]||0}pts`;
   }else if(sortMode==='last'){
     const ri=lastRoundWithData();
     const roundPts=ri!==null?computeAllPlayerRoundPts(ri):{};
     list.sort((a,b)=>(roundPts[b.id]||0)-(roundPts[a.id]||0)||b.price-a.price);
-    pointsFor=id=>roundPts[id]||0;
+    headlineFor=p=>`${roundPts[p.id]||0}pts`;
+  }else if(sortMode==='ownership'){
+    list.sort((a,b)=>ownershipPct(b.id)-ownershipPct(a.id)||b.price-a.price);
+    headlineFor=p=>`${ownershipPct(p.id)}%`;
+    showOwnRow=false;
+  }else if(sortMode==='goals'){
+    list.sort((a,b)=>b.goals-a.goals||b.price-a.price);
+    headlineFor=p=>`⚽ ${p.goals}`;
   }else{
     list.sort((a,b)=>b.price-a.price);
   }
@@ -1842,13 +1850,13 @@ function renderList(){
     const isTaken=STATE.taken.has(p.id);
     const teamBlocked=STATE.takenTeams.has(p.team)&&!isTaken;
     const warn=teamBlocked?'<span style="color:var(--red);font-size:9px;margin-left:4px">komanda pilna</span>':'';
-    const headline=pointsFor?`${pointsFor(p.id)}pts`:`${p.price.toFixed(1)}M`;
+    const headline=headlineFor?headlineFor(p):`${p.price.toFixed(1)}M`;
     return `<div class="pi ${isTaken?'taken':''}" onclick="openPlayerModal(${p.id})">
       <div class="pi-av">${kitSvg(p.team,32)}</div>
       <div class="pi-info"><div class="pi-name">${p.name}${warn}</div>
       <div class="pi-team">${teamLogoImg(p.team,14)}${p.team}</div>
       <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div>
-      <div class="pi-right"><div class="pi-price-val">${headline}</div><div class="pi-own-val">${ownershipPct(p.id)}%</div></div>
+      <div class="pi-right"><div class="pi-price-val">${headline}</div>${showOwnRow?`<div class="pi-own-val">${ownershipPct(p.id)}%</div>`:''}</div>
     </div>`;
   }).join('')||'<div style="padding:18px;text-align:center;color:var(--mu);font-size:12px">Nerasta</div>';
 }
@@ -1911,6 +1919,12 @@ function openPlayerModal(id){
 function openPlayerHistoryModal(idArg){
   const id=idArg!==undefined&&idArg!==null?idArg:PM_CURRENT_ID;
   const p=PLAYERS.find(x=>x.id===id);if(!p)return;
+  // Whichever card launched this (live picker or read-only historical
+  // squad view) closes immediately — otherwise it stays open underneath,
+  // stacking two near-identical-looking overlays and making it look like
+  // nothing happened.
+  document.getElementById('pm-bg').classList.remove('open');
+  document.getElementById('rpm-bg').classList.remove('open');
   document.getElementById('phist-av').innerHTML=kitSvg(p.team,58);
   document.getElementById('phist-name').textContent=p.name;
   document.getElementById('phist-team').innerHTML=`${teamLogoImg(p.team,16)}${p.team}`;
