@@ -1464,15 +1464,15 @@ function ownershipPct(id){return OWNERSHIP[id]??0;}
 async function refreshOwnership(){
   try{
     const allUsers=await fetchAllUsers();
-    const round=computeCurrentRound();
+    // Whichever round is actually on the pitch right now — not always the
+    // live round, since goRound() also lets you browse past ones. A past
+    // squad is history; it says nothing about who's owned in the round
+    // being built now, so no falling back to someone's last-saved squad
+    // when they haven't picked for this round yet — they just don't count.
+    const round=STATE.curRound;
     const counts={};
     allUsers.forEach(u=>{
-      const squads=u.mySquads||{};
-      let squad=squads[round];
-      if(!squad){
-        const keys=Object.keys(squads).map(Number);
-        if(keys.length)squad=squads[Math.max(...keys)];
-      }
+      const squad=(u.mySquads||{})[round];
       if(!squad)return;
       Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
     });
@@ -1840,8 +1840,10 @@ function renderList(){
     headlineFor=p=>`${ownershipPct(p.id)}%`;
     showOwnRow=false;
   }else if(sortMode==='goals'){
-    list.sort((a,b)=>b.goals-a.goals||b.price-a.price);
-    headlineFor=p=>`⚽ ${p.goals}`;
+    // This season's goals (from entered match results), not PLAYERS[].goals
+    // — that field is last season's tally, used only for initial pricing.
+    list.sort((a,b)=>currentSeasonGoals(b.id)-currentSeasonGoals(a.id)||b.price-a.price);
+    headlineFor=p=>`⚽ ${currentSeasonGoals(p.id)}`;
   }else{
     list.sort((a,b)=>b.price-a.price);
   }
