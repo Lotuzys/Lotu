@@ -68,9 +68,11 @@ a{color:var(--or)}
 .lang-car{font-size:8px;color:var(--mu)}
 .lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--bor);border-radius:12px;box-shadow:var(--sh-lg);overflow:hidden;min-width:150px;z-index:400}
 .lang-menu.open{display:block;animation:fadein .15s var(--ease)}
-.lang-opt{padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;transition:background .12s var(--ease);white-space:nowrap}
+.lang-opt{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;transition:background .12s var(--ease);white-space:nowrap}
 .lang-opt:hover{background:var(--sur)}
 .lang-opt.sel{color:var(--or);font-weight:800;background:var(--ordim)}
+.flag-ic-wrap{display:inline-flex;flex-shrink:0}
+.flag-ic{width:18px;height:11px;border-radius:2px;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.1)}
 
 /* SPONSOR */
 .spons-top{margin-right:16px;padding-right:16px;border-right:1px solid var(--bor);display:flex;align-items:center;flex-shrink:0}
@@ -530,10 +532,10 @@ a{color:var(--or)}
   </nav>
   <div class="tright">
     <div class="lang-sw" id="lang-sw">
-      <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu()">🇱🇹 <span class="lang-car">▾</span></button>
+      <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu()"><span class="flag-ic-wrap"></span><span class="lang-car">▾</span></button>
       <div class="lang-menu" id="lang-menu">
-        <div class="lang-opt" data-lang="lt" onclick="setLang('lt')">🇱🇹 Lietuvių</div>
-        <div class="lang-opt" data-lang="en" onclick="setLang('en')">🇬🇧 English</div>
+        <div class="lang-opt" data-lang="lt" onclick="setLang('lt')"><span class="flag-ic-wrap"></span>Lietuvių</div>
+        <div class="lang-opt" data-lang="en" onclick="setLang('en')"><span class="flag-ic-wrap"></span>English</div>
       </div>
     </div>
     <button class="abtn" id="admbtn" style="display:none" onclick="showPage('admin',this)">⚙ Admin</button>
@@ -1042,10 +1044,19 @@ function applyStaticI18n(){
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{el.title=t(el.dataset.i18nTitle);});
   applyPosLabels();
 }
+// Inline SVGs instead of flag emoji — flag emoji (regional-indicator pairs)
+// render as blank/broken glyphs on Windows and plenty of mobile browsers
+// that lack a color-flag emoji font. An SVG draws identically everywhere.
+const FLAG_LT='<svg class="flag-ic" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="12" fill="#fdb913"/><rect y="12" width="60" height="12" fill="#006a44"/><rect y="24" width="60" height="12" fill="#c1272d"/></svg>';
+const FLAG_GB='<svg class="flag-ic" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="36" fill="#00247d"/><g stroke="#fff" stroke-width="6"><path d="M0,0 L60,36 M60,0 L0,36"/></g><g stroke="#cf142b" stroke-width="2.4"><path d="M0,0 L60,36 M60,0 L0,36"/></g><path d="M30,0 V36 M0,18 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V36 M0,18 H60" stroke="#cf142b" stroke-width="6"/></svg>';
 function renderLangSwitcher(){
   const btn=document.getElementById('lang-btn');if(!btn)return;
-  btn.innerHTML=`${LANG==='en'?'🇬🇧':'🇱🇹'} <span class="lang-car">▾</span>`;
-  document.querySelectorAll('.lang-opt').forEach(el=>el.classList.toggle('sel',el.dataset.lang===LANG));
+  btn.innerHTML=`${LANG==='en'?FLAG_GB:FLAG_LT}<span class="lang-car">▾</span>`;
+  document.querySelectorAll('.lang-opt').forEach(el=>{
+    const isEn=el.dataset.lang==='en';
+    el.querySelector('.flag-ic-wrap').innerHTML=isEn?FLAG_GB:FLAG_LT;
+    el.classList.toggle('sel',el.dataset.lang===LANG);
+  });
 }
 function toggleLangMenu(){document.getElementById('lang-menu')?.classList.toggle('open');}
 function setLang(l){
