@@ -739,7 +739,7 @@ a{color:var(--or)}
 <!-- HISTORY -->
 <div class="page" id="page-history">
   <div class="hist-wrap">
-    <div class="hist-header"><span class="hist-title">Turų istorija</span><span class="hist-sub" id="hist-sub">0 turų sužaista</span></div>
+    <div class="hist-header"><span class="hist-title" data-i18n="hist_title">Turų istorija</span><span class="hist-sub" id="hist-sub">0 turų sužaista</span></div>
     <div id="hist-content"></div>
   </div>
 </div>
@@ -747,23 +747,23 @@ a{color:var(--or)}
 <!-- STANDINGS -->
 <div class="page" id="page-standings">
   <div class="swrap"><div class="pan">
-    <div class="ph"><h3>A grupės lentelė</h3><span class="sub">prasideda nuo 0</span></div>
-    <table class="st"><thead><tr><th>#</th><th>Komanda</th><th>R</th><th>P</th><th>L</th><th>Pr</th><th>Įm</th><th>Pr</th><th>+/−</th><th>Tšk</th></tr></thead><tbody id="stand-full"></tbody></table>
+    <div class="ph"><h3 data-i18n="standings_title">A grupės lentelė</h3><span class="sub" data-i18n="standings_sub">prasideda nuo 0</span></div>
+    <table class="st"><thead><tr><th>#</th><th data-i18n="th_team">Komanda</th><th data-i18n="th_played" data-i18n-title="th_played_full" title="Rungtynės">R</th><th data-i18n="th_wins" data-i18n-title="th_wins_full" title="Pergalės">P</th><th data-i18n="th_draws" data-i18n-title="th_draws_full" title="Lygiosios">L</th><th data-i18n="th_losses" data-i18n-title="th_losses_full" title="Pralaimėjimai">Pr</th><th data-i18n="th_goalsfor" data-i18n-title="th_goalsfor_full" title="Įmušti">Įm</th><th data-i18n="th_goalsagainst" data-i18n-title="th_goalsagainst_full" title="Praleisti">Pr</th><th>+/−</th><th data-i18n="th_points" data-i18n-title="th_points_full" title="Taškai">Tšk</th></tr></thead><tbody id="stand-full"></tbody></table>
   </div></div>
 </div>
 
 <!-- LEADERS -->
 <div class="page" id="page-leaders">
   <div class="lbwrap"><div class="pan">
-    <div class="ph"><h3>Fantasy lyderiai</h3><span class="sub" id="lb-sub">0 turų</span></div>
+    <div class="ph"><h3 data-i18n="leaders_title">Fantasy lyderiai</h3><span class="sub" id="lb-sub">0 turų</span></div>
     <div class="lb-filters">
       <div class="lb-mode">
-        <button class="lb-mb on" id="lbm-season" onclick="setLBMode('season')">Sezono lyderiai</button>
-        <button class="lb-mb" id="lbm-round" onclick="setLBMode('round')">Turo lyderiai</button>
+        <button class="lb-mb on" id="lbm-season" onclick="setLBMode('season')" data-i18n="lb_mode_season">Sezono lyderiai</button>
+        <button class="lb-mb" id="lbm-round" onclick="setLBMode('round')" data-i18n="lb_mode_round">Turo lyderiai</button>
       </div>
       <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
     </div>
-    <div class="lb-sponsor-note">🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!</div>
+    <div class="lb-sponsor-note" data-i18n="lb_sponsor_note">🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!</div>
     <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
   </div></div>
@@ -773,11 +773,11 @@ a{color:var(--or)}
      anyone's fantasy picks; filterable to a single round's best XI. -->
 <div class="page" id="page-teamseason">
   <div class="lbwrap"><div class="pan">
-    <div class="ph"><h3>Sezono rinktinė</h3><span class="sub" id="ts-sub"></span></div>
+    <div class="ph"><h3 data-i18n="nav_teamseason">Sezono rinktinė</h3><span class="sub" id="ts-sub"></span></div>
     <div class="lb-filters">
       <div class="lb-mode">
-        <button class="lb-mb on" id="tsm-season" onclick="setTSMode('season')">Sezono rinktinė</button>
-        <button class="lb-mb" id="tsm-round" onclick="setTSMode('round')">Turo rinktinė</button>
+        <button class="lb-mb on" id="tsm-season" onclick="setTSMode('season')" data-i18n="ts_mode_season">Sezono rinktinė</button>
+        <button class="lb-mb" id="tsm-round" onclick="setTSMode('round')" data-i18n="ts_mode_round">Turo rinktinė</button>
       </div>
       <div class="rtabs" id="ts-rounds" style="display:none;margin-bottom:0"></div>
     </div>
@@ -805,18 +805,18 @@ a{color:var(--or)}
       <div class="pmname" id="pm-name"></div>
       <div class="pmteam" id="pm-team"></div>
       <span class="pmchip" id="pm-chip"></span>
-      <button class="pmcapmini" id="pm-cap-mini" style="display:none" onclick="toggleCaptainForPlayer(PM_CURRENT_ID);openPlayerModal(PM_CURRENT_ID)">Rinktis C</button>
+      <button class="pmcapmini" id="pm-cap-mini" style="display:none" onclick="toggleCaptainForPlayer(PM_CURRENT_ID);openPlayerModal(PM_CURRENT_ID)" data-i18n="pick_captain_btn">Rinktis C</button>
       <button class="pmclose" onclick="document.getElementById('pm-bg').classList.remove('open')">✕</button>
     </div>
     <div class="pmstats">
-      <div class="pmst"><div class="pmstv" id="pm-goals"></div><div class="pmstl">Įvarčiai</div></div>
-      <div class="pmst"><div class="pmstv" id="pm-szpts"></div><div class="pmstl">Taškai</div></div>
-      <div class="pmst"><div class="pmstv" id="pm-price"></div><div class="pmstl">Kaina</div></div>
-      <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl">Nuosavybė</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-goals"></div><div class="pmstl" data-i18n="stat_goals">Įvarčiai</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-szpts"></div><div class="pmstl" data-i18n="pts_label">Taškai</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-price"></div><div class="pmstl" data-i18n="stat_price">Kaina</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl" data-i18n="sort_own">Nuosavybė</div></div>
     </div>
     <div class="pmfix" id="pm-fixtures"></div>
-    <button class="pmhistlink" id="pm-hist-link" onclick="openPlayerHistoryModal()">📊 Turų taškų istorija</button>
-    <div class="pmact"><button class="pmadd" id="pm-add-btn">Pridėti</button></div>
+    <button class="pmhistlink" id="pm-hist-link" onclick="openPlayerHistoryModal()" data-i18n="hist_link">📊 Turų taškų istorija</button>
+    <div class="pmact"><button class="pmadd" id="pm-add-btn" data-i18n="btn_add">Pridėti</button></div>
   </div>
 </div>
 
@@ -849,7 +849,7 @@ a{color:var(--or)}
     </div>
     <div class="pmstats" id="rpm-stats"></div>
     <div id="rpm-breakdown"></div>
-    <button class="pmhistlink" id="rpm-hist-link" onclick="openPlayerHistoryModal(RPM_CURRENT_ID)">📊 Turų taškų istorija</button>
+    <button class="pmhistlink" id="rpm-hist-link" onclick="openPlayerHistoryModal(RPM_CURRENT_ID)" data-i18n="hist_link">📊 Turų taškų istorija</button>
   </div>
 </div>
 
@@ -862,12 +862,12 @@ a{color:var(--or)}
       <div class="prof-sub" id="prof-sub">—</div>
     </div>
     <div class="prof-body">
-      <div class="prof-row"><span class="prof-row-lbl">Fantasy komanda</span><span class="prof-row-val" id="prof-teamname">—</span></div>
-      <div class="prof-row"><span class="prof-row-lbl">Mėgstama komanda</span><span class="prof-row-val" id="prof-favteam">—</span></div>
-      <div class="prof-row"><span class="prof-row-lbl">Iš viso taškų</span><span class="prof-row-val" id="prof-pts">0</span></div>
-      <div class="prof-row"><span class="prof-row-lbl">Turų sužaista</span><span class="prof-row-val" id="prof-rounds">0</span></div>
-      <button class="prof-close" onclick="document.getElementById('prof-bg').classList.remove('open')">Uždaryti</button>
-      <button class="prof-logout" onclick="doLogout()">Atsijungti</button>
+      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_teamname">Fantasy komanda</span><span class="prof-row-val" id="prof-teamname">—</span></div>
+      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_favteam">Mėgstama komanda</span><span class="prof-row-val" id="prof-favteam">—</span></div>
+      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_totalpts">Iš viso taškų</span><span class="prof-row-val" id="prof-pts">0</span></div>
+      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_roundsplayed">Turų sužaista</span><span class="prof-row-val" id="prof-rounds">0</span></div>
+      <button class="prof-close" onclick="document.getElementById('prof-bg').classList.remove('open')" data-i18n="btn_close">Uždaryti</button>
+      <button class="prof-logout" onclick="doLogout()" data-i18n="btn_logout">Atsijungti</button>
     </div>
   </div>
 </div>
@@ -878,7 +878,7 @@ a{color:var(--or)}
     <div class="rhero"><div class="remo" id="res-emo">✅</div><div class="rscore" id="res-score">✓</div><div class="rlbl" id="res-lbl">Komanda išsaugota</div></div>
     <div class="rgrid2" id="res-grid"></div>
     <div class="racts">
-      <button class="rbk" onclick="document.getElementById('res-panel').classList.remove('open')">Gerai, ačiū →</button>
+      <button class="rbk" onclick="document.getElementById('res-panel').classList.remove('open')" data-i18n="btn_ok_thanks">Gerai, ačiū →</button>
     </div>
   </div>
 </div>
@@ -986,6 +986,31 @@ const I18N={
     toast_round_not_open:'Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas',
     players_count_suffix:'žaid.',team_full:'komanda pilna',not_found:'Nerasta',
     res_lbl:(r,isUpdate)=>`${r} — komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
+    hist_title:'Turų istorija',standings_title:'A grupės lentelė',standings_sub:'prasideda nuo 0',
+    th_team:'Komanda',th_played:'R',th_wins:'P',th_draws:'L',th_losses:'Pr',th_goalsfor:'Įm',th_goalsagainst:'Pr',th_points:'Tšk',
+    th_played_full:'Rungtynės',th_wins_full:'Pergalės',th_draws_full:'Lygiosios',th_losses_full:'Pralaimėjimai',
+    th_goalsfor_full:'Įmušti',th_goalsagainst_full:'Praleisti',th_points_full:'Taškai',
+    leaders_title:'Fantasy lyderiai',lb_mode_season:'Sezono lyderiai',lb_mode_round:'Turo lyderiai',
+    lb_sponsor_note:'🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!',
+    ts_mode_season:'Sezono rinktinė',ts_mode_round:'Turo rinktinė',
+    pick_captain_btn:'Rinktis C',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
+    prof_teamname:'Fantasy komanda',prof_favteam:'Mėgstama komanda',prof_totalpts:'Iš viso taškų',prof_roundsplayed:'Turų sužaista',
+    btn_close:'Uždaryti',btn_logout:'Atsijungti',btn_ok_thanks:'Gerai, ačiū →',
+    pmfix_lbl:'Šio turo rungtynės',pm_locked:'Komanda užfiksuota',pm_taken:'Jau pasirinktas ✓',
+    pm_team_taken:'Komanda jau atstovaujama',pm_add_price:price=>`Pridėti (${price}M)`,
+    phist_current_suffix:'(einamasis)',phist_total_label:n=>`Iš viso (${n} turai)`,
+    match_vs:(i,opp)=>`${i} rungtynės — vs ${opp}`,no_data:'Nėra duomenų',
+    mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarus tinklelis',mstat_one:'Praleistas 1 įvartis',
+    mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
+    zero_pts:'0 taškų',no_result_yet:'Šiam turui dar nėra rezultato',zero_pts_round:'0 taškų šį turą',
+    captain_label:'Kapitonas',
+    toast_new_round:r=>`${r} — rinkis naują komandą!`,
+    hist_sub_count:n=>`${n} turų sužaista`,hist_empty:'Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!',
+    hist_no_squad:'Komanda nepasirinkta',round_tab:n=>`${n} turas`,
+    own_round_label:n=>`Nuosavybė (${n} turas)`,round_pts_label:'Turo taškai',season_pts_label:'Sezono taškai',
+    no_finished_rounds:'Dar nėra pasibaigusių turų',whole_season:'visas sezonas',fallback_player:'Žaidėjas',
+    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas, laimi Carlsberg dėžę!`,
+    lb_sub_count:n=>`${n} dalyvių`,you_suffix:'(Tu)',rounds_count:n=>`${n} turų`,no_participants:'Dar nėra dalyvių',
   },
   en:{
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
@@ -1037,6 +1062,31 @@ const I18N={
     toast_round_not_open:'This round isn\'t open yet — wait for the previous one to close',
     players_count_suffix:'players',team_full:'team full',not_found:'No results',
     res_lbl:(r,isUpdate)=>`${r} — team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
+    hist_title:'Round History',standings_title:'Group A Table',standings_sub:'starts from 0',
+    th_team:'Team',th_played:'P',th_wins:'W',th_draws:'D',th_losses:'L',th_goalsfor:'F',th_goalsagainst:'A',th_points:'Pts',
+    th_played_full:'Played',th_wins_full:'Wins',th_draws_full:'Draws',th_losses_full:'Losses',
+    th_goalsfor_full:'Goals for',th_goalsagainst_full:'Goals against',th_points_full:'Points',
+    leaders_title:'Fantasy Leaders',lb_mode_season:'Season Leaders',lb_mode_round:'Round Leaders',
+    lb_sponsor_note:'🍺 This league is sponsored by <strong>Carlsberg</strong> — every round\'s leader wins a Carlsberg crate!',
+    ts_mode_season:'Team of the Season',ts_mode_round:'Team of the Round',
+    pick_captain_btn:'Make Captain',stat_goals:'Goals',stat_price:'Price',hist_link:'📊 Round Points History',btn_add:'Add',
+    prof_teamname:'Fantasy Team',prof_favteam:'Favorite Team',prof_totalpts:'Total Points',prof_roundsplayed:'Rounds Played',
+    btn_close:'Close',btn_logout:'Log Out',btn_ok_thanks:'OK, thanks →',
+    pmfix_lbl:'This round\'s matches',pm_locked:'Team locked',pm_taken:'Already picked ✓',
+    pm_team_taken:'Club already used',pm_add_price:price=>`Add (${price}M)`,
+    phist_current_suffix:'(current)',phist_total_label:n=>`Total (${n} rounds)`,
+    match_vs:(i,opp)=>`Match ${i} — vs ${opp}`,no_data:'No data',
+    mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
+    mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
+    zero_pts:'0 points',no_result_yet:'No result for this round yet',zero_pts_round:'0 points this round',
+    captain_label:'Captain',
+    toast_new_round:r=>`${r} — pick a new team!`,
+    hist_sub_count:n=>`${n} rounds played`,hist_empty:'No history yet.<br>Pick a team and play your first round!',
+    hist_no_squad:'No team picked',round_tab:n=>`Round ${n}`,
+    own_round_label:n=>`Ownership (Round ${n})`,round_pts_label:'Round Points',season_pts_label:'Season Points',
+    no_finished_rounds:'No finished rounds yet',whole_season:'whole season',fallback_player:'Player',
+    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} winner, wins a Carlsberg crate!`,
+    lb_sub_count:n=>`${n} participants`,you_suffix:'(You)',rounds_count:n=>`${n} rounds`,no_participants:'No participants yet',
   },
 };
 function t(key,...args){
@@ -2100,16 +2150,16 @@ function openPlayerModal(id){
   const fixtures=teamFixturesForRound(p.team,STATE.curRound);
   const fixEl=document.getElementById('pm-fixtures');
   if(fixtures.length){
-    fixEl.innerHTML=`<div class="pmfix-lbl">Šio turo rungtynės</div>`+fixtures.map(f=>
+    fixEl.innerHTML=`<div class="pmfix-lbl">${t('pmfix_lbl')}</div>`+fixtures.map(f=>
       `<div class="pmfix-row"><span class="pmfix-day">${FR[STATE.curRound].days[f.day].l}</span>
        <span class="pmfix-opp">${teamLogoImg(f.opponent,14)}${f.opponent}</span></div>`
     ).join('');
   }else{fixEl.innerHTML='';}
   const btn=document.getElementById('pm-add-btn');
-  if(isLocked()){btn.textContent='Komanda užfiksuota';btn.disabled=true;}
-  else if(STATE.taken.has(p.id)){btn.textContent='Jau pasirinktas ✓';btn.disabled=true;}
-  else if(STATE.takenTeams.has(p.team)){btn.textContent='Komanda jau atstovaujama';btn.disabled=true;}
-  else{btn.textContent=`Pridėti (${p.price.toFixed(1)}M)`;btn.disabled=false;
+  if(isLocked()){btn.textContent=t('pm_locked');btn.disabled=true;}
+  else if(STATE.taken.has(p.id)){btn.textContent=t('pm_taken');btn.disabled=true;}
+  else if(STATE.takenTeams.has(p.team)){btn.textContent=t('pm_team_taken');btn.disabled=true;}
+  else{btn.textContent=t('pm_add_price',p.price.toFixed(1));btn.disabled=false;
     btn.onclick=()=>{selectPlayer(p.id);document.getElementById('pm-bg').classList.remove('open');};}
   // "Rinktis C" only shows next to the position chip for a player who's
   // already in your squad, the round is still editable, AND they aren't
@@ -2149,13 +2199,13 @@ function openPlayerHistoryModal(idArg){
     // behind expanding it — it's the one figure worth seeing at a glance.
     return `<div class="phist-rw">
       <div class="phist-row ${ri===STATE.curRound?'cur':''}" onclick="togglePhistRound(this,${id},${ri})">
-        <span>${r.n}${ri===STATE.curRound?' (einamasis)':''}</span>
+        <span>${r.n}${ri===STATE.curRound?' '+t('phist_current_suffix'):''}</span>
         <span class="phist-row-r"><span class="phist-own-mini" id="${ownId}">…</span><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
       </div>
       <div class="phist-sub"></div>
     </div>`;
   }).join('');
-  listEl.innerHTML=`<div class="phist-total"><span>Iš viso (${roundsWithData} turai)</span><span>${total}pts</span></div>${rowsHtml}`;
+  listEl.innerHTML=`<div class="phist-total"><span>${t('phist_total_label',roundsWithData)}</span><span>${total}pts</span></div>${rowsHtml}`;
   document.getElementById('phist-bg').classList.add('open');
   // One real fetchAllUsers() read (the rest hit its short client-side
   // cache) fills in every round's ownership without waiting for each row
@@ -2208,12 +2258,12 @@ function togglePhistRound(rowEl,playerId,ri){
     const matchesHtml=matches.length?matches.map((m,i)=>`
       <div class="phist-mrw">
         <div class="phist-subrow" onclick="togglePhistMatch(this)">
-          <span>${i+1} rungtynės — vs ${m.opponent}</span>
+          <span>${t('match_vs',i+1,m.opponent)}</span>
           <span class="phist-row-r"><span class="${m.pts<0?'neg':''}">${m.pts}pts</span><span class="phist-chev">▾</span></span>
         </div>
         <div class="phist-mdetail">${matchStatRowsHtml(m,p.pos)}</div>
       </div>`
-    ).join(''):'<div class="phist-subrow em">Nėra duomenų</div>';
+    ).join(''):`<div class="phist-subrow em">${t('no_data')}</div>`;
     sub.innerHTML=matchesHtml;
     sub.dataset.loaded='1';
   }
@@ -2254,28 +2304,28 @@ function openStatModal(p,pos,tiles,breakdownHtml){
 // per-match expand.
 function matchStatRowsHtml(m,pos){
   const rows=[];
-  if(m.goals>0)rows.push([`Įvarčiai (${m.goals} × ${CONFIG.PTS_POS[pos]})`,m.goals*CONFIG.PTS_POS[pos]]);
+  if(m.goals>0)rows.push([t('mstat_goals',m.goals,CONFIG.PTS_POS[pos]),m.goals*CONFIG.PTS_POS[pos]]);
   if(pos==='G'||pos==='D'){
-    if(m.cs)rows.push(['Švarus tinklelis',CONFIG.CS_PTS]);
-    else if(m.one)rows.push(['Praleistas 1 įvartis',CONFIG.ONE_GOAL_AGAINST_PTS]);
+    if(m.cs)rows.push([t('mstat_cs'),CONFIG.CS_PTS]);
+    else if(m.one)rows.push([t('mstat_one'),CONFIG.ONE_GOAL_AGAINST_PTS]);
   }
-  if(m.result==='W')rows.push(['Pergalė',CONFIG.WIN_PTS]);
-  else if(m.result==='L')rows.push(['Pralaimėjimas',CONFIG.LOSS_PTS]);
-  if(m.redCount>0)rows.push([`Raudona kortelė (${m.redCount}×)`,m.redCount*CONFIG.RED_CARD_PTS]);
+  if(m.result==='W')rows.push([t('mstat_win'),CONFIG.WIN_PTS]);
+  else if(m.result==='L')rows.push([t('mstat_loss'),CONFIG.LOSS_PTS]);
+  if(m.redCount>0)rows.push([t('mstat_red',m.redCount),m.redCount*CONFIG.RED_CARD_PTS]);
   return rows.map(([lbl,val])=>`<div class="rrow"><span>${lbl}</span><span class="rp ${val<0?'neg':''}">${val>0?'+':''}${val}</span></div>`).join('')
-    ||'<div class="rrow-empty">0 taškų</div>';
+    ||`<div class="rrow-empty">${t('zero_pts')}</div>`;
 }
 function scoringBreakdownHtml(det,pos){
   if(!det||!det.played){
-    return '<div class="rrow-empty">Šiam turui dar nėra rezultato</div>';
+    return `<div class="rrow-empty">${t('no_result_yet')}</div>`;
   }
   if(!det.matches||!det.matches.length){
-    return '<div class="rrow-empty">0 taškų šį turą</div>';
+    return `<div class="rrow-empty">${t('zero_pts_round')}</div>`;
   }
   let html=det.matches.map((m,i)=>
-    `<div class="rrow-match-lbl">${i+1} rungtynės — vs ${m.opponent}</div>${matchStatRowsHtml(m,pos)}`
+    `<div class="rrow-match-lbl">${t('match_vs',i+1,m.opponent)}</div>${matchStatRowsHtml(m,pos)}`
   ).join('');
-  if(det.isC)html+=`<div class="rrow cap-row"><span>Kapitonas</span><span class="rp cap">×2</span></div>`;
+  if(det.isC)html+=`<div class="rrow cap-row"><span>${t('captain_label')}</span><span class="rp cap">×2</span></div>`;
   return html;
 }
 
@@ -2302,9 +2352,9 @@ async function openHistoricalPlayerModal(pos,idx){
   const det=roundDetail[STATE.curRound]?.find(d=>d.name===p.name)||{pts:0,goals:0,wins:0,losses:0,played:false,matches:[]};
   det.isC=isC;
   openStatModal(p,pos,[
-    {val:p.price.toFixed(1)+'M',label:'Kaina'},
-    {val:'…',label:`Nuosavybė (${STATE.curRound+1} turas)`,id:'rpm-round-owner'},
-    {val:det.pts+'pts',label:'Turo taškai'},
+    {val:p.price.toFixed(1)+'M',label:t('stat_price')},
+    {val:'…',label:t('own_round_label',STATE.curRound+1),id:'rpm-round-owner'},
+    {val:det.pts+'pts',label:t('round_pts_label')},
   ],scoringBreakdownHtml(det,pos));
   const pct=await computeOwnershipForRound(p.id,STATE.curRound);
   const el=document.getElementById('rpm-round-owner');if(el)el.textContent=pct+'%';
@@ -2430,6 +2480,10 @@ function refreshDynamicI18n(){
   if(document.getElementById('page-squad')?.classList.contains('on')){
     renderFilters();renderList();renderSquadMsg();renderFixtures();updateBottomBar();renderAllSlots();
   }
+  if(document.getElementById('page-history')?.classList.contains('on'))renderHistory();
+  if(document.getElementById('page-standings')?.classList.contains('on'))renderStFull();
+  if(document.getElementById('page-leaders')?.classList.contains('on')){renderLBRoundTabs();renderLB();}
+  if(document.getElementById('page-teamseason')?.classList.contains('on')){renderTSRoundTabs();renderTeamOfSeason();}
   // A custom fantasy team name overrides the localized placeholder title
   // that applyStaticI18n() just reset it to — put it back.
   if(STATE.fantasyTeamName){
@@ -2510,7 +2564,7 @@ function goNextRound(){
   STATE.captain=null;STATE.activePos=null;STATE.activePosIdx=null;
   STATE.activePosF='Visos';STATE.activeTeamF='Visos';
   clearAllSlots();renderFilters();renderList();renderAllSlots();updateBottomBar();renderSquadMsg();renderFixtures();
-  toast(`${FR[STATE.curRound].n} — rinkis naują komandą!`);saveCurrentState();
+  toast(t('toast_new_round',FR[STATE.curRound].n));saveCurrentState();
 }
 
 // ═══════════════════════════════════════════════
@@ -2518,9 +2572,9 @@ function goNextRound(){
 // ═══════════════════════════════════════════════
 function renderHistory(){
   const {roundPts,roundDetail,roundsPlayed}=computeScoring(STATE.mySquads,STATE.DB);
-  document.getElementById('hist-sub').textContent=`${roundsPlayed} turų sužaista`;
+  document.getElementById('hist-sub').textContent=t('hist_sub_count',roundsPlayed);
   const el=document.getElementById('hist-content');
-  if(!roundsPlayed){el.innerHTML=`<div class="empty-hist">⚽<br><br>Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!</div>`;return;}
+  if(!roundsPlayed){el.innerHTML=`<div class="empty-hist">⚽<br><br>${t('hist_empty')}</div>`;return;}
   let html='<div class="hist-grid">';
   FR.forEach((r,i)=>{
     const snap=STATE.mySquads[i];const pts=roundPts[i];const detail=roundDetail[i];
@@ -2528,7 +2582,7 @@ function renderHistory(){
     // straight to that round's pitch (goRound handles live vs. historical).
     const clickable=!!snap;
     html+=`<div class="hcard ${i===STATE.curRound?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
-      <div class="hcard-head"><div class="hcard-title">${r.n}${i===STATE.curRound?' (einamasis)':''}</div>
+      <div class="hcard-head"><div class="hcard-title">${r.n}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
       <div class="hcard-pts ${pts===undefined?'em':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
       <div class="hcard-body">`;
     if(snap){['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
@@ -2537,7 +2591,7 @@ function renderHistory(){
       html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
         <div class="hcp-name">${isC?'⭐ ':''}${p.name} <span class="hcp-pos">${POS_LT[pos]}</span></div>
         <div class="hcp-pts ${isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
-    }));}else{html+=`<div style="font-size:11px;color:var(--mu);padding:8px 0">Komanda nepasirinkta</div>`;}
+    }));}else{html+=`<div style="font-size:11px;color:var(--mu);padding:8px 0">${t('hist_no_squad')}</div>`;}
     html+=`</div></div>`;
   });
   el.innerHTML=html+'</div>';
@@ -2639,7 +2693,7 @@ function bestXI(ptsMap,hasData){
 function tsSlotHtml(entry,pos){
   const icons={G:'🧤',D:'🛡️',M:'⚙️',F:'⚡'};
   if(!entry){
-    return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">${icons[pos]}</span></div><div class="sn">—</div><div class="sp">Nėra duomenų</div></div>`;
+    return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">${icons[pos]}</span></div><div class="sn">—</div><div class="sp">${t('no_data')}</div></div>`;
   }
   const p=entry.p;
   const badge=TEAM_LOGOS[p.team]?`<img class="slot-badge" src="${TEAM_LOGOS[p.team]}" alt="">`:'';
@@ -2660,8 +2714,8 @@ function openTSPlayerModal(pos,playerId){
   const p=PLAYERS.find(x=>x.id===playerId);if(!p)return;
   const seasonTotal=computeSeasonPlayerPts()[playerId]||0;
   openStatModal(p,pos,[
-    {val:p.price.toFixed(1)+'M',label:'Kaina'},
-    {val:seasonTotal+'pts',label:'Sezono taškai'},
+    {val:p.price.toFixed(1)+'M',label:t('stat_price')},
+    {val:seasonTotal+'pts',label:t('season_pts_label')},
   ],'');
 }
 
@@ -2681,7 +2735,7 @@ function setTSMode(mode){
 }
 function renderTSRoundTabs(){
   document.getElementById('ts-rounds').innerHTML=pastRoundIndices().map(i=>
-    `<button class="rtb ${i===TS_ROUND?'on':''}" onclick="setTSRound(${i})">${i+1} turas</button>`).join('');
+    `<button class="rtb ${i===TS_ROUND?'on':''}" onclick="setTSRound(${i})">${t('round_tab',i+1)}</button>`).join('');
 }
 function setTSRound(i){TS_ROUND=i;renderTSRoundTabs();renderTeamOfSeason();}
 
@@ -2690,21 +2744,21 @@ function renderTeamOfSeason(){
   const sub=document.getElementById('ts-sub');
   if(TS_MODE==='round'&&TS_ROUND===null){
     sub.textContent='';
-    pitch.innerHTML='<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.75);font-size:13px">Dar nėra pasibaigusių turų</div>';
+    pitch.innerHTML=`<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.75);font-size:13px">${t('no_finished_rounds')}</div>`;
     return;
   }
-  sub.textContent=TS_MODE==='round'?FR[TS_ROUND].n:'visas sezonas';
+  sub.textContent=TS_MODE==='round'?FR[TS_ROUND].n:t('whole_season');
   const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND):computeSeasonPlayerPts();
   const hasData=TS_MODE==='round'?!!STATE.DB[TS_ROUND]:pastRoundIndices().some(ri=>!!STATE.DB[ri]);
   const xi=bestXI(ptsMap,hasData);
   pitch.innerHTML=`
-    <div class="rlbl">Vartininkas</div>
+    <div class="rlbl">${t('rlbl_gk')}</div>
     <div class="prow">${tsSlotHtml(xi.G[0],'G')}</div>
-    <div class="rlbl">Gynėjai</div>
+    <div class="rlbl">${t('rlbl_def')}</div>
     <div class="prow">${xi.D.map(e=>tsSlotHtml(e,'D')).join('')}</div>
-    <div class="rlbl">Saugai</div>
+    <div class="rlbl">${t('rlbl_mid')}</div>
     <div class="prow">${xi.M.map(e=>tsSlotHtml(e,'M')).join('')}</div>
-    <div class="rlbl">Puolėjai</div>
+    <div class="rlbl">${t('rlbl_fwd')}</div>
     <div class="prow">${xi.F.map(e=>tsSlotHtml(e,'F')).join('')}</div>
   `;
 }
@@ -2723,7 +2777,7 @@ function setLBMode(mode){
 }
 function renderLBRoundTabs(){
   document.getElementById('lb-rounds').innerHTML=pastRoundIndices().map(i=>
-    `<button class="rtb ${i===LB_ROUND?'on':''}" onclick="setLBRound(${i})">${i+1} turas</button>`).join('');
+    `<button class="rtb ${i===LB_ROUND?'on':''}" onclick="setLBRound(${i})">${t('round_tab',i+1)}</button>`).join('');
 }
 function setLBRound(i){LB_ROUND=i;renderLBRoundTabs();renderLB();}
 
@@ -2735,25 +2789,25 @@ async function renderLB(){
     if(LB_ROUND===null){
       document.getElementById('lb-sub').textContent='';
       prizeEl.style.display='none';
-      document.getElementById('lb-list').innerHTML='<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">Dar nėra pasibaigusių turų</div>';
+      document.getElementById('lb-list').innerHTML=`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_finished_rounds')}</div>`;
       return;
     }
     const ri=LB_ROUND;
     entries=allUsers.map(u=>{
       const {roundPts}=computeScoring(u.mySquads||{},STATE.DB);
       return {
-        name:u.name||u.email||'Žaidėjas',
+        name:u.name||u.email||t('fallback_player'),
         uid:u.id,
         pts:roundPts[ri]||0,
         favTeam:u.favTeam||'',
-        teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
+        teamName:u.fantasyTeamName||(u.name||t('fallback_player'))+"'s FC",
         isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
       };
     }).sort((a,b)=>b.pts-a.pts);
     document.getElementById('lb-sub').textContent=FR[ri].n;
     if(entries.length&&entries[0].pts>0){
       prizeEl.style.display='flex';
-      prizeEl.innerHTML=`<span style="font-size:20px">🍺</span><span><strong>${entries[0].name}</strong> — ${FR[ri].n} nugalėtojas, laimi Carlsberg dėžę!</span>`;
+      prizeEl.innerHTML=`<span style="font-size:20px">🍺</span><span>${t('lb_round_winner',entries[0].name,FR[ri].n)}</span>`;
     }else{
       prizeEl.style.display='none';
     }
@@ -2761,16 +2815,16 @@ async function renderLB(){
     entries=allUsers.map(u=>{
       const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},STATE.DB);
       return {
-        name:u.name||u.email||'Žaidėjas',
+        name:u.name||u.email||t('fallback_player'),
         uid:u.id,
         pts:totalPts,
         rounds:roundsPlayed,
         favTeam:u.favTeam||'',
-        teamName:u.fantasyTeamName||(u.name||'Žaidėjas')+"'s FC",
+        teamName:u.fantasyTeamName||(u.name||t('fallback_player'))+"'s FC",
         isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
       };
     }).sort((a,b)=>b.pts-a.pts);
-    document.getElementById('lb-sub').textContent=`${entries.length} dalyvių`;
+    document.getElementById('lb-sub').textContent=t('lb_sub_count',entries.length);
     prizeEl.style.display='none';
   }
   const medals=['🥇','🥈','🥉'];
@@ -2779,12 +2833,12 @@ async function renderLB(){
       <span class="lbpos ${i<2?'g':''}">${medals[i]||i+1}</span>
       <span class="lb-fav" title="${r.favTeam}">${r.favTeam?'⚽':''}</span>
       <div>
-        <div class="lbname">${r.name}${r.isMe?' (Tu)':''}</div>
+        <div class="lbname">${r.name}${r.isMe?' '+t('you_suffix'):''}</div>
         <div class="lbteamname">${r.teamName}${r.favTeam?' · '+r.favTeam:''}</div>
       </div>
-      <span class="lbr">${LB_MODE==='round'?'':(r.rounds+' turų')}</span>
+      <span class="lbr">${LB_MODE==='round'?'':t('rounds_count',r.rounds)}</span>
       <span class="lbpts">${r.pts}</span>
-    </div>`).join('')||'<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">Dar nėra dalyvių</div>';
+    </div>`).join('')||`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_participants')}</div>`;
 }
 
 // ═══════════════════════════════════════════════
