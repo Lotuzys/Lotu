@@ -62,7 +62,13 @@ a{color:var(--or)}
 .user-av{width:26px;height:26px;border-radius:50%;background:var(--or-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
 
 /* LANGUAGE SWITCHER */
-.lang-sw{position:relative}
+/* Own stacking context, independent of .topbar (which drops position:sticky
+   for position:static on mobile — z-index has no effect on static elements,
+   so without this the dropdown could lose its elevation and get painted
+   over by page content below it, e.g. the dashboard hero's orange
+   background). Below the .mbg modals' z-index:500, same as the rest of the
+   topbar, so an open modal still correctly covers it. */
+.lang-sw{position:relative;z-index:450}
 .lang-btn{background:var(--card);border:1.5px solid var(--bor2);color:var(--ink2);font-size:12px;font-weight:700;padding:7px 11px;border-radius:10px;cursor:pointer;transition:all .18s var(--ease);display:flex;align-items:center;gap:5px}
 .lang-btn:hover{border-color:var(--or);box-shadow:var(--sh-xs)}
 .lang-car{font-size:8px;color:var(--mu)}
@@ -494,8 +500,16 @@ a{color:var(--or)}
      the goalkeeper's row, which sits right after the "Žaidėjai" search
      panel and so is exactly what a normal scroll-down lands on. Letting it
      scroll away like ordinary content on mobile removes that failure mode
-     entirely instead of trying to out-guess where users stop scrolling. */
-  .topbar{position:static}
+     entirely instead of trying to out-guess where users stop scrolling.
+     position:relative (not static) keeps that exact same in-flow, scrolls-
+     away behavior — it's a no-op for layout — but static ignores z-index
+     entirely, which combined with .topbar's backdrop-filter (itself a
+     stacking-context trigger) was trapping the whole topbar, dropdown
+     included, underneath the page content painted after it (e.g. the
+     dashboard hero's orange background). relative lets the topbar's
+     z-index:300 apply again so it — and the language dropdown inside it —
+     properly paints above the page. */
+  .topbar{position:relative}
 
   #user-chip-name{display:none}
   .user-chip{padding:6px}
