@@ -1016,7 +1016,7 @@ const I18N={
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
     nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',my_account:'My Account',
     brand_tooltip:'Go to home',league_sub:'A Division · 2026/27',sponsor_tooltip:'Season Sponsor',
-    login_sub:'Log in and score points every round',tab_login:'Log In',tab_register:'Register',
+    login_sub:'Log in and score points every gameweek',tab_login:'Log In',tab_register:'Register',
     label_email:'Email',label_password:'Password',forgot_pw:'Forgot your password?',
     err_login:'Incorrect login credentials',
     ok_pw_reset:'Password reset email sent — check your inbox.',
@@ -1025,9 +1025,9 @@ const I18N={
     ob_step1:'Step 1 of 2',ob_step2:'Step 2 of 2',ob_title1:'Pick your favorite team',
     ob_sub1:'Shown next to your name on the leaderboard',ob_title2:'Fantasy team name',
     ph_teamname:'e.g. Osetrov\'s Genius FC',btn_start:'Start Playing →',
-    dash_subtitle:'A Division · 11 fantasy rounds · 22 match days',btn_build_squad:'Build Your Team →',
-    btn_my_history:'My History',stat_rounds:'Fantasy Rounds',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
-    stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Round Schedule',
+    dash_subtitle:'A Division · 11 fantasy gameweeks · 22 matchdays',btn_build_squad:'Build Your Team →',
+    btn_my_history:'My History',stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
+    stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Gameweek Schedule',
     rt_locked:'🔒 Locked',rt_waiting:'Pending',
     players_header:'Players',sort_by:'Sort by',position_label:'Position',team_label:'Team',
     search_ph:'Search player or team...',pos_all:'All',your_team:'Your Team',
@@ -1039,12 +1039,12 @@ const I18N={
     sc_red:'🟥 Red card',sc_cap:'C Captain',sc_note:'⚠ Only 1 player per club',
     prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
     prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',group_a_title:'Group A',
-    sort_total:'Points (total)',sort_price:'Price',sort_last:'Last round',sort_own:'Ownership',sort_goals:'Goals scored',
+    sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',
     msg_saved:(r,d)=>`<strong>${r}</strong> team saved — change it as many times as you like until <strong>${d}</strong>.`,
     msg_open_badge:'Open',
     msg_open_sub:(d1,d2,dl)=>`${d1} and ${d2} · deadline ${dl}`,
     msg_history_pts:(r,pts)=>`<strong>${r}</strong> (history) — scored <strong>${pts}</strong> points.`,
-    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> deadline passed (${dl}) — team wasn't submitted in time, 0 points this round.`,
+    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> deadline passed (${dl}) — team wasn't submitted in time, 0 points this gameweek.`,
     fix_title:r=>`🗓 ${r} — matches`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pick a ${pos} from the list ${dir}`,toast_dir_above:'above ↑',toast_dir_left:'on the left ←',
     posAcc:{G:'goalkeeper',D:'defender',M:'midfielder',F:'forward'},
@@ -1059,34 +1059,34 @@ const I18N={
     toast_auto_ok:'Random team generated ✓ Don\'t forget to pick a captain!',
     bb_selected:'Selected:',bb_review:'Review (history)',bb_deadline_passed:'Deadline passed',
     bb_update:'Update Team ✓',bb_submit:'Submit Team ▶',bb_saving:'Saving...',
-    toast_round_not_open:'This round isn\'t open yet — wait for the previous one to close',
+    toast_round_not_open:'This gameweek isn\'t open yet — wait for the previous one to close',
     players_count_suffix:'players',team_full:'team full',not_found:'No results',
     res_lbl:(r,isUpdate)=>`${r} — team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
-    hist_title:'Round History',standings_title:'Group A Table',standings_sub:'starts from 0',
+    hist_title:'Gameweek History',standings_title:'Group A Table',standings_sub:'starts from 0',
     th_team:'Team',th_played:'P',th_wins:'W',th_draws:'D',th_losses:'L',th_goalsfor:'F',th_goalsagainst:'A',th_points:'Pts',
     th_played_full:'Played',th_wins_full:'Wins',th_draws_full:'Draws',th_losses_full:'Losses',
     th_goalsfor_full:'Goals for',th_goalsagainst_full:'Goals against',th_points_full:'Points',
-    leaders_title:'Fantasy Leaders',lb_mode_season:'Season Leaders',lb_mode_round:'Round Leaders',
-    lb_sponsor_note:'🍺 This league is sponsored by <strong>Carlsberg</strong> — every round\'s leader wins a Carlsberg crate!',
-    ts_mode_season:'Team of the Season',ts_mode_round:'Team of the Round',
-    pick_captain_btn:'Make Captain',stat_goals:'Goals',stat_price:'Price',hist_link:'📊 Round Points History',btn_add:'Add',
-    prof_teamname:'Fantasy Team',prof_favteam:'Favorite Team',prof_totalpts:'Total Points',prof_roundsplayed:'Rounds Played',
+    leaders_title:'Fantasy Leaders',lb_mode_season:'Season Leaders',lb_mode_round:'Gameweek Leaders',
+    lb_sponsor_note:'🍺 This league is sponsored by <strong>Carlsberg</strong> — every gameweek\'s leader wins a Carlsberg crate!',
+    ts_mode_season:'Team of the Season',ts_mode_round:'Team of the Gameweek',
+    pick_captain_btn:'Make Captain',stat_goals:'Goals',stat_price:'Price',hist_link:'📊 Gameweek Points History',btn_add:'Add',
+    prof_teamname:'Fantasy Team',prof_favteam:'Favorite Team',prof_totalpts:'Total Points',prof_roundsplayed:'Gameweeks Played',
     btn_close:'Close',btn_logout:'Log Out',btn_ok_thanks:'OK, thanks →',
-    pmfix_lbl:'This round\'s matches',pm_locked:'Team locked',pm_taken:'Already picked ✓',
+    pmfix_lbl:'This gameweek\'s matches',pm_locked:'Team locked',pm_taken:'Already picked ✓',
     pm_team_taken:'Club already used',pm_add_price:price=>`Add (${price}M)`,
-    phist_current_suffix:'(current)',phist_total_label:n=>`Total (${n} rounds)`,
+    phist_current_suffix:'(current)',phist_total_label:n=>`Total (${n} gameweeks)`,
     match_vs:(i,opp)=>`Match ${i} — vs ${opp}`,no_data:'No data',
     mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
     mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
-    zero_pts:'0 points',no_result_yet:'No result for this round yet',zero_pts_round:'0 points this round',
+    zero_pts:'0 points',no_result_yet:'No result for this gameweek yet',zero_pts_round:'0 points this gameweek',
     captain_label:'Captain',
     toast_new_round:r=>`${r} — pick a new team!`,
-    hist_sub_count:n=>`${n} rounds played`,hist_empty:'No history yet.<br>Pick a team and play your first round!',
-    hist_no_squad:'No team picked',round_tab:n=>`Round ${n}`,
-    own_round_label:n=>`Ownership (Round ${n})`,round_pts_label:'Round Points',season_pts_label:'Season Points',
-    no_finished_rounds:'No finished rounds yet',whole_season:'whole season',fallback_player:'Player',
+    hist_sub_count:n=>`${n} gameweeks played`,hist_empty:'No history yet.<br>Pick a team and play your first gameweek!',
+    hist_no_squad:'No team picked',round_tab:n=>`Gameweek ${n}`,
+    own_round_label:n=>`Ownership (Gameweek ${n})`,round_pts_label:'Gameweek Points',season_pts_label:'Season Points',
+    no_finished_rounds:'No finished gameweeks yet',whole_season:'whole season',fallback_player:'Player',
     lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} winner, wins a Carlsberg crate!`,
-    lb_sub_count:n=>`${n} participants`,you_suffix:'(You)',rounds_count:n=>`${n} rounds`,no_participants:'No participants yet',
+    lb_sub_count:n=>`${n} participants`,you_suffix:'(You)',rounds_count:n=>`${n} gameweeks`,no_participants:'No participants yet',
   },
 };
 function t(key,...args){
@@ -1289,6 +1289,16 @@ function isPastDeadline(i){ return Date.now()>=FR[i].deadline; }
 function formatDeadline(i){
   return new Intl.DateTimeFormat(LANG==='en'?'en-GB':'lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(FR[i].deadline);
 }
+// Round/day display names — FR[ri].n / FR[ri].days[di].l ("1 Fantasy
+// Turas" / "1-oji diena") are the Lithuanian schedule data itself, not UI
+// chrome, so they're not in the I18N dict. In English they're shown as
+// "Gameweek N" / "Matchday N" instead — matchdays are numbered globally
+// across the whole schedule (2 per round), matching how the Lithuanian
+// ordinals already count them ("3-ioji diena" is round 2's first day).
+// Admin panel intentionally keeps using FR[i].n/day.l directly — it's
+// Lithuanian-only regardless of LANG.
+function roundName(ri){return LANG==='en'?`Gameweek ${ri+1}`:FR[ri].n;}
+function dayLabel(ri,di){return LANG==='en'?`Matchday ${ri*2+di+1}`:FR[ri].days[di].l;}
 
 // ═══════════════════════════════════════════════
 // SPONSOR — season sponsor logo, shown in the topbar, dashboard hero and
@@ -1948,7 +1958,7 @@ async function renderDash(){
     const future=i>live;
     const isCur=i===STATE.curRound&&!done;
     return `<div class="rtile ${done?'done':''} ${isCur?'cur':''} ${future?'future':''}" onclick="goRound(${i})">
-      <div class="rtn">${r.n}</div><div class="rts">${r.days[0].l} + ${r.days[1].l}</div>
+      <div class="rtn">${roundName(i)}</div><div class="rts">${dayLabel(i,0)} + ${dayLabel(i,1)}</div>
       <div class="rtdl">⏱ ${formatDeadline(i)}</div>
       <div class="rtpt ${done?'':'em'}">${future?t('rt_locked'):(done?roundPts[i]+'pts':t('rt_waiting'))}</div>
     </div>`;
@@ -2001,28 +2011,28 @@ function renderSquadMsg(){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
     const pts=roundPts[STATE.curRound]||0;
     el.innerHTML=`<div class="scored-msg"><div class="sm-pts">${pts}</div>
-      <div class="sm-txt">${t('msg_saved',FR[STATE.curRound].n,formatDeadline(STATE.curRound))}</div></div>`;
+      <div class="sm-txt">${t('msg_saved',roundName(STATE.curRound),formatDeadline(STATE.curRound))}</div></div>`;
   }else if(isLive){
     el.innerHTML=`<div class="ti"><div class="ti-n">${STATE.curRound+1}</div>
-      <div class="ti-info"><div class="ti-lbl">${FR[STATE.curRound].n}</div>
-      <div class="ti-sub">${t('msg_open_sub',FR[STATE.curRound].days[0].l,FR[STATE.curRound].days[1].l,formatDeadline(STATE.curRound))}</div></div>
+      <div class="ti-info"><div class="ti-lbl">${roundName(STATE.curRound)}</div>
+      <div class="ti-sub">${t('msg_open_sub',dayLabel(STATE.curRound,0),dayLabel(STATE.curRound,1),formatDeadline(STATE.curRound))}</div></div>
       <span class="ti-badge open">${t('msg_open_badge')}</span></div>`;
   }else if(hasSquad){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
     const pts=roundPts[STATE.curRound]||0;
     el.innerHTML=`<div class="locked-msg"><div class="lm-icon">📋</div>
-      <div class="lm-txt">${t('msg_history_pts',FR[STATE.curRound].n,pts)}</div></div>`;
+      <div class="lm-txt">${t('msg_history_pts',roundName(STATE.curRound),pts)}</div></div>`;
   }else{
     el.innerHTML=`<div class="locked-msg"><div class="lm-icon">⏱️</div>
-      <div class="lm-txt">${t('msg_deadline_passed',FR[STATE.curRound].n,formatDeadline(STATE.curRound))}</div></div>`;
+      <div class="lm-txt">${t('msg_deadline_passed',roundName(STATE.curRound),formatDeadline(STATE.curRound))}</div></div>`;
   }
 }
 
 function renderFixtures(){
   const r=FR[STATE.curRound];
-  let html=`<div class="fix-box"><div class="fix-title">${t('fix_title',r.n)}</div>`;
+  let html=`<div class="fix-box"><div class="fix-title">${t('fix_title',roundName(STATE.curRound))}</div>`;
   r.days.forEach((day,di)=>{
-    html+=`<div class="fix-day"><div class="fix-day-lbl">${day.l}</div>`;
+    html+=`<div class="fix-day"><div class="fix-day-lbl">${dayLabel(STATE.curRound,di)}</div>`;
     day.m.forEach((m,mi)=>{
       const saved=STATE.DB[STATE.curRound]?.[di]?.[mi];
       const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>`:`<span class="fix-vs">${t('fix_vs')}</span>`;
@@ -2151,7 +2161,7 @@ function openPlayerModal(id){
   const fixEl=document.getElementById('pm-fixtures');
   if(fixtures.length){
     fixEl.innerHTML=`<div class="pmfix-lbl">${t('pmfix_lbl')}</div>`+fixtures.map(f=>
-      `<div class="pmfix-row"><span class="pmfix-day">${FR[STATE.curRound].days[f.day].l}</span>
+      `<div class="pmfix-row"><span class="pmfix-day">${dayLabel(STATE.curRound,f.day)}</span>
        <span class="pmfix-opp">${teamLogoImg(f.opponent,14)}${f.opponent}</span></div>`
     ).join('');
   }else{fixEl.innerHTML='';}
@@ -2189,7 +2199,7 @@ function openPlayerHistoryModal(idArg){
   let total=0,roundsWithData=0;
   const withDataRounds=[];
   const rowsHtml=FR.map((r,ri)=>{
-    if(!STATE.DB[ri])return `<div class="phist-row em"><span>${r.n}</span><span>—</span></div>`;
+    if(!STATE.DB[ri])return `<div class="phist-row em"><span>${roundName(ri)}</span><span>—</span></div>`;
     const pts=computeAllPlayerRoundPts(ri)[id]||0;
     total+=pts;roundsWithData++;withDataRounds.push(ri);
     const ownId=`phist-ownmini-${id}-${ri}`;
@@ -2199,7 +2209,7 @@ function openPlayerHistoryModal(idArg){
     // behind expanding it — it's the one figure worth seeing at a glance.
     return `<div class="phist-rw">
       <div class="phist-row ${ri===STATE.curRound?'cur':''}" onclick="togglePhistRound(this,${id},${ri})">
-        <span>${r.n}${ri===STATE.curRound?' '+t('phist_current_suffix'):''}</span>
+        <span>${roundName(ri)}${ri===STATE.curRound?' '+t('phist_current_suffix'):''}</span>
         <span class="phist-row-r"><span class="phist-own-mini" id="${ownId}">…</span><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
       </div>
       <div class="phist-sub"></div>
@@ -2544,7 +2554,7 @@ async function submitSquad(){
 // submit, first time or a later update, per request: don't just toast it.
 function showSquadSavedScreen(isUpdate){
   const snap=STATE.mySquads[STATE.curRound];if(!snap)return;
-  document.getElementById('res-lbl').textContent=t('res_lbl',FR[STATE.curRound].n,isUpdate);
+  document.getElementById('res-lbl').textContent=t('res_lbl',roundName(STATE.curRound),isUpdate);
   const cards=[];
   Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
     if(!p)return;
@@ -2564,7 +2574,7 @@ function goNextRound(){
   STATE.captain=null;STATE.activePos=null;STATE.activePosIdx=null;
   STATE.activePosF='Visos';STATE.activeTeamF='Visos';
   clearAllSlots();renderFilters();renderList();renderAllSlots();updateBottomBar();renderSquadMsg();renderFixtures();
-  toast(t('toast_new_round',FR[STATE.curRound].n));saveCurrentState();
+  toast(t('toast_new_round',roundName(STATE.curRound)));saveCurrentState();
 }
 
 // ═══════════════════════════════════════════════
@@ -2582,7 +2592,7 @@ function renderHistory(){
     // straight to that round's pitch (goRound handles live vs. historical).
     const clickable=!!snap;
     html+=`<div class="hcard ${i===STATE.curRound?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
-      <div class="hcard-head"><div class="hcard-title">${r.n}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
+      <div class="hcard-head"><div class="hcard-title">${roundName(i)}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
       <div class="hcard-pts ${pts===undefined?'em':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
       <div class="hcard-body">`;
     if(snap){['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
@@ -2747,7 +2757,7 @@ function renderTeamOfSeason(){
     pitch.innerHTML=`<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.75);font-size:13px">${t('no_finished_rounds')}</div>`;
     return;
   }
-  sub.textContent=TS_MODE==='round'?FR[TS_ROUND].n:t('whole_season');
+  sub.textContent=TS_MODE==='round'?roundName(TS_ROUND):t('whole_season');
   const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND):computeSeasonPlayerPts();
   const hasData=TS_MODE==='round'?!!STATE.DB[TS_ROUND]:pastRoundIndices().some(ri=>!!STATE.DB[ri]);
   const xi=bestXI(ptsMap,hasData);
@@ -2804,10 +2814,10 @@ async function renderLB(){
         isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
       };
     }).sort((a,b)=>b.pts-a.pts);
-    document.getElementById('lb-sub').textContent=FR[ri].n;
+    document.getElementById('lb-sub').textContent=roundName(ri);
     if(entries.length&&entries[0].pts>0){
       prizeEl.style.display='flex';
-      prizeEl.innerHTML=`<span style="font-size:20px">🍺</span><span>${t('lb_round_winner',entries[0].name,FR[ri].n)}</span>`;
+      prizeEl.innerHTML=`<span style="font-size:20px">🍺</span><span>${t('lb_round_winner',entries[0].name,roundName(ri))}</span>`;
     }else{
       prizeEl.style.display='none';
     }
