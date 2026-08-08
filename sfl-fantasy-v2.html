@@ -327,9 +327,8 @@ a{color:var(--or)}
 .pmfix-day{color:var(--mu);font-weight:600;font-size:11px}
 .pmfix-opp{display:flex;align-items:center;gap:5px}
 .pmhistlink{display:block;width:calc(100% - 28px);margin:12px 14px 0;padding:10px;background:var(--sur2);border:1px solid var(--bor);border-radius:12px;color:var(--ink2);font-size:12.5px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
-.pmcapbtn{display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:10px;background:var(--capbg);border:1px solid rgba(139,92,246,.3);border-radius:12px;color:var(--cap);font-size:12.5px;font-weight:800;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
-.pmcapbtn:hover{background:rgba(139,92,246,.15)}
-.pmcapbtn.on{background:var(--cap);color:#fff;border-color:var(--cap)}
+.pmcapmini{display:inline-block;vertical-align:middle;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;margin-top:6px;margin-left:6px;background:var(--capbg);color:var(--cap);border:1px solid rgba(139,92,246,.3);cursor:pointer;transition:all .15s var(--ease)}
+.pmcapmini:hover{background:var(--cap);color:#fff}
 .pmhistlink:hover{background:var(--sur);border-color:var(--or)}
 .pmact{padding:14px}
 #rpm-breakdown{padding:4px 0 8px}
@@ -767,6 +766,7 @@ a{color:var(--or)}
       <div class="pmname" id="pm-name"></div>
       <div class="pmteam" id="pm-team"></div>
       <span class="pmchip" id="pm-chip"></span>
+      <button class="pmcapmini" id="pm-cap-mini" style="display:none" onclick="toggleCaptainForPlayer(PM_CURRENT_ID);openPlayerModal(PM_CURRENT_ID)">Rinktis C</button>
       <button class="pmclose" onclick="document.getElementById('pm-bg').classList.remove('open')">✕</button>
     </div>
     <div class="pmstats">
@@ -777,7 +777,6 @@ a{color:var(--or)}
     </div>
     <div class="pmfix" id="pm-fixtures"></div>
     <button class="pmhistlink" id="pm-hist-link" onclick="openPlayerHistoryModal()">📊 Turų taškų istorija</button>
-    <button class="pmcapbtn" id="pm-cap-btn" style="display:none"></button>
     <div class="pmact"><button class="pmadd" id="pm-add-btn">Pridėti</button></div>
   </div>
 </div>
@@ -1886,19 +1885,12 @@ function openPlayerModal(id){
   else if(STATE.takenTeams.has(p.team)){btn.textContent='Komanda jau atstovaujama';btn.disabled=true;}
   else{btn.textContent=`Pridėti (${p.price.toFixed(1)}M)`;btn.disabled=false;
     btn.onclick=()=>{selectPlayer(p.id);document.getElementById('pm-bg').classList.remove('open');};}
-  // Captain button — only makes sense for a player already in your squad,
-  // and only while the round is still editable.
-  const capBtn=document.getElementById('pm-cap-btn');
+  // "Rinktis C" only shows next to the position chip for a player who's
+  // already in your squad, the round is still editable, AND they aren't
+  // already captain — the current captain gets no extra field at all.
+  const capMini=document.getElementById('pm-cap-mini');
   const ownIdx=STATE.taken.has(p.id)?STATE.slots[p.pos].findIndex(s=>s&&s.id===p.id):-1;
-  if(ownIdx!==-1&&!isLocked()){
-    const isCap=isCaptain(p.pos,ownIdx);
-    capBtn.style.display='block';
-    capBtn.classList.toggle('on',isCap);
-    capBtn.textContent=isCap?'✓ Kapitonas — spausk pašalinti':'⭐ Skirti kapitonu';
-    capBtn.onclick=()=>{toggleCaptainForPlayer(p.id);openPlayerModal(p.id);};
-  }else{
-    capBtn.style.display='none';
-  }
+  capMini.style.display=(ownIdx!==-1&&!isLocked()&&!isCaptain(p.pos,ownIdx))?'inline-block':'none';
   document.getElementById('pm-bg').classList.add('open');
 }
 
