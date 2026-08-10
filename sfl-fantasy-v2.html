@@ -494,6 +494,24 @@ a{color:var(--or)}
      falling out of the pitch, cut off by the bar. Give the pitch itself
      the breathing room instead of relying on far-away wrap padding. */
   .pitch{padding-bottom:100px;scroll-margin-top:156px}
+  /* Squad-picker pitch only (scoped to #page-squad — Sezono rinktinė reuses
+     the same .pitch/.rlbl/.slot/.sc2/.prow classes and must stay
+     untouched, both here and on desktop). Position labels hidden, icons
+     shrunk a touch, and the whole squad pushed well down + tightened up
+     vertically so goalkeeper/forwards land inside the pitch's white lines
+     instead of poking past them — the plain top/bottom-goal-box artwork is
+     comparatively short, so on a narrow mobile column the default spacing
+     pushed the first/last rows outside it. */
+  #page-squad .pitch{padding-top:90px}
+  #page-squad .pitch .rlbl{display:none}
+  #page-squad .prow{margin-bottom:12px;margin-top:5px}
+  #page-squad .slot{width:66px}
+  #page-squad .sc2{width:52px;height:52px;font-size:16px}
+  #page-squad .sn{font-size:10px;max-width:66px}
+  #page-squad .sp{margin-top:0}
+  #page-squad .sfx{font-size:8px;margin-top:0;max-width:66px}
+  #page-squad .slot-icon{font-size:18px}
+  #page-squad .slot-icon.sm{font-size:14px}
   /* The topbar is sticky everywhere else, but on mobile it wraps to
      ~148px tall (brand row + nav row) and, once stuck to top:0, permanently
      overlaps whatever content the user scrolled up to meet — most visibly
