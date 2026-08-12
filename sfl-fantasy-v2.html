@@ -387,6 +387,23 @@ a{color:var(--or)}
 .rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
 .pmadd{width:100%;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}.pmadd:hover{transform:translateY(-1px)}.pmadd:disabled{opacity:.4;cursor:default;box-shadow:none}
 
+/* SQUAD TUTORIAL — first-visit 4-step walkthrough for fantasy newcomers */
+.tut-modal{background:var(--card);border:1px solid var(--bor);border-radius:24px;width:340px;max-width:92vw;overflow:hidden;box-shadow:var(--sh-lg);animation:popin .25s var(--ease)}
+.tut-head{background:var(--or-grad);padding:26px 22px 20px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.tut-head::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 25% 25%,rgba(255,255,255,.18),transparent 45%)}
+.tut-icon{font-size:36px;margin-bottom:8px;position:relative;filter:drop-shadow(0 4px 8px rgba(0,0,0,.15))}
+.tut-step-of{font-size:11px;font-weight:700;opacity:.85;letter-spacing:.05em;text-transform:uppercase;position:relative}
+.tut-title{font-size:18px;font-weight:800;margin-top:4px;position:relative;letter-spacing:-.01em}
+.tut-body{padding:20px 22px 6px;font-size:13.5px;line-height:1.55;color:var(--ink2);min-height:78px}
+.tut-dots{display:flex;justify-content:center;gap:6px;padding:14px 0}
+.tut-dot{width:6px;height:6px;border-radius:50%;background:var(--bor);transition:all .2s var(--ease)}
+.tut-dot.on{background:var(--or);width:16px;border-radius:4px}
+.tut-nav{display:flex;gap:8px;padding:6px 22px 22px}
+.tut-skip{flex:0 0 auto;padding:11px 14px;background:none;border:none;color:var(--mu);font-size:12.5px;font-weight:600;cursor:pointer;transition:color .15s var(--ease)}
+.tut-skip:hover{color:var(--ink2)}
+.tut-next{flex:1;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}
+.tut-next:hover{transform:translateY(-1px)}
+
 /* PROFILE MODAL */
 .prof-modal{background:var(--card);border:1px solid var(--bor);border-radius:24px;width:360px;max-width:92vw;overflow:hidden;box-shadow:var(--sh-lg);animation:popin .25s var(--ease)}
 .prof-head{background:var(--or-grad);padding:22px;text-align:center;color:#fff;position:relative;overflow:hidden}
@@ -985,6 +1002,23 @@ a{color:var(--or)}
   </div>
 </div>
 
+<!-- SQUAD TUTORIAL — shown once, the first time a player ever opens the squad-builder screen -->
+<div class="mbg" id="tut-bg" onclick="if(event.target===this)closeSquadTutorial()">
+  <div class="tut-modal">
+    <div class="tut-head">
+      <div class="tut-icon" id="tut-icon">⚽</div>
+      <div class="tut-step-of" id="tut-step-of">1 / 4</div>
+      <div class="tut-title" id="tut-title">—</div>
+    </div>
+    <div class="tut-body" id="tut-body">—</div>
+    <div class="tut-dots" id="tut-dots"></div>
+    <div class="tut-nav">
+      <button class="tut-skip" id="tut-skip-btn" onclick="closeSquadTutorial()" data-i18n="tut_skip">Praleisti</button>
+      <button class="tut-next" id="tut-next-btn" onclick="tutNext()" data-i18n="tut_next">Toliau →</button>
+    </div>
+  </div>
+</div>
+
 <!-- SQUAD SAVED CONFIRMATION -->
 <div class="rp2" id="res-panel">
   <div class="ri">
@@ -1074,6 +1108,17 @@ const I18N={
     search_ph:'Ieškoti žaidėjo ar komandos...',pos_all:'Visos',your_team:'Tavo komanda',
     budget_label:'Biudžetas:',budget_used:'panaudota:',auto_title:'Sumesti atsitiktinę komandą',
     rlbl_gk:'Vartininkas',rlbl_def:'Gynėjai',rlbl_mid:'Saugai',rlbl_fwd:'Puolėjai',slot_pick:'Pasirink',
+    // First-visit squad-builder tutorial — 4 short steps, plainest possible
+    // language, aimed at someone who's never played fantasy football before.
+    tut_step_of:(n,total)=>`${n} / ${total}`,tut_skip:'Praleisti',tut_next:'Toliau →',tut_done:'Supratau, žaidžiam! →',
+    tut_s1_title:'Kas yra Fantasy futbolas?',
+    tut_s1_body:'Sudarai savo komandą iš 7 realių žaidėjų. Jie renka taškus už tai, ką padaro tikrose rungtynėse. Kuo daugiau taškų surenka tavo žaidėjai — tuo aukščiau kyli lentelėje.',
+    tut_s2_title:'Sudaryk komandą',
+    tut_s2_body:'Turi 50M biudžetą. Reikia išsirinkti: 1 vartininką, 2 gynėjus, 2 saugus ir 2 puolėjus. Iš vieno klubo gali būti tik 1 žaidėjas.',
+    tut_s3_title:'Pasirink kapitoną',
+    tut_s3_body:'Vienas žaidėjas — tavo kapitonas — gauna DVIGUBAI taškų. Rinkis tą, kuris, tavo manymu, sužais geriausiai.',
+    tut_s4_title:'Terminas',
+    tut_s4_body:'Kiekvieną turą gali keisti komandą kiek nori kartų — iki termino. Kai jis praeina, komanda užsirakina ir gauni taškus už tą turą. Kitą turą renkiesi iš naujo.',
     scoring_title:'Taškų sistema',
     sc_th_pos:'Pozicija',sc_th_goal:'Įvartis',sc_th_cs:'Švarūs vartai',sc_th_one:'Praleistas tik 1',
     sc_pos_gk:'🧤 Vartininkas',sc_pos_def:'🛡 Gynėjas',sc_pos_mid:'⚙ Saugas',sc_pos_fwd:'⚡ Puolėjas',
@@ -1157,6 +1202,15 @@ const I18N={
     search_ph:'Search player or team...',pos_all:'All',your_team:'Your Team',
     budget_label:'Budget:',budget_used:'used:',auto_title:'Generate a random team',
     rlbl_gk:'Goalkeeper',rlbl_def:'Defenders',rlbl_mid:'Midfielders',rlbl_fwd:'Forwards',slot_pick:'Pick',
+    tut_step_of:(n,total)=>`${n} / ${total}`,tut_skip:'Skip',tut_next:'Next →',tut_done:"Got it, let's play! →",
+    tut_s1_title:'What is Fantasy football?',
+    tut_s1_body:'You build a squad of 7 real players. They earn points for what they do in real matches. The more points your players score, the higher you climb the table.',
+    tut_s2_title:'Build your squad',
+    tut_s2_body:'You have a 50M budget. Pick: 1 goalkeeper, 2 defenders, 2 midfielders, 2 forwards. Only 1 player per club.',
+    tut_s3_title:'Pick a Captain',
+    tut_s3_body:'One player — your Captain — scores DOUBLE points. Choose whoever you think will play best.',
+    tut_s4_title:'Deadline',
+    tut_s4_body:"You can change your team as many times as you like before the deadline. Once it passes, your team locks in and you earn points for that gameweek. Next gameweek, you pick again.",
     scoring_title:'Scoring System',
     sc_th_pos:'Position',sc_th_goal:'Goal',sc_th_cs:'Clean sheet',sc_th_one:'Conceded 1',
     sc_pos_gk:'🧤 Goalkeeper',sc_pos_def:'🛡 Defender',sc_pos_mid:'⚙ Midfielder',sc_pos_fwd:'⚡ Forward',
@@ -1907,6 +1961,7 @@ const STATE={
   mySquads:{},
   DB:{},teams:null,savedMatches:new Set(),
   favTeam:'',fantasyTeamName:'',division:'A',
+  seenSquadTutorial:false,
 };
 STATE.teams=freshTeams();
 
@@ -1918,6 +1973,7 @@ function resetStateData(){
   STATE.mySquads={};
   STATE.DB={};STATE.teams=freshTeams();STATE.savedMatches=new Set();
   STATE.favTeam='';STATE.fantasyTeamName='';STATE.division='A';
+  STATE.seenSquadTutorial=false;
 }
 
 // Per-user document (profile + in-progress pitch builder only — NOT
@@ -1932,6 +1988,7 @@ function stateToObj(){
     captain:STATE.captain,
     slots:Object.fromEntries(Object.entries(STATE.slots).map(([k,v])=>[k,v.map(p=>p?p.id:null)])),
     taken:[...STATE.taken],takenTeams:[...STATE.takenTeams],
+    seenSquadTutorial:STATE.seenSquadTutorial,
   };
 }
 
@@ -1939,6 +1996,10 @@ function loadStateFromObj(s){
   STATE.curRound=s.curRound??0;STATE.adminRound=s.adminRound??0;
   STATE.mySquads=s.mySquads??{};
   STATE.favTeam=s.favTeam??'';STATE.fantasyTeamName=s.fantasyTeamName??'';
+  // Missing on every account that existed before this flag was introduced —
+  // treated as "hasn't seen it" (false) rather than true, so existing
+  // players get the tutorial too the next time they open the squad screen.
+  STATE.seenSquadTutorial=s.seenSquadTutorial??false;
   // Existing accounts from before divisions B-E existed have no `division`
   // field saved yet — derive it from their favTeam (falls back to 'A',
   // which is what every one of them actually is) rather than defaulting
@@ -2355,6 +2416,56 @@ function ini(name){return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpp
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2600);}
 
 // ═══════════════════════════════════════════════
+// SQUAD TUTORIAL — first-visit walkthrough
+// ═══════════════════════════════════════════════
+// Shown exactly once per account, the first time the squad-builder screen
+// is ever opened (any entry path — nav tab, dashboard button, a round
+// tile — all funnel through showPage('squad',...) below). Kept to the
+// simplest possible explanation: what fantasy football is, how to build a
+// squad, the captain's double points, and the deadline/re-pick-each-round
+// rule — the handful of concepts a first-time player actually needs before
+// touching the pitch.
+let TUT_STEP=0;
+function tutSteps(){
+  return [
+    {icon:'⚽',title:t('tut_s1_title'),body:t('tut_s1_body')},
+    {icon:'💰',title:t('tut_s2_title'),body:t('tut_s2_body')},
+    {icon:'⭐',title:t('tut_s3_title'),body:t('tut_s3_body')},
+    {icon:'⏰',title:t('tut_s4_title'),body:t('tut_s4_body')},
+  ];
+}
+function openSquadTutorial(){
+  TUT_STEP=0;
+  renderTutStep();
+  document.getElementById('tut-bg').classList.add('open');
+}
+function renderTutStep(){
+  const steps=tutSteps();
+  const s=steps[TUT_STEP];
+  document.getElementById('tut-icon').textContent=s.icon;
+  document.getElementById('tut-step-of').textContent=t('tut_step_of',TUT_STEP+1,steps.length);
+  document.getElementById('tut-title').textContent=s.title;
+  document.getElementById('tut-body').textContent=s.body;
+  document.getElementById('tut-dots').innerHTML=steps.map((_,i)=>`<div class="tut-dot ${i===TUT_STEP?'on':''}"></div>`).join('');
+  const isLast=TUT_STEP===steps.length-1;
+  document.getElementById('tut-next-btn').textContent=isLast?t('tut_done'):t('tut_next');
+  document.getElementById('tut-skip-btn').style.display=isLast?'none':'';
+}
+function tutNext(){
+  const steps=tutSteps();
+  if(TUT_STEP<steps.length-1){TUT_STEP++;renderTutStep();}
+  else{closeSquadTutorial();}
+}
+function closeSquadTutorial(){
+  document.getElementById('tut-bg').classList.remove('open');
+  // Marked seen (and persisted) on ANY dismissal — skip, "got it", or
+  // tapping the backdrop — not just finishing all 4 steps. It's a one-time
+  // orientation, not a gate; someone who skips it shouldn't get it shoved
+  // back in front of them next time they open the squad screen.
+  if(!STATE.seenSquadTutorial){STATE.seenSquadTutorial=true;saveCurrentState();}
+}
+
+// ═══════════════════════════════════════════════
 // PAGE ROUTING
 // ═══════════════════════════════════════════════
 // Every showPage()/goRound() call pushes a browser-history entry (unless
@@ -2370,7 +2481,7 @@ function showPage(name,btn,opts){
   if(btn)btn.classList.add('on');
   document.getElementById('bbar').style.display=(name==='squad')?'flex':'none';
   if(name==='dash')     renderDash();
-  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();}
+  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();if(!STATE.seenSquadTutorial)openSquadTutorial();}
   if(name==='history')  renderHistory();
   if(name==='standings')renderStFull();
   if(name==='leaders')  renderLB();
@@ -3019,6 +3130,7 @@ function refreshDynamicI18n(){
   if(document.getElementById('page-leaders')?.classList.contains('on')){renderLBRoundTabs();renderLB();}
   if(document.getElementById('page-teamseason')?.classList.contains('on')){renderTSRoundTabs();renderTeamOfSeason();}
   if(document.getElementById('page-stats')?.classList.contains('on'))renderStats();
+  if(document.getElementById('tut-bg')?.classList.contains('open'))renderTutStep();
   // A custom fantasy team name overrides the localized placeholder title
   // that applyStaticI18n() just reset it to — put it back.
   if(STATE.fantasyTeamName){
