@@ -454,6 +454,19 @@ a{color:var(--or)}
 .scteam{font-size:10px;color:var(--mu)}
 .scgoals{font-size:15px;font-weight:900;color:var(--or);white-space:nowrap}
 
+/* STATISTICS — FPL-style all-players table (price/ownership/form/points) */
+.statswrap{max-width:960px;margin:0 auto;padding:22px 18px}
+.stats-controls{display:flex;align-items:center;gap:8px;padding:0 16px 14px}
+.stats-controls .fg-lbl{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.stats-controls .pl-sort-sel{flex:1;max-width:220px}
+.stats-dirbtn{background:var(--card);border:1.5px solid var(--bor2);color:var(--or);font-size:14px;font-weight:800;width:34px;height:34px;border-radius:10px;cursor:pointer;transition:all .18s var(--ease)}
+.stats-dirbtn:hover{border-color:var(--or);box-shadow:var(--sh-xs)}
+.stats-table-wrap{overflow-x:auto}
+.stats-table{min-width:640px}
+.stats-pname{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.stats-pname span:first-of-type{font-weight:700}
+.stats-pos{font-size:9px;font-weight:800;color:#fff;padding:2px 6px;border-radius:5px;text-transform:uppercase}
+
 /* STANDINGS */
 .swrap{max-width:780px;margin:0 auto;padding:22px 18px}
 .st{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
@@ -578,6 +591,7 @@ a{color:var(--or)}
     <button class="nb" onclick="goRound(computeCurrentRound())" data-i18n="nav_myteam">Mano komanda</button>
     <button class="nb" onclick="showPage('history',this)" data-i18n="nav_history">Istorija</button>
     <button class="nb" onclick="showPage('teamseason',this)" data-i18n="nav_teamseason">Sezono rinktinė</button>
+    <button class="nb" onclick="showPage('stats',this)" data-i18n="nav_stats">Statistika</button>
     <button class="nb" onclick="showPage('leaders',this)" data-i18n="nav_leaders">Lyderiai</button>
     <button class="nb" onclick="showPage('standings',this)" data-i18n="nav_standings">Lentelė</button>
   </nav>
@@ -837,6 +851,30 @@ a{color:var(--or)}
   </div></div>
 </div>
 
+<!-- STATISTICS — FPL-style all-players table (price/ownership/form/points).
+     Defaults to the viewer's own division; the dropdown lets anyone peek
+     at another division's players, same pattern as Leaders/Team of Season. -->
+<div class="page" id="page-stats">
+  <div class="statswrap"><div class="pan">
+    <div class="ph"><h3 data-i18n="nav_stats">Statistika</h3><span class="sub" id="stats-sub"></span></div>
+    <div class="lb-filters">
+      <select class="lb-divsel" id="stats-divsel" onchange="setStatsDivision(this.value)"></select>
+    </div>
+    <div class="stats-controls">
+      <div class="fg-lbl" data-i18n="sort_by">Rikiuoti pagal</div>
+      <select class="pl-sort-sel" id="stats-sort-f" onchange="renderStats()"></select>
+      <button class="stats-dirbtn" id="stats-dir-btn" onclick="toggleStatsDir()" data-i18n-title="stats_dir_title" title="Keisti rikiavimo kryptį">↓</button>
+    </div>
+    <div class="stats-table-wrap">
+      <table class="st stats-table"><thead><tr>
+        <th>#</th><th data-i18n="th_player">Žaidėjas</th><th data-i18n="th_team">Komanda</th>
+        <th data-i18n="sort_price">Kaina</th><th data-i18n="sort_own">Nuosavybė</th>
+        <th data-i18n="stats_form">Forma</th><th data-i18n="sort_total">Taškai</th>
+      </tr></thead><tbody id="stats-tbody"></tbody></table>
+    </div>
+  </div></div>
+</div>
+
 <!-- ADMIN -->
 <div class="page" id="page-admin">
   <div class="awrap">
@@ -988,6 +1026,8 @@ let LANG=localStorage.getItem(LANG_KEY)==='en'?'en':'lt';
 const I18N={
   lt:{
     nav_dash:'Pagrindinis',nav_myteam:'Mano komanda',nav_history:'Istorija',nav_teamseason:'Sezono rinktinė',
+    nav_stats:'Statistika',stats_form:'Forma',sort_team:'Komanda (A-Z)',th_player:'Žaidėjas',
+    stats_dir_title:'Keisti rikiavimo kryptį',
     nav_leaders:'Lyderiai',nav_standings:'Lentelė',pts_label:'Taškai',my_account:'Mano paskyra',
     brand_tooltip:'Į pagrindinį',league_sub:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 2026/27`,sponsor_tooltip:'Sezono rėmėjas',
     login_sub:'Prisijunk ir rink taškus kiekvieną turą',tab_login:'Prisijungti',tab_register:'Registruotis',
@@ -1068,6 +1108,8 @@ const I18N={
   },
   en:{
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
+    nav_stats:'Statistics',stats_form:'Form',sort_team:'Team (A-Z)',th_player:'Player',
+    stats_dir_title:'Toggle sort direction',
     nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',my_account:'My Account',
     brand_tooltip:'Go to home',league_sub:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 2026/27`,sponsor_tooltip:'Season Sponsor',
     login_sub:'Log in and score points every gameweek',tab_login:'Log In',tab_register:'Register',
@@ -1670,6 +1712,7 @@ function refreshActivePageForDivisionSwitch(){
   if(name==='standings') renderStFull();
   if(name==='leaders')   renderLB();
   if(name==='teamseason')renderTeamOfSeason();
+  if(name==='stats')     renderStats();
   if(name==='admin')     renderAdmin();
 }
 
@@ -1875,6 +1918,7 @@ function subscribeLeagueState(){
     if(document.getElementById('page-history')?.classList.contains('on'))renderHistory();
     if(document.getElementById('page-leaders')?.classList.contains('on'))renderLB();
     if(document.getElementById('page-standings')?.classList.contains('on'))renderStFull();
+    if(document.getElementById('page-stats')?.classList.contains('on'))renderStats();
     // Tabs only here too, for the same reason as saveM() — this listener
     // fires on your own write echoing back, potentially more than once, and
     // a full renderAdmin() would blow away unsaved edits elsewhere on the
@@ -2162,6 +2206,7 @@ function showPage(name,btn,opts){
   if(name==='standings')renderStFull();
   if(name==='leaders')  renderLB();
   if(name==='teamseason')renderTeamOfSeason();
+  if(name==='stats')    renderStats();
   if(name==='admin')    renderAdmin();
   saveCurrentState();
   if(!opts.skipHistory)history.pushState({page:name},'','#'+name);
@@ -2181,7 +2226,7 @@ function showMainApp(){
 // Maps a page name back to the nav button that should show as active when
 // arriving via browser back/forward (popstate carries no DOM reference).
 function navBtnFor(name){
-  const idx={dash:0,history:2,teamseason:3,leaders:4,standings:5}[name];
+  const idx={dash:0,history:2,teamseason:3,stats:4,leaders:5,standings:6}[name];
   if(idx!==undefined)return document.querySelectorAll('.nb')[idx];
   if(name==='admin')return document.getElementById('admbtn');
   return null;
@@ -2788,6 +2833,7 @@ function refreshDynamicI18n(){
   if(document.getElementById('page-standings')?.classList.contains('on'))renderStFull();
   if(document.getElementById('page-leaders')?.classList.contains('on')){renderLBRoundTabs();renderLB();}
   if(document.getElementById('page-teamseason')?.classList.contains('on')){renderTSRoundTabs();renderTeamOfSeason();}
+  if(document.getElementById('page-stats')?.classList.contains('on'))renderStats();
   // A custom fantasy team name overrides the localized placeholder title
   // that applyStaticI18n() just reset it to — put it back.
   if(STATE.fantasyTeamName){
@@ -3034,6 +3080,45 @@ function topScorersList(db,div,n){
     .sort((a,b)=>b.goals-a.goals||a.p.name.localeCompare(b.p.name))
     .slice(0,n);
 }
+// ═══════════════════════════════════════════════
+// STATISTICS TAB (FPL-style all-players table) — price/ownership/form/
+// total points per division. "Form" mirrors FPL's own definition loosely:
+// average fantasy points over the last N played rounds (2 here), not
+// season-to-date average, so a hot/cold streak actually shows.
+// ═══════════════════════════════════════════════
+function computeFormPts(db,div,n){
+  db=db||STATE.DB;div=div||STATE.division;n=n||2;
+  const players=PLAYERS.filter(p=>p.division===div);
+  const totals={};players.forEach(p=>totals[p.id]=0);
+  const rounds=pastRoundIndices().slice(-n);
+  if(!rounds.length)return totals;
+  rounds.forEach(ri=>{
+    const rp=computeAllPlayerRoundPts(ri,db,div);
+    players.forEach(p=>totals[p.id]+=(rp[p.id]||0));
+  });
+  players.forEach(p=>totals[p.id]=Math.round((totals[p.id]/rounds.length)*10)/10);
+  return totals;
+}
+// Ownership scoped to the division being viewed — unlike the squad-picker's
+// own OWNERSHIP/refreshOwnership() (which counts every registered user
+// regardless of division as the denominator), this filters to that
+// division's own users first, so a division's % actually reflects its own
+// player pool rather than being diluted by the other 4 divisions' accounts.
+async function computeOwnershipForDivision(div){
+  const allUsersAll=await fetchAllUsers();
+  const allUsers=allUsersAll.filter(u=>(u.division||'A')===div);
+  const round=computeCurrentRound();
+  const counts={};
+  allUsers.forEach(u=>{
+    const squad=(u.mySquads||{})[round];
+    if(!squad)return;
+    Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
+  });
+  const total=allUsers.length||1;
+  const pct={};
+  PLAYERS.filter(p=>p.division===div).forEach(p=>{pct[p.id]=Math.round(((counts[p.id]||0)/total)*1000)/10;});
+  return pct;
+}
 // One player per slot, ranked purely by points — no budget/one-per-club
 // constraint, since this is "who actually performed best", not a fantasy
 // pick. Slots with no scoring data yet come back null.
@@ -3165,6 +3250,68 @@ function renderTopScorers(db,div){
       <div><div class="scname">${r.p.name}</div><div class="scteam">${r.p.team} · ${POS_FL[r.p.pos]}</div></div>
       <span class="scgoals">⚽ ${r.goals}</span>
     </div>`).join('')||`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_goals_yet')}</div>`;
+}
+
+// Defaults to the viewer's own division; the dropdown lets anyone peek at
+// another division's player pool read-only, same pattern as LB_DIVISION/
+// TS_DIVISION above — doesn't touch STATE.division.
+let STATS_DIVISION=null;
+function setStatsDivision(div){STATS_DIVISION=div;renderStats();}
+let STATS_SORT='total';
+let STATS_DIR='desc';
+function toggleStatsDir(){
+  STATS_DIR=STATS_DIR==='desc'?'asc':'desc';
+  const btn=document.getElementById('stats-dir-btn');
+  if(btn)btn.textContent=STATS_DIR==='desc'?'↓':'↑';
+  renderStats();
+}
+function renderStatsSortOptions(){
+  const sel=document.getElementById('stats-sort-f');if(!sel)return;
+  const cur=sel.value||STATS_SORT;
+  sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>`+
+    `<option value="ownership">${t('sort_own')}</option><option value="form">${t('stats_form')}</option>`+
+    `<option value="team">${t('sort_team')}</option>`;
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'total';
+}
+async function renderStats(){
+  if(!STATS_DIVISION)STATS_DIVISION=STATE.division;
+  const divSel=document.getElementById('stats-divsel');
+  divSel.innerHTML=DIVISION_KEYS.map(d=>
+    `<option value="${d}" ${d===STATS_DIVISION?'selected':''}>${d} divizionas${d===STATE.division?' (tavo)':''}</option>`).join('');
+  renderStatsSortOptions();
+  STATS_SORT=document.getElementById('stats-sort-f')?.value||'total';
+
+  const div=STATS_DIVISION;
+  const db=await getDivisionDB(div);
+  const totals=computeSeasonPlayerPts(db,div);
+  const form=computeFormPts(db,div,2);
+  const ownership=await computeOwnershipForDivision(div);
+  const players=PLAYERS.filter(p=>p.division===div&&p.active!==false);
+
+  const metricFor={
+    total:p=>totals[p.id]||0,
+    price:p=>p.price,
+    ownership:p=>ownership[p.id]||0,
+    form:p=>form[p.id]||0,
+    team:p=>p.team,
+  }[STATS_SORT]||(p=>totals[p.id]||0);
+
+  const sorted=[...players].sort((a,b)=>{
+    const va=metricFor(a),vb=metricFor(b);
+    const cmp=typeof va==='string'?(va.localeCompare(vb)||a.name.localeCompare(b.name)):((va-vb)||a.name.localeCompare(b.name));
+    return STATS_DIR==='desc'?-cmp:cmp;
+  });
+
+  document.getElementById('stats-sub').textContent=sorted.length+' '+t('players_count_suffix');
+  document.getElementById('stats-tbody').innerHTML=sorted.map((p,i)=>`
+    <tr><td>${i+1}</td>
+      <td><div class="stats-pname">${kitSvg(p.team,22)}<span>${p.name}</span><span class="stats-pos" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div></td>
+      <td>${teamLogoImg(p.team,16)}${p.team}</td>
+      <td>${p.price.toFixed(1)}M</td>
+      <td>${ownership[p.id]??0}%</td>
+      <td>${form[p.id]??0}</td>
+      <td style="font-weight:800;color:var(--or)">${totals[p.id]||0}</td>
+    </tr>`).join('')||`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--mu)">${t('not_found')}</td></tr>`;
 }
 
 async function renderLB(){
