@@ -1279,7 +1279,10 @@ const RAW=[
 ['M','Saulius Brazauskas','Gladiatoriai',5],['M','Darius Kondratavičius','Gladiatoriai',3],
 ['F','Andrius Stankevičius','Gladiatoriai',9],['F','Deividas Lukšas','Gladiatoriai',6],['F','Rokas Adomavičius','Gladiatoriai',4],
 ];
-const PLAYERS=RAW.map((r,i)=>({id:i+1,pos:r[0],name:r[1],team:r[2],goals:r[3],price:calcPrice(r[3],r[0],r[2])}));
+// let, not const: loadPlayersFromFirestore() swaps this out post-login with
+// the live-synced roster. This RAW-derived list is only the offline/
+// fetch-failure fallback.
+let PLAYERS=RAW.map((r,i)=>({id:i+1,pos:r[0],name:r[1],team:r[2],goals:r[3],price:calcPrice(r[3],r[0],r[2]),active:true}));
 // Each round (matchday) is played on a single day — both fixture groups
 // share that date, kickoff/deadline is 13:30 EEST. Every even day of
 // August 2026 starting the 4th (Aug 4, 6, 8 ... 24). Update the matching
@@ -1462,6 +1465,7 @@ async function loginUser(user){
   CURRENT_USER={uid:user.uid,email:user.email,name:(doc&&doc.name)||pendingRegisterName||user.displayName||user.email.split('@')[0]};
   pendingRegisterName=null;
   await loadLeagueState();
+  await loadPlayersFromFirestore();
   loadRoundIntoPitch(computeCurrentRound());
   subscribeLeagueState();
   updateTopbarForUser();
@@ -1790,6 +1794,34 @@ function syncPlayerIndex(){
     .catch(e=>console.error('Nepavyko sinchronizuoti žaidėjų indekso',e));
 }
 
+// Live roster, auto-synced every 12h from vilniausfutbolas.lt by a scheduled
+// Cloud Function (functions/index.js) into the `players` collection. Loaded
+// once per login/reload and swapped into PLAYERS in place of the hardcoded
+// RAW fallback above. Inactive (retired/transferred-out) players are kept
+// in PLAYERS — not stripped — so historical squads that picked them still
+// resolve; renderList()/autoFillSquad() are what filter them out of the
+// pickable list. Ids are never reassigned by the sync (see functions/
+// index.js header), so this never invalidates a saved squad or meta/players.
+async function loadPlayersFromFirestore(){
+  try{
+    const snap=await db.collection('players').get();
+    if(snap.empty)return false;
+    const loaded=snap.docs.map(d=>d.data())
+      .filter(p=>p.id&&p.pos&&p.team)
+      .sort((a,b)=>a.id-b.id)
+      .map(p=>({id:p.id,pos:p.pos,name:p.name,team:p.team,goals:p.goals||0,price:p.price,active:p.active!==false}));
+    if(!loaded.length)return false;
+    PLAYERS=loaded;
+    return true;
+  }catch(e){
+    // Firestore unreachable, rules not deployed yet, or collection empty —
+    // fall back to the hardcoded RAW-derived list rather than leaving the
+    // app with no players at all.
+    console.error('Nepavyko įkelti žaidėjų iš duomenų bazės, naudojamas atsarginis sąrašas',e);
+    return false;
+  }
+}
+
 // Getters
 function usedBudget(){return Object.values(STATE.slots).flat().filter(Boolean).reduce((s,p)=>s+p.price,0);}
 function filledSlots(){return Object.values(STATE.slots).flat().filter(Boolean).length;}
@@ -1836,7 +1868,7 @@ function autoFillSquad(){
     const usedTeams=new Set(),usedIds=new Set();const picks=[];let total=0,ok=true;
     for(let i=0;i<positions.length;i++){
       const pos=positions[i];
-      const candidates=PLAYERS.filter(p=>p.pos===pos&&!usedTeams.has(p.team)&&!usedIds.has(p.id));
+      const candidates=PLAYERS.filter(p=>p.active!==false&&p.pos===pos&&!usedTeams.has(p.team)&&!usedIds.has(p.id));
       for(let j=candidates.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[candidates[j],candidates[k]]=[candidates[k],candidates[j]];}
       const restPositions=positions.slice(i+1);
       let picked=null;
@@ -1845,7 +1877,7 @@ function autoFillSquad(){
         const newIds=new Set(usedIds);newIds.add(cand.id);
         let minRest=0,restOk=true;
         for(const rp of restPositions){
-          const opts=PLAYERS.filter(p=>p.pos===rp&&!newTeams.has(p.team)&&!newIds.has(p.id));
+          const opts=PLAYERS.filter(p=>p.active!==false&&p.pos===rp&&!newTeams.has(p.team)&&!newIds.has(p.id));
           if(!opts.length){restOk=false;break;}
           minRest+=Math.min(...opts.map(p=>p.price));
         }
@@ -2095,6 +2127,7 @@ function renderSortOptions(){
 function renderList(){
   const q=document.getElementById('srch').value.toLowerCase();
   let list=PLAYERS.filter(p=>{
+    if(p.active===false)return false;
     if(STATE.activePosF!=='Visos'&&p.pos!==STATE.activePosF)return false;
     if(STATE.activeTeamF!=='Visos'&&p.team!==STATE.activeTeamF)return false;
     if(q&&!p.name.toLowerCase().includes(q)&&!p.team.toLowerCase().includes(q))return false;

@@ -158,6 +158,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Full player roster, auto-synced from vilniausfutbolas.lt every 12h by
+    // a scheduled Cloud Function (functions/index.js) — the app boots its
+    // PLAYERS list from this collection. The function itself writes via the
+    // Admin SDK, which bypasses these rules entirely; this write grant only
+    // covers the (rare/manual) case of an admin editing a player by hand
+    // from a client.
+    match /players/{extId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
