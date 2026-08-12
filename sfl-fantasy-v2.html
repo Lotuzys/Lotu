@@ -3101,22 +3101,31 @@ function computeFormPts(db,div,n){
 }
 // Ownership scoped to the division being viewed — unlike the squad-picker's
 // own OWNERSHIP/refreshOwnership() (which counts every registered user
-// regardless of division as the denominator), this filters to that
-// division's own users first, so a division's % actually reflects its own
-// player pool rather than being diluted by the other 4 divisions' accounts.
+// regardless of division as the denominator, and only looks at the single
+// live round), this filters to that division's own users first, so a
+// division's % actually reflects its own player pool rather than being
+// diluted by the other 4 divisions' accounts — and it's the AVERAGE of
+// each round's ownership % across every round played so far (round 0
+// through the current one, inclusive), not just a single round's snapshot.
+// e.g. 0% in rounds 1-4 and 100% in round 5 averages to 20%, not 100%.
 async function computeOwnershipForDivision(div){
   const allUsersAll=await fetchAllUsers();
   const allUsers=allUsersAll.filter(u=>(u.division||'A')===div);
-  const round=computeCurrentRound();
-  const counts={};
-  allUsers.forEach(u=>{
-    const squad=(u.mySquads||{})[round];
-    if(!squad)return;
-    Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
-  });
   const total=allUsers.length||1;
+  const players=PLAYERS.filter(p=>p.division===div);
+  const rounds=Array.from({length:computeCurrentRound()+1},(_,i)=>i);
+  const sums={};players.forEach(p=>sums[p.id]=0);
+  rounds.forEach(round=>{
+    const counts={};
+    allUsers.forEach(u=>{
+      const squad=(u.mySquads||{})[round];
+      if(!squad)return;
+      Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
+    });
+    players.forEach(p=>{sums[p.id]+=((counts[p.id]||0)/total)*100;});
+  });
   const pct={};
-  PLAYERS.filter(p=>p.division===div).forEach(p=>{pct[p.id]=Math.round(((counts[p.id]||0)/total)*1000)/10;});
+  players.forEach(p=>{pct[p.id]=Math.round((sums[p.id]/rounds.length)*10)/10;});
   return pct;
 }
 // One player per slot, ranked purely by points — no budget/one-per-club
