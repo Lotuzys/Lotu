@@ -1964,26 +1964,26 @@ function syncPlayerIndex(){
 }
 
 // Live roster, auto-synced every 12h from vilniausfutbolas.lt by a scheduled
-// Cloud Function (functions/index.js) into the `players` collection. Loaded
-// once per login/reload and swapped into PLAYERS in place of the hardcoded
-// RAW fallback above. Inactive (retired/transferred-out) players are kept
-// in PLAYERS — not stripped — so historical squads that picked them still
-// resolve; renderList()/autoFillSquad() are what filter them out of the
-// pickable list. Ids are never reassigned by the sync (see functions/
-// index.js header), so this never invalidates a saved squad or meta/players.
+// Cloud Function (functions/index.js) into the `players` collection — now
+// covering all 5 divisions, each player doc carrying its own division.
+// Loaded once per login/reload and swaps out the ENTIRE hardcoded RAW/
+// RAW_B..E fallback above (that fallback only ever fires if this fetch
+// fails or the collection is still empty). Inactive (retired/transferred-
+// out) players are kept in PLAYERS — not stripped — so historical squads
+// that picked them still resolve; renderList()/autoFillSquad() are what
+// filter them out of the pickable list. Ids are never reassigned by the
+// sync (see functions/index.js header), so this never invalidates a saved
+// squad or meta/players.
 async function loadPlayersFromFirestore(){
   try{
     const snap=await db.collection('players').get();
     if(snap.empty)return false;
     const loaded=snap.docs.map(d=>d.data())
-      .filter(p=>p.id&&p.pos&&p.team)
+      .filter(p=>p.id&&p.pos&&p.team&&p.division)
       .sort((a,b)=>a.id-b.id)
-      .map(p=>({id:p.id,pos:p.pos,name:p.name,team:p.team,goals:p.goals||0,price:p.price,active:p.active!==false,division:'A'}));
+      .map(p=>({id:p.id,pos:p.pos,name:p.name,team:p.team,goals:p.goals||0,price:p.price,active:p.active!==false,division:p.division}));
     if(!loaded.length)return false;
-    // The `players` Firestore collection only auto-syncs division A so far
-    // (functions/index.js) — replace just A's slice of the global roster,
-    // keep B-E's static placeholder data as-is, don't wipe them out.
-    PLAYERS=[...loaded,...PLAYERS.filter(p=>p.division!=='A')];
+    PLAYERS=loaded;
     return true;
   }catch(e){
     // Firestore unreachable, rules not deployed yet, or collection empty —
