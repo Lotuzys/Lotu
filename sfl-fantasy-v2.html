@@ -425,6 +425,7 @@ a{color:var(--or)}
 .lb-filters{padding:14px 16px;border-bottom:1px solid var(--bor)}
 .lb-mode{display:flex;background:var(--sur);border-radius:11px;padding:4px;margin-bottom:11px}
 .lb-mb{flex:1;padding:8px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--mu);border-radius:8px;cursor:pointer;transition:all .18s var(--ease)}
+.lb-divsel{width:100%;padding:9px 10px;border:1.5px solid var(--bor);border-radius:10px;background:var(--sur);font-size:12px;font-weight:700;color:var(--ink);margin-bottom:11px;cursor:pointer}
 .lb-mb.on{background:var(--card);color:var(--or);box-shadow:var(--sh-xs)}
 .lb-prize{background:#fff5eb;border:1.5px solid var(--orbor);border-radius:var(--r);padding:10px 14px;margin:0 16px 13px;font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:8px}
 .lb-sponsor-note{background:#fdf6e8;border:1.5px solid rgba(217,119,6,.25);border-radius:var(--r);padding:9px 14px;margin:0 16px 13px;font-size:11.5px;color:var(--ink2)}
@@ -573,6 +574,7 @@ a{color:var(--or)}
         <div class="lang-opt" data-lang="en" onclick="setLang('en')"><span class="flag-ic-wrap"></span>English</div>
       </div>
     </div>
+    <select class="abtn" id="admdivsw" style="display:none" onchange="switchDivision(this.value)" title="Admin: peržiūrėti kitą divizioną"></select>
     <button class="abtn" id="admbtn" style="display:none" onclick="showPage('admin',this)">⚙ Admin</button>
     <div class="pchip" id="pts-chip" style="display:none"><div class="pchip-v" id="hdr-pts">0</div><div class="pchip-l" data-i18n="pts_label">Taškai</div></div>
     <div class="user-chip" id="user-chip" style="display:none" onclick="openProfile()">
@@ -782,6 +784,7 @@ a{color:var(--or)}
         <button class="lb-mb on" id="lbm-season" onclick="setLBMode('season')" data-i18n="lb_mode_season">Sezono lyderiai</button>
         <button class="lb-mb" id="lbm-round" onclick="setLBMode('round')" data-i18n="lb_mode_round">Turo lyderiai</button>
       </div>
+      <select class="lb-divsel" id="lb-divsel" onchange="setLBDivision(this.value)"></select>
       <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
     </div>
     <div class="lb-sponsor-note" data-i18n="lb_sponsor_note">🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!</div>
@@ -800,6 +803,7 @@ a{color:var(--or)}
         <button class="lb-mb on" id="tsm-season" onclick="setTSMode('season')" data-i18n="ts_mode_season">Sezono rinktinė</button>
         <button class="lb-mb" id="tsm-round" onclick="setTSMode('round')" data-i18n="ts_mode_round">Turo rinktinė</button>
       </div>
+      <select class="lb-divsel" id="ts-divsel" onchange="setTSDivision(this.value)"></select>
       <div class="rtabs" id="ts-rounds" style="display:none;margin-bottom:0"></div>
     </div>
     <div class="pw">
@@ -812,7 +816,7 @@ a{color:var(--or)}
 <div class="page" id="page-admin">
   <div class="awrap">
     <div class="atitle">⚙ Rezultatų duomenų bazė</div>
-    <div class="asub">Išsaugok kiekvieno mačo rezultatą ir įvarčių autorius.</div>
+    <div class="asub" id="admin-asub">Išsaugok kiekvieno mačo rezultatą ir įvarčių autorius.</div>
     <div class="rtabs" id="rtabs"></div>
     <div id="admin-content"></div>
   </div>
@@ -1594,6 +1598,36 @@ function updateTopbarForUser(){
   document.getElementById('pts-chip').style.display='block';
   document.getElementById('main-nav').style.display='flex';
   document.getElementById('admbtn').style.display=isAdmin()?'block':'none';
+  const divSw=document.getElementById('admdivsw');
+  if(isAdmin()){
+    divSw.style.display='block';
+    divSw.innerHTML=DIVISION_KEYS.map(d=>`<option value="${d}">${d} divizionas</option>`).join('');
+    divSw.value=STATE.division;
+  }else{
+    divSw.style.display='none';
+  }
+}
+
+// Admin-only: browse/manage any of the 5 divisions without changing which
+// division their own account is actually onboarded into — re-points every
+// division-scoped constant plus the per-division league/state doc listener
+// at the chosen division and re-renders whatever's currently on screen.
+// Building/saving a squad while "in" another division still goes through
+// the normal squad-picker flow (same as any real user in that division).
+async function switchDivision(div){
+  if(!isAdmin()||!DIVISIONS[div])return;
+  unsubscribeLeagueState();
+  STATE.division=div;
+  setActiveDivision(div);
+  applyStaticI18n();
+  STATE.slots={G:[null],D:[null,null],M:[null,null],F:[null,null]};
+  STATE.taken=new Set();STATE.takenTeams=new Set();STATE.captain=null;
+  STATE.activePosF='Visos';STATE.activeTeamF='Visos';
+  await loadLeagueState();
+  subscribeLeagueState();
+  loadRoundIntoPitch(STATE.curRound);
+  renderDash();
+  toast(`Peržiūri ${div} divizioną (admin)`);
 }
 
 // ═══════════════════════════════════════════════
@@ -1743,16 +1777,20 @@ function saveSquadForRound(uid,round,squadObj){
 }
 
 // ═══════════════════════════════════════════════
-// FIRESTORE PERSISTENCE — shared league doc (league/state)
-// Match results, goalscorers and standings are the same for every player,
-// so they live in one shared document instead of each user's own doc.
+// FIRESTORE PERSISTENCE — shared league doc, one per division (league/state
+// for A — kept as the original doc id so existing division-A data needs no
+// migration — and league/state_B.._E for the rest). Match results,
+// goalscorers and standings are the same for every player IN THAT DIVISION,
+// so they live in one shared per-division document instead of each user's
+// own doc, and instead of one giant doc mixing all 5 divisions' results.
 // ═══════════════════════════════════════════════
-const LEAGUE_DOC=db.collection('league').doc('state');
+function leagueDocId(div){return (div||STATE.division)==='A'?'state':'state_'+(div||STATE.division);}
+function leagueDocRef(div){return db.collection('league').doc(leagueDocId(div));}
 let leagueUnsub=null;
 
 async function loadLeagueState(){
   try{
-    const snap=await LEAGUE_DOC.get();
+    const snap=await leagueDocRef().get();
     const d=snap.exists?snap.data():null;
     STATE.DB=d?.DB??{};STATE.teams=d?.teams??freshTeams();STATE.savedMatches=new Set(d?.savedMatches??[]);
   }catch(e){console.error('Nepavyko įkelti turo duomenų',e);}
@@ -1760,7 +1798,7 @@ async function loadLeagueState(){
 
 function subscribeLeagueState(){
   if(leagueUnsub)leagueUnsub();
-  leagueUnsub=LEAGUE_DOC.onSnapshot(snap=>{
+  leagueUnsub=leagueDocRef().onSnapshot(snap=>{
     if(!snap.exists)return;
     const d=snap.data();
     STATE.DB=d.DB??{};STATE.teams=d.teams??freshTeams();STATE.savedMatches=new Set(d.savedMatches??[]);
@@ -1897,7 +1935,7 @@ async function refreshOwnership(){
 
 function saveLeagueState(){
   if(!isAdmin())return;
-  LEAGUE_DOC.set({DB:STATE.DB,teams:STATE.teams,savedMatches:[...STATE.savedMatches]},{merge:true})
+  leagueDocRef().set({DB:STATE.DB,teams:STATE.teams,savedMatches:[...STATE.savedMatches]},{merge:true})
     .catch(e=>{console.error(e);toast('Klaida išsaugant — patikrink admin teises');});
 }
 
@@ -2818,6 +2856,22 @@ function renderStFull(){
 // ═══════════════════════════════════════════════
 let LB_MODE='season';
 let LB_ROUND=null;
+// Defaults to the viewer's own division; the dropdown lets anyone peek at
+// another division's board read-only, without touching STATE.division (that
+// stays "which division I actually play in" — switchDivision() is the only
+// thing allowed to change it, and that's admin-only).
+let LB_DIVISION=null;
+function setLBDivision(div){LB_DIVISION=div;renderLB();}
+// Read-only fetch of another division's match results for the leaderboard
+// filter. Division A (or whichever division is currently STATE.division)
+// reuses the already-loaded/subscribed STATE.DB instead of a redundant read.
+async function getDivisionDB(div){
+  if(div===STATE.division)return STATE.DB;
+  try{
+    const snap=await leagueDocRef(div).get();
+    return snap.exists?(snap.data().DB??{}):{};
+  }catch(e){console.error('Nepavyko įkelti kito diviziono rezultatų',e);return{};}
+}
 
 // Only rounds whose deadline has actually passed have a real result to show
 // a round-leaders table for — a still-open round has no winner yet, so it
@@ -2831,9 +2885,14 @@ function pastRoundIndices(){return FR.map((_,i)=>i).filter(i=>isPastDeadline(i))
 // win/loss bonus), just evaluated for every real player against the shared
 // results doc instead of only the players inside someone's squad.
 // ═══════════════════════════════════════════════
-function computeAllPlayerRoundPts(ri){
-  const pts={};PLAYERS.forEach(p=>pts[p.id]=0);
-  const r=FR[ri];const round=STATE.DB[ri];
+// db/div default to the viewer's own (STATE.DB/STATE.division) so every
+// existing call site keeps working unchanged — renderTeamOfSeason() passes
+// them explicitly when showing a division other than the viewer's own.
+function computeAllPlayerRoundPts(ri,db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  const pts={};const players=PLAYERS.filter(p=>p.division===div);
+  players.forEach(p=>pts[p.id]=0);
+  const r=(DIVISIONS[div]||DIVISIONS.A).fr[ri];const round=db[ri];
   if(!r||!round)return pts;
   const scorerGoals={},teamMatchGA={},teamResults={},teamPlayed={},reds={};
   r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
@@ -2851,7 +2910,7 @@ function computeAllPlayerRoundPts(ri){
     else if(ag>hg){teamResults[m[1]].push('W');teamResults[m[0]].push('L');}
     else{teamResults[m[0]].push('D');teamResults[m[1]].push('D');}
   }));
-  PLAYERS.forEach(p=>{
+  players.forEach(p=>{
     const goals=scorerGoals[p.id]||0;const gaList=teamMatchGA[p.team]||[];const played=!!teamPlayed[p.team];
     const res=teamResults[p.team]||[];const wins=res.filter(x=>x==='W').length;const losses=res.filter(x=>x==='L').length;
     let val=goals*CONFIG.PTS_POS[p.pos];
@@ -2864,11 +2923,13 @@ function computeAllPlayerRoundPts(ri){
   });
   return pts;
 }
-function computeSeasonPlayerPts(){
-  const totals={};PLAYERS.forEach(p=>totals[p.id]=0);
+function computeSeasonPlayerPts(db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  const totals={};const players=PLAYERS.filter(p=>p.division===div);
+  players.forEach(p=>totals[p.id]=0);
   pastRoundIndices().forEach(ri=>{
-    const rp=computeAllPlayerRoundPts(ri);
-    PLAYERS.forEach(p=>totals[p.id]+=rp[p.id]);
+    const rp=computeAllPlayerRoundPts(ri,db,div);
+    players.forEach(p=>totals[p.id]+=rp[p.id]);
   });
   return totals;
 }
@@ -2879,9 +2940,10 @@ function computeSeasonPlayerPts(){
 // "there's a real result and the best available score happens to be zero or
 // negative" (a red card, or a scoreless loss) — the latter is still a real
 // answer and should be shown, not hidden behind a placeholder.
-function bestXI(ptsMap,hasData){
+function bestXI(ptsMap,hasData,div){
+  div=div||STATE.division;
   const byPos={G:[],D:[],M:[],F:[]};
-  PLAYERS.forEach(p=>byPos[p.pos].push({p,pts:ptsMap[p.id]||0}));
+  PLAYERS.filter(p=>p.division===div).forEach(p=>byPos[p.pos].push({p,pts:ptsMap[p.id]||0}));
   Object.values(byPos).forEach(arr=>arr.sort((a,b)=>b.pts-a.pts));
   const top=(pos,n)=>Array.from({length:n},(_,i)=>hasData&&byPos[pos][i]?byPos[pos][i]:null);
   return {G:top('G',1),D:top('D',2),M:top('M',2),F:top('F',2)};
@@ -2906,9 +2968,10 @@ function tsSlotHtml(entry,pos){
 // Sezono rinktinė player card — price + season points total, regardless of
 // whether the pitch itself is currently showing a specific round's points
 // or the season aggregate.
-function openTSPlayerModal(pos,playerId){
+async function openTSPlayerModal(pos,playerId){
   const p=PLAYERS.find(x=>x.id===playerId);if(!p)return;
-  const seasonTotal=computeSeasonPlayerPts()[playerId]||0;
+  const tsDB=await getDivisionDB(TS_DIVISION||STATE.division);
+  const seasonTotal=computeSeasonPlayerPts(tsDB,TS_DIVISION||STATE.division)[playerId]||0;
   openStatModal(p,pos,[
     {val:p.price.toFixed(1)+'M',label:t('stat_price')},
     {val:seasonTotal+'pts',label:t('season_pts_label')},
@@ -2935,7 +2998,16 @@ function renderTSRoundTabs(){
 }
 function setTSRound(i){TS_ROUND=i;renderTSRoundTabs();renderTeamOfSeason();}
 
-function renderTeamOfSeason(){
+// Same own-division-default / read-only-peek-at-others pattern as the
+// leaderboard's LB_DIVISION — see getDivisionDB().
+let TS_DIVISION=null;
+function setTSDivision(div){TS_DIVISION=div;renderTeamOfSeason();}
+
+async function renderTeamOfSeason(){
+  if(!TS_DIVISION)TS_DIVISION=STATE.division;
+  const divSel=document.getElementById('ts-divsel');
+  divSel.innerHTML=DIVISION_KEYS.map(d=>
+    `<option value="${d}" ${d===TS_DIVISION?'selected':''}>${d} divizionas${d===STATE.division?' (tavo)':''}</option>`).join('');
   const pitch=document.getElementById('ts-pitch');
   const sub=document.getElementById('ts-sub');
   if(TS_MODE==='round'&&TS_ROUND===null){
@@ -2944,9 +3016,10 @@ function renderTeamOfSeason(){
     return;
   }
   sub.textContent=TS_MODE==='round'?roundName(TS_ROUND):t('whole_season');
-  const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND):computeSeasonPlayerPts();
-  const hasData=TS_MODE==='round'?!!STATE.DB[TS_ROUND]:pastRoundIndices().some(ri=>!!STATE.DB[ri]);
-  const xi=bestXI(ptsMap,hasData);
+  const tsDB=await getDivisionDB(TS_DIVISION);
+  const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND,tsDB,TS_DIVISION):computeSeasonPlayerPts(tsDB,TS_DIVISION);
+  const hasData=TS_MODE==='round'?!!tsDB[TS_ROUND]:pastRoundIndices().some(ri=>!!tsDB[ri]);
+  const xi=bestXI(ptsMap,hasData,TS_DIVISION);
   pitch.innerHTML=`
     <div class="rlbl">${t('rlbl_gk')}</div>
     <div class="prow">${tsSlotHtml(xi.G[0],'G')}</div>
@@ -2978,7 +3051,13 @@ function renderLBRoundTabs(){
 function setLBRound(i){LB_ROUND=i;renderLBRoundTabs();renderLB();}
 
 async function renderLB(){
-  const allUsers=await fetchAllUsers();
+  if(!LB_DIVISION)LB_DIVISION=STATE.division;
+  const divSel=document.getElementById('lb-divsel');
+  divSel.innerHTML=DIVISION_KEYS.map(d=>
+    `<option value="${d}" ${d===LB_DIVISION?'selected':''}>${d} divizionas${d===STATE.division?' (tavo)':''}</option>`).join('');
+  const allUsersAll=await fetchAllUsers();
+  const allUsers=allUsersAll.filter(u=>(u.division||'A')===LB_DIVISION);
+  const lbDB=await getDivisionDB(LB_DIVISION);
   const prizeEl=document.getElementById('lb-prize');
   let entries;
   if(LB_MODE==='round'){
@@ -2990,7 +3069,7 @@ async function renderLB(){
     }
     const ri=LB_ROUND;
     entries=allUsers.map(u=>{
-      const {roundPts}=computeScoring(u.mySquads||{},STATE.DB);
+      const {roundPts}=computeScoring(u.mySquads||{},lbDB);
       return {
         name:u.name||u.email||t('fallback_player'),
         uid:u.id,
@@ -3009,7 +3088,7 @@ async function renderLB(){
     }
   }else{
     entries=allUsers.map(u=>{
-      const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},STATE.DB);
+      const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},lbDB);
       return {
         name:u.name||u.email||t('fallback_player'),
         uid:u.id,
@@ -3073,6 +3152,8 @@ function renderAdminTabs(){
   }).join('');
 }
 function renderAdmin(){
+  const sub=document.getElementById('admin-asub');
+  if(sub)sub.textContent=`Išsaugok kiekvieno mačo rezultatą ir įvarčių autorius. — ${STATE.division} divizionas`;
   renderAdminTabs();
   renderAdminRound();
 }

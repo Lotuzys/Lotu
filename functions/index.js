@@ -152,7 +152,12 @@ async function rebuildPlayerIndex() {
   const list = [];
   snap.forEach((doc) => {
     const p = doc.data();
-    list[p.id - 1] = {pos: p.pos, team: p.team, price: p.price};
+    // division is always 'A' here — this function only ever syncs the
+    // division-A collection (see file header). firestore.rules requires
+    // every entry to have a concrete division value, not a missing one —
+    // see the comment on slotValid() in firestore.rules for why (a
+    // "missing means A" fallback there blew the rules' expression budget).
+    list[p.id - 1] = {pos: p.pos, team: p.team, price: p.price, division: 'A'};
   });
   await db.doc('meta/players').set({list, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
 }

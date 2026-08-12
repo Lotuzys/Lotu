@@ -44,6 +44,28 @@ service cloud.firestore {
       return idx[id - 1];
     }
 
+    // ── Divisions ─────────────────────────────────────────────────────────
+    // A user's own division comes from their profile doc (set at onboarding,
+    // derived from their chosen favourite team) — never from anything the
+    // squad write itself claims.
+    //
+    // Every users/{uid} doc and every meta/players entry is required to
+    // have a concrete `division` value (backfilled to 'A' for every
+    // pre-existing account/player the moment this deployed — see the
+    // migration run alongside this rules change) precisely so this stays a
+    // plain equality check. A "missing field defaults to A" fallback was
+    // tried here first (several equivalent forms — a ternary, a boolean-OR
+    // null check, a retry branch in squadLegal) and every one of them blew
+    // Firestore's 1000-expression rule budget once combined with
+    // slotValid()'s 7x-per-squad-write call pattern, even against a
+    // 10-element trusted index; only removing the need for a fallback
+    // entirely — by guaranteeing the data never has the gap — fit the
+    // budget. Verified against the Firestore emulator; don't reintroduce a
+    // conditional here without re-running that test suite.
+    function userDivision(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.division;
+    }
+
     // ── Per-round squad integrity ────────────────────────────────────────
     // Points are never stored — the client always derives them from a
     // round's frozen squad snapshot plus the shared match-results doc
@@ -65,9 +87,11 @@ service cloud.firestore {
 
     // A single slot must be a real player (checked against the trusted
     // index by id, not by trusting the pos/team/price the client submitted
-    // alongside it) whose recorded position matches this slot.
-    function slotValid(p, pos, idx) {
-      return p != null && ('id' in p) && p.id >= 1 && p.id <= idx.size() && playerAt(idx, p.id).pos == pos;
+    // alongside it) whose recorded position AND division match this slot.
+    function slotValid(p, pos, idx, div) {
+      let pl = playerAt(idx, p.id);
+      return p != null && ('id' in p) && p.id >= 1 && p.id <= idx.size()
+        && pl.pos == pos && pl.division == div;
     }
 
     // Firestore rules cap each function at 10 local variables, so the
@@ -79,10 +103,10 @@ service cloud.firestore {
       let shapeOk = gk.size()==1 && df.size()==2 && mf.size()==2 && fw.size()==2;
       return shapeOk ? [gk[0], df[0], df[1], mf[0], mf[1], fw[0], fw[1]] : [];
     }
-    function slotsValid(s, idx) {
+    function slotsValid(s, idx, div) {
       return s.size()==7
-        && slotValid(s[0],'G',idx) && slotValid(s[1],'D',idx) && slotValid(s[2],'D',idx)
-        && slotValid(s[3],'M',idx) && slotValid(s[4],'M',idx) && slotValid(s[5],'F',idx) && slotValid(s[6],'F',idx);
+        && slotValid(s[0],'G',idx,div) && slotValid(s[1],'D',idx,div) && slotValid(s[2],'D',idx,div)
+        && slotValid(s[3],'M',idx,div) && slotValid(s[4],'M',idx,div) && slotValid(s[5],'F',idx,div) && slotValid(s[6],'F',idx,div);
     }
     function slotTeams(s, idx) {
       return [playerAt(idx,s[0].id).team, playerAt(idx,s[1].id).team, playerAt(idx,s[2].id).team,
@@ -104,11 +128,12 @@ service cloud.firestore {
         + playerAt(idx,s[3].id).price + playerAt(idx,s[4].id).price + playerAt(idx,s[5].id).price
         + playerAt(idx,s[6].id).price;
     }
-    function squadLegal(snap) {
+    function squadLegal(snap, uid) {
       let idx = playerIndex();
+      let div = userDivision(uid);
       let s = squadSlots(snap);
       return s.size()==7
-        && slotsValid(s, idx)
+        && slotsValid(s, idx, div)
         && teamsDistinct(slotTeams(s, idx))
         && squadBudget(s, idx) <= 50.01;
     }
@@ -132,7 +157,7 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow create, update: if isSignedIn() && request.auth.uid == uid
           && request.time < DEADLINES()[round]
-          && squadLegal(request.resource.data);
+          && squadLegal(request.resource.data, uid);
       }
     }
 
