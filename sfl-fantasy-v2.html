@@ -439,6 +439,15 @@ a{color:var(--or)}
 .lbr{font-size:11px;color:var(--mu);text-align:right}
 .lbpts{font-size:15px;font-weight:900;color:var(--or)}
 
+/* TOP SCORERS (Leaders tab — real goals, not fantasy points) */
+.scrow{display:grid;grid-template-columns:28px 28px 1fr auto;gap:10px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--bor);font-size:12px;transition:all .15s var(--ease)}
+.scrow:hover{background:var(--sur)}
+.scrow:last-child{border-bottom:none}
+.scpos{font-size:13px;font-weight:800;color:var(--or);text-align:center}.scpos.g{color:var(--gold)}
+.scname{font-weight:600;color:var(--ink)}
+.scteam{font-size:10px;color:var(--mu)}
+.scgoals{font-size:15px;font-weight:900;color:var(--or);white-space:nowrap}
+
 /* STANDINGS */
 .swrap{max-width:780px;margin:0 auto;padding:22px 18px}
 .st{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
@@ -790,7 +799,15 @@ a{color:var(--or)}
     <div class="lb-sponsor-note" data-i18n="lb_sponsor_note">🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!</div>
     <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
-  </div></div>
+  </div>
+  <!-- Real top scorers for the selected division — raw goals from the admin
+       panel's match results, not fantasy points. Follows the same #lb-divsel
+       division picker above, so no separate filter of its own. -->
+  <div class="pan" style="margin-top:16px">
+    <div class="ph"><h3 data-i18n="top_scorers_title">⚽ Rezultatyviausi žaidėjai</h3><span class="sub" id="lbsc-sub"></span></div>
+    <div id="lbsc-list"></div>
+  </div>
+  </div>
 </div>
 
 <!-- TEAM OF THE SEASON — best real 1-2-2-2 XI by actual match points, not
@@ -977,7 +994,7 @@ const I18N={
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 11 fantasy turų · 22 rungtynių dienos`,btn_build_squad:'Sudaryti komandą →',
     btn_my_history:'Mano istorija',stat_rounds:'Fantasy turų',stat_teams:'Fantasy komandų',stat_prizes:'Prizai',
     stat_mypts:'Tavo taškai',stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
-    rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',
+    rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🔒 Praleista',
     players_header:'Žaidėjai',sort_by:'Rikiuoti pagal',position_label:'Pozicija',team_label:'Komanda',
     search_ph:'Ieškoti žaidėjo ar komandos...',pos_all:'Visos',your_team:'Tavo komanda',
     budget_label:'Biudžetas:',budget_used:'panaudota:',auto_title:'Sumesti atsitiktinę komandą',
@@ -987,7 +1004,8 @@ const I18N={
     sc_one:'1️⃣ Praleistas 1 įvartis (GK/DEF)',sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',
     sc_red:'🟥 Raudona kortelė',sc_cap:'C Kapitonas',sc_note:'⚠ Iš kiekvienos komandos — tik 1 žaidėjas',
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
-    prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',group_a_title:'A grupė',
+    prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
+    group_a_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupė`,
     sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Nuosavybė',sort_goals:'Įmušti įvarčiai',
     msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
     msg_open_badge:'Atviras',
@@ -1011,12 +1029,15 @@ const I18N={
     toast_round_not_open:'Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas',
     players_count_suffix:'žaid.',team_full:'komanda pilna',not_found:'Nerasta',
     res_lbl:(r,isUpdate)=>`${r} — komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
-    hist_title:'Turų istorija',standings_title:'A grupės lentelė',standings_sub:'prasideda nuo 0',
+    hist_title:'Turų istorija',
+    standings_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupės lentelė`,
+    standings_sub:'prasideda nuo 0',
     th_team:'Komanda',th_played:'R',th_wins:'P',th_draws:'L',th_losses:'Pr',th_goalsfor:'Įm',th_goalsagainst:'Pr',th_points:'Tšk',
     th_played_full:'Rungtynės',th_wins_full:'Pergalės',th_draws_full:'Lygiosios',th_losses_full:'Pralaimėjimai',
     th_goalsfor_full:'Įmušti',th_goalsagainst_full:'Praleisti',th_points_full:'Taškai',
     leaders_title:'Fantasy lyderiai',lb_mode_season:'Sezono lyderiai',lb_mode_round:'Turo lyderiai',
     lb_sponsor_note:'🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!',
+    top_scorers_title:'⚽ Rezultatyviausi žaidėjai',lbsc_sub_count:n=>`po ${n} turų`,no_goals_yet:'Dar nėra įmuštų įvarčių',
     ts_mode_season:'Sezono rinktinė',ts_mode_round:'Turo rinktinė',
     pick_captain_btn:'Rinktis C',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
     prof_teamname:'Fantasy komanda',prof_favteam:'Mėgstama komanda',prof_totalpts:'Iš viso taškų',prof_roundsplayed:'Turų sužaista',
@@ -1053,7 +1074,7 @@ const I18N={
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 11 fantasy gameweeks · 22 matchdays`,btn_build_squad:'Build Your Team →',
     btn_my_history:'My History',stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
     stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Gameweek Schedule',
-    rt_locked:'🔒 Locked',rt_waiting:'Pending',
+    rt_locked:'🔒 Locked',rt_waiting:'Pending',rt_missed:'🔒 Missed',
     players_header:'Players',sort_by:'Sort by',position_label:'Position',team_label:'Team',
     search_ph:'Search player or team...',pos_all:'All',your_team:'Your Team',
     budget_label:'Budget:',budget_used:'used:',auto_title:'Generate a random team',
@@ -1063,7 +1084,8 @@ const I18N={
     sc_one:'1️⃣ Conceded 1 goal (GK/DEF)',sc_win:'✅ Team win',sc_loss:'❌ Loss',
     sc_red:'🟥 Red card',sc_cap:'C Captain',sc_note:'⚠ Only 1 player per club',
     prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
-    prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',group_a_title:'Group A',
+    prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',
+    group_a_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()}`,
     sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',
     msg_saved:(r,d)=>`<strong>${r}</strong> team saved — change it as many times as you like until <strong>${d}</strong>.`,
     msg_open_badge:'Open',
@@ -1087,12 +1109,15 @@ const I18N={
     toast_round_not_open:'This gameweek isn\'t open yet — wait for the previous one to close',
     players_count_suffix:'players',team_full:'team full',not_found:'No results',
     res_lbl:(r,isUpdate)=>`${r} — team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
-    hist_title:'Gameweek History',standings_title:'Group A Table',standings_sub:'starts from 0',
+    hist_title:'Gameweek History',
+    standings_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Table`,
+    standings_sub:'starts from 0',
     th_team:'Team',th_played:'P',th_wins:'W',th_draws:'D',th_losses:'L',th_goalsfor:'F',th_goalsagainst:'A',th_points:'Pts',
     th_played_full:'Played',th_wins_full:'Wins',th_draws_full:'Draws',th_losses_full:'Losses',
     th_goalsfor_full:'Goals for',th_goalsagainst_full:'Goals against',th_points_full:'Points',
     leaders_title:'Fantasy Leaders',lb_mode_season:'Season Leaders',lb_mode_round:'Gameweek Leaders',
     lb_sponsor_note:'🍺 This league is sponsored by <strong>Carlsberg</strong> — every gameweek\'s leader wins a Carlsberg crate!',
+    top_scorers_title:'⚽ Top Scorers',lbsc_sub_count:n=>`after ${n} gameweeks`,no_goals_yet:'No goals scored yet',
     ts_mode_season:'Team of the Season',ts_mode_round:'Team of the Gameweek',
     pick_captain_btn:'Make Captain',stat_goals:'Goals',stat_price:'Price',hist_link:'📊 Gameweek Points History',btn_add:'Add',
     prof_teamname:'Fantasy Team',prof_favteam:'Favorite Team',prof_totalpts:'Total Points',prof_roundsplayed:'Gameweeks Played',
@@ -2178,11 +2203,15 @@ async function renderDash(){
   document.getElementById('d-rounds').innerHTML=FR.map((r,i)=>{
     const done=STATE.mySquads[i]!==undefined;
     const future=i>live;
-    const isCur=i===STATE.curRound&&!done;
-    return `<div class="rtile ${done?'done':''} ${isCur?'cur':''} ${future?'future':''}" onclick="goRound(${i})">
+    // A past gameweek the user never set a squad for has nothing to wait
+    // for anymore — lock it (same treatment as a not-yet-open round)
+    // instead of showing the misleading "Pending" label.
+    const missed=!done&&!future&&i<live;
+    const isCur=i===live;
+    return `<div class="rtile ${done?'done':''} ${isCur?'cur':''} ${(future||missed)?'future':''}" onclick="goRound(${i})">
       <div class="rtn">${roundName(i)}</div><div class="rts">${dayLabel(i,0)} + ${dayLabel(i,1)}</div>
       <div class="rtdl">⏱ ${formatDeadline(i)}</div>
-      <div class="rtpt ${done?'':'em'}">${future?t('rt_locked'):(done?roundPts[i]+'pts':t('rt_waiting'))}</div>
+      <div class="rtpt ${done?'':'em'}">${future?t('rt_locked'):(missed?t('rt_missed'):(done?roundPts[i]+'pts':t('rt_waiting')))}</div>
     </div>`;
   }).join('');
 }
@@ -2933,6 +2962,34 @@ function computeSeasonPlayerPts(db,div){
   });
   return totals;
 }
+// Real top scorers for the Leaders tab — raw goal tally per player straight
+// from the admin panel's match results (saved.scorers), independent of
+// fantasy points/anyone's picks. Mirrors computeAllPlayerRoundPts's data
+// walk but only accumulates goal counts.
+function computeSeasonGoals(db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  const goals={};const players=PLAYERS.filter(p=>p.division===div);
+  players.forEach(p=>goals[p.id]=0);
+  const fr=(DIVISIONS[div]||DIVISIONS.A).fr;
+  pastRoundIndices().forEach(ri=>{
+    const r=fr[ri];const round=db[ri];
+    if(!r||!round)return;
+    r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
+      const saved=round?.[di]?.[mi];if(!saved)return;
+      (saved.scorers||[]).forEach(sc=>{if(goals[sc.pid]!==undefined)goals[sc.pid]+=sc.cnt;});
+    }));
+  });
+  return goals;
+}
+function topScorersList(db,div,n){
+  n=n||10;
+  const goals=computeSeasonGoals(db,div);
+  const players=PLAYERS.filter(p=>p.division===div);
+  return players.map(p=>({p,goals:goals[p.id]||0}))
+    .filter(x=>x.goals>0)
+    .sort((a,b)=>b.goals-a.goals||a.p.name.localeCompare(b.p.name))
+    .slice(0,n);
+}
 // One player per slot, ranked purely by points — no budget/one-per-club
 // constraint, since this is "who actually performed best", not a fantasy
 // pick. Slots with no scoring data yet come back null.
@@ -3050,6 +3107,23 @@ function renderLBRoundTabs(){
 }
 function setLBRound(i){LB_ROUND=i;renderLBRoundTabs();renderLB();}
 
+// Real top-10 scorers panel on the Leaders tab — independent of the
+// season/gameweek fantasy-points toggle above it, so it's rendered
+// unconditionally as soon as the division's results doc is loaded.
+function renderTopScorers(db,div){
+  const rows=topScorersList(db,div,10);
+  const subEl=document.getElementById('lbsc-sub');
+  if(subEl)subEl.textContent=pastRoundIndices().length?t('lbsc_sub_count',pastRoundIndices().length):'';
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('lbsc-list').innerHTML=rows.map((r,i)=>`
+    <div class="scrow">
+      <span class="scpos ${i<2?'g':''}">${medals[i]||i+1}</span>
+      <span>${teamLogoImg(r.p.team,22)}</span>
+      <div><div class="scname">${r.p.name}</div><div class="scteam">${r.p.team} · ${POS_FL[r.p.pos]}</div></div>
+      <span class="scgoals">⚽ ${r.goals}</span>
+    </div>`).join('')||`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_goals_yet')}</div>`;
+}
+
 async function renderLB(){
   if(!LB_DIVISION)LB_DIVISION=STATE.division;
   const divSel=document.getElementById('lb-divsel');
@@ -3058,6 +3132,7 @@ async function renderLB(){
   const allUsersAll=await fetchAllUsers();
   const allUsers=allUsersAll.filter(u=>(u.division||'A')===LB_DIVISION);
   const lbDB=await getDivisionDB(LB_DIVISION);
+  renderTopScorers(lbDB,LB_DIVISION);
   const prizeEl=document.getElementById('lb-prize');
   let entries;
   if(LB_MODE==='round'){
