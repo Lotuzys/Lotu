@@ -36,7 +36,6 @@
 
 const {onSchedule} = require('firebase-functions/v2/scheduler');
 const {onRequest} = require('firebase-functions/v2/https');
-const {onDocumentCreated} = require('firebase-functions/v2/firestore');
 const {setGlobalOptions} = require('firebase-functions/v2');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
@@ -380,39 +379,5 @@ exports.syncPlayersNow = onRequest(async (req, res) => {
   } catch (e) {
     logger.error('syncPlayersNow failed', e);
     res.status(500).json({error: String(e)});
-  }
-});
-
-// TEMP DEBUG TOOL — do not leave deployed long-term. Fetches an arbitrary
-// URL server-side (Cloud Functions has real internet egress that the admin
-// tooling driving this repo does not) and writes the raw response back onto
-// the same request doc. Firestore-trigger based (not onRequest) because the
-// *.a.run.app HTTPS endpoints aren't reachable either — only
-// *.googleapis.com is, so Firestore is the only round-trip available.
-// Only reachable by whoever can write to `debugFetchQueue/*`, which is
-// nobody through firestore.rules (no rule grants it) — only direct
-// IAM-authenticated REST/Admin SDK access can create a request doc here.
-// Was used one-off to locate team crest image URLs on vilniausfutbolas.lt
-// for divisions B-E logos; remove this export once that work is done.
-exports.debugFetch = onDocumentCreated('debugFetchQueue/{id}', async (event) => {
-  const snap = event.data;
-  if (!snap) return;
-  const url = snap.data().url;
-  if (!url) return;
-  try {
-    const r = await fetch(url, {headers: {'User-Agent': 'Mozilla/5.0 (compatible; SFLFantasyBot/1.0)'}});
-    const buf = Buffer.from(await r.arrayBuffer());
-    const ct = r.headers.get('content-type') || '';
-    const isImage = ct.startsWith('image/');
-    await snap.ref.set({
-      status: r.status,
-      contentType: ct,
-      isImage,
-      base64: isImage ? buf.toString('base64') : null,
-      text: isImage ? null : buf.toString('utf8').slice(0, 150000),
-      fetchedAt: admin.firestore.FieldValue.serverTimestamp(),
-    }, {merge: true});
-  } catch (e) {
-    await snap.ref.set({error: String(e), fetchedAt: admin.firestore.FieldValue.serverTimestamp()}, {merge: true});
   }
 });
