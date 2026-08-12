@@ -465,6 +465,17 @@ a{color:var(--or)}
 .stats-pname span:first-of-type{font-weight:700}
 .stats-pos{font-size:9px;font-weight:800;color:#fff;padding:2px 6px;border-radius:5px;text-transform:uppercase}
 
+/* SCORING SYSTEM PANEL — position-dependent points as a small table */
+.sc-table-wrap{overflow-x:auto;padding:2px 15px 10px}
+.sc-table{width:100%;border-collapse:collapse}
+.sc-table th{background:var(--or-grad);color:#fff;font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:8px 6px;text-align:center;font-weight:700}
+.sc-table th:first-child{text-align:left;border-radius:8px 0 0 0}
+.sc-table th:last-child{border-radius:0 8px 0 0}
+.sc-table td{padding:8px 6px;border-bottom:1px solid var(--bor);font-size:11.5px;text-align:center;color:var(--ink2)}
+.sc-table td:first-child{text-align:left;font-weight:600;color:var(--ink)}
+.sc-table tr:last-child td{border-bottom:none}
+.sc-dash{color:var(--mu)}
+
 /* STANDINGS */
 .swrap{max-width:780px;margin:0 auto;padding:22px 18px}
 .st{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
@@ -757,15 +768,27 @@ a{color:var(--or)}
     <div>
       <div class="pan">
         <div class="ph"><h3 data-i18n="scoring_title">Taškų sistema</h3></div>
-        <div class="rrow"><span data-i18n="sc_gk_goal">🧤 Vartininko įvartis</span><span class="rp">+10</span></div>
-        <div class="rrow"><span data-i18n="sc_def_goal">🛡 Gynėjo įvartis</span><span class="rp">+6</span></div>
-        <div class="rrow"><span data-i18n="sc_mid_goal">⚙ Saugo įvartis</span><span class="rp">+5</span></div>
-        <div class="rrow"><span data-i18n="sc_fwd_goal">⚡ Puolėjo įvartis</span><span class="rp">+4</span></div>
-        <div class="rrow"><span data-i18n="sc_cs">🔒 Clean sheet (GK/DEF)</span><span class="rp">+10</span></div>
-        <div class="rrow"><span data-i18n="sc_one">1️⃣ Praleistas 1 įvartis (GK/DEF)</span><span class="rp">+5</span></div>
+        <!-- Position-dependent points (goal value + GK/DEF-only clean-sheet
+             /1-conceded bonus, which now differ between the two) as a
+             table; everything that applies the same regardless of
+             position goes below it as a plain list. -->
+        <div class="sc-table-wrap">
+          <table class="sc-table"><thead><tr>
+            <th data-i18n="sc_th_pos">Pozicija</th>
+            <th data-i18n="sc_th_goal">Įvartis</th>
+            <th data-i18n="sc_th_cs">Švarus tinklelis</th>
+            <th data-i18n="sc_th_one">Praleistas 1</th>
+          </tr></thead><tbody>
+            <tr><td data-i18n="sc_pos_gk">🧤 Vartininkas</td><td><span class="rp">+10</span></td><td><span class="rp">+10</span></td><td><span class="rp">+5</span></td></tr>
+            <tr><td data-i18n="sc_pos_def">🛡 Gynėjas</td><td><span class="rp">+6</span></td><td><span class="rp">+8</span></td><td><span class="rp">+4</span></td></tr>
+            <tr><td data-i18n="sc_pos_mid">⚙ Saugas</td><td><span class="rp">+5</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
+            <tr><td data-i18n="sc_pos_fwd">⚡ Puolėjas</td><td><span class="rp">+4</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
+          </tbody></table>
+        </div>
         <div class="rrow"><span data-i18n="sc_win">✅ Komandos pergalė</span><span class="rp">+2</span></div>
         <div class="rrow"><span data-i18n="sc_loss">❌ Pralaimėjimas</span><span class="rp neg">−1</span></div>
         <div class="rrow"><span data-i18n="sc_red">🟥 Raudona kortelė</span><span class="rp neg">−3</span></div>
+        <div class="rrow"><span data-i18n="sc_motm">⭐ Geriausias rungtynių žaidėjas</span><span class="rp">+2</span></div>
         <div class="rrow cap-row"><span data-i18n="sc_cap">C Kapitonas</span><span class="rp cap">×2</span></div>
         <div class="rrow note-row"><span data-i18n="sc_note">⚠ Iš kiekvienos komandos — tik 1 žaidėjas</span></div>
       </div>
@@ -1005,7 +1028,10 @@ const db=firebase.firestore();
 // ═══════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════
-const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:10,ONE_GOAL_AGAINST_PTS:5,WIN_PTS:2,LOSS_PTS:-1,RED_CARD_PTS:-3,CAPTAIN_MULT:2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
+// CS_PTS/ONE_GOAL_AGAINST_PTS are per-position (only G and D ever qualify —
+// M/F have no entry and are never looked up for these). Defenders earn less
+// than goalkeepers for the same clean sheet / 1-conceded outcome.
+const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:{G:10,D:8},ONE_GOAL_AGAINST_PTS:{G:5,D:4},WIN_PTS:2,LOSS_PTS:-1,RED_CARD_PTS:-3,CAPTAIN_MULT:2,MOTM_PTS:2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
 const POS_C={G:'#eab308',D:'#3b82f6',M:'#22c55e',F:'#ef4444'};
 const POS_LT={G:'V',D:'G',M:'S',F:'P'};
 const POS_FL={G:'Vartininkas',D:'Gynėjas',M:'Saugas',F:'Puolėjas'};
@@ -1048,9 +1074,10 @@ const I18N={
     search_ph:'Ieškoti žaidėjo ar komandos...',pos_all:'Visos',your_team:'Tavo komanda',
     budget_label:'Biudžetas:',budget_used:'panaudota:',auto_title:'Sumesti atsitiktinę komandą',
     rlbl_gk:'Vartininkas',rlbl_def:'Gynėjai',rlbl_mid:'Saugai',rlbl_fwd:'Puolėjai',slot_pick:'Pasirink',
-    scoring_title:'Taškų sistema',sc_gk_goal:'🧤 Vartininko įvartis',sc_def_goal:'🛡 Gynėjo įvartis',
-    sc_mid_goal:'⚙ Saugo įvartis',sc_fwd_goal:'⚡ Puolėjo įvartis',sc_cs:'🔒 Clean sheet (GK/DEF)',
-    sc_one:'1️⃣ Praleistas 1 įvartis (GK/DEF)',sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',
+    scoring_title:'Taškų sistema',
+    sc_th_pos:'Pozicija',sc_th_goal:'Įvartis',sc_th_cs:'Švarus tinklelis',sc_th_one:'Praleistas 1',
+    sc_pos_gk:'🧤 Vartininkas',sc_pos_def:'🛡 Gynėjas',sc_pos_mid:'⚙ Saugas',sc_pos_fwd:'⚡ Puolėjas',
+    sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',sc_motm:'⭐ Geriausias rungtynių žaidėjas',
     sc_red:'🟥 Raudona kortelė',sc_cap:'C Kapitonas',sc_note:'⚠ Iš kiekvienos komandos — tik 1 žaidėjas',
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
     prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
@@ -1097,6 +1124,7 @@ const I18N={
     match_vs:(i,opp)=>`${i} rungtynės — vs ${opp}`,no_data:'Nėra duomenų',
     mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarus tinklelis',mstat_one:'Praleistas 1 įvartis',
     mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
+    mstat_motm:'⭐ Geriausias rungtynių žaidėjas',
     zero_pts:'0 taškų',no_result_yet:'Šiam turui dar nėra rezultato',zero_pts_round:'0 taškų šį turą',
     captain_label:'Kapitonas',
     toast_new_round:r=>`${r} — rinkis naują komandą!`,
@@ -1129,9 +1157,10 @@ const I18N={
     search_ph:'Search player or team...',pos_all:'All',your_team:'Your Team',
     budget_label:'Budget:',budget_used:'used:',auto_title:'Generate a random team',
     rlbl_gk:'Goalkeeper',rlbl_def:'Defenders',rlbl_mid:'Midfielders',rlbl_fwd:'Forwards',slot_pick:'Pick',
-    scoring_title:'Scoring System',sc_gk_goal:'🧤 Goalkeeper goal',sc_def_goal:'🛡 Defender goal',
-    sc_mid_goal:'⚙ Midfielder goal',sc_fwd_goal:'⚡ Forward goal',sc_cs:'🔒 Clean sheet (GK/DEF)',
-    sc_one:'1️⃣ Conceded 1 goal (GK/DEF)',sc_win:'✅ Team win',sc_loss:'❌ Loss',
+    scoring_title:'Scoring System',
+    sc_th_pos:'Position',sc_th_goal:'Goal',sc_th_cs:'Clean sheet',sc_th_one:'Conceded 1',
+    sc_pos_gk:'🧤 Goalkeeper',sc_pos_def:'🛡 Defender',sc_pos_mid:'⚙ Midfielder',sc_pos_fwd:'⚡ Forward',
+    sc_win:'✅ Team win',sc_loss:'❌ Loss',sc_motm:'⭐ Man of the match',
     sc_red:'🟥 Red card',sc_cap:'C Captain',sc_note:'⚠ Only 1 player per club',
     prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
     prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',
@@ -1178,6 +1207,7 @@ const I18N={
     match_vs:(i,opp)=>`Match ${i} — vs ${opp}`,no_data:'No data',
     mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
     mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
+    mstat_motm:'⭐ Man of the match',
     zero_pts:'0 points',no_result_yet:'No result for this gameweek yet',zero_pts_round:'0 points this gameweek',
     captain_label:'Captain',
     toast_new_round:r=>`${r} — pick a new team!`,
@@ -1931,18 +1961,68 @@ function subscribeLeagueState(){
 function unsubscribeLeagueState(){if(leagueUnsub){leagueUnsub();leagueUnsub=null;}}
 
 // ═══════════════════════════════════════════════
+// MAN OF THE MATCH — +2 bonus for whoever scores the most RAW match points
+// (goal/CS/conceded-1/win-loss/red — never the captain multiplier, which is
+// a fantasy-squad overlay, not a real-world result) among every real player
+// on both rosters for that specific match. Computed once per round and
+// shared by every scoring engine below (computeScoring, computeAllPlayerRoundPts,
+// computePlayerMatchBreakdown) so they never disagree on who earned it —
+// it does NOT depend on anyone's fantasy squad, only on the match result +
+// the division's real player rosters, so a player earns it whether or not
+// any manager actually owns them.
+// Returns {[di]:{[mi]: playerId|null}}. Ties keep whoever PLAYERS lists
+// first (stable/deterministic — no random tie-break).
+function computeMatchMotm(ri,db,div){
+  div=div||STATE.division;
+  const r=(DIVISIONS[div]||DIVISIONS.A).fr[ri];
+  const round=db?.[ri];
+  const motm={};
+  if(!r||!round)return motm;
+  const byTeam={};
+  PLAYERS.filter(p=>p.division===div).forEach(p=>{(byTeam[p.team]=byTeam[p.team]||[]).push(p);});
+  r.days.forEach((day,di)=>{
+    motm[di]={};
+    day.m.forEach((m,mi)=>{
+      const saved=round?.[di]?.[mi];
+      if(!saved){motm[di][mi]=null;return;}
+      const hg=saved.hg,ag=saved.ag;
+      let res0,res1;
+      if(hg>ag){res0='W';res1='L';}else if(ag>hg){res1='W';res0='L';}else{res0='D';res1='D';}
+      let bestId=null,bestPts=-Infinity;
+      [[m[0],ag,res0],[m[1],hg,res1]].forEach(([team,ga,result])=>{
+        (byTeam[team]||[]).forEach(p=>{
+          const mGoals=(saved.scorers||[]).filter(sc=>sc.pid===p.id).reduce((s,sc)=>s+sc.cnt,0);
+          const mRed=(saved.reds||[]).filter(pid=>pid===p.id).length;
+          let mPts=mGoals*CONFIG.PTS_POS[p.pos];
+          if(p.pos==='G'||p.pos==='D'){
+            if(ga===0)mPts+=CONFIG.CS_PTS[p.pos];
+            else if(ga===1)mPts+=CONFIG.ONE_GOAL_AGAINST_PTS[p.pos];
+          }
+          if(result==='W')mPts+=CONFIG.WIN_PTS;else if(result==='L')mPts+=CONFIG.LOSS_PTS;
+          mPts+=mRed*CONFIG.RED_CARD_PTS;
+          if(mPts>bestPts){bestPts=mPts;bestId=p.id;}
+        });
+      });
+      motm[di][mi]=bestId;
+    });
+  });
+  return motm;
+}
+
+// ═══════════════════════════════════════════════
 // SCORING — pure function of (mySquads, match-results DB), never stored.
 // Called fresh everywhere points are shown, so results updating live in
 // STATE.DB (via subscribeLeagueState's listener) automatically recomputes
 // everyone's points — no manual "claim" step, nothing to go stale.
 // ═══════════════════════════════════════════════
-function computeScoring(mySquads,db){
+function computeScoring(mySquads,db,div){
+  div=div||STATE.division;
   const roundPts={},roundDetail={};
   let totalPts=0,roundsPlayed=0;
   Object.keys(mySquads).forEach(riStr=>{
     const ri=parseInt(riStr);
     const snap=mySquads[riStr];
-    const r=FR[ri];
+    const r=(DIVISIONS[div]||DIVISIONS.A).fr[ri];
     if(!snap||!r)return;
     // teamDay[team][di] holds that team's single match on matchday di —
     // lets us build a genuine per-match breakdown below instead of only
@@ -1953,9 +2033,10 @@ function computeScoring(mySquads,db){
       const hg=saved.hg,ag=saved.ag;
       let res0,res1;
       if(hg>ag){res0='W';res1='L';}else if(ag>hg){res1='W';res0='L';}else{res0='D';res1='D';}
-      (teamDay[m[0]]=teamDay[m[0]]||{})[di]={opponent:m[1],ga:ag,result:res0,scorers:saved.scorers,reds:saved.reds||[]};
-      (teamDay[m[1]]=teamDay[m[1]]||{})[di]={opponent:m[0],ga:hg,result:res1,scorers:saved.scorers,reds:saved.reds||[]};
+      (teamDay[m[0]]=teamDay[m[0]]||{})[di]={mi,opponent:m[1],ga:ag,result:res0,scorers:saved.scorers,reds:saved.reds||[]};
+      (teamDay[m[1]]=teamDay[m[1]]||{})[di]={mi,opponent:m[0],ga:hg,result:res1,scorers:saved.scorers,reds:saved.reds||[]};
     }));
+    const motmMap=computeMatchMotm(ri,db,div);
     let total=0;const detail=[];
     Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
       if(!p)return;
@@ -1963,7 +2044,7 @@ function computeScoring(mySquads,db){
       const mult=isC?CONFIG.CAPTAIN_MULT:1;
       const days=teamDay[p.team]||{};
       const played=Object.keys(days).length>0;
-      let pts=0,goals=0,wins=0,losses=0,csCount=0,oneCount=0,redCount=0;
+      let pts=0,goals=0,wins=0,losses=0,csCount=0,oneCount=0,redCount=0,motmCount=0;
       const matches=[];
       [0,1].forEach(di=>{
         const info=days[di];if(!info)return;
@@ -1974,20 +2055,22 @@ function computeScoring(mySquads,db){
         // Clean-sheet/1-conceded bonus is judged for THIS match only — a
         // team can bank it twice in one round (once per matchday).
         if(pos==='G'||pos==='D'){
-          if(info.ga===0){mCS=true;mPts+=CONFIG.CS_PTS;}
-          else if(info.ga===1){mOne=true;mPts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
+          if(info.ga===0){mCS=true;mPts+=CONFIG.CS_PTS[pos];}
+          else if(info.ga===1){mOne=true;mPts+=CONFIG.ONE_GOAL_AGAINST_PTS[pos];}
         }
         if(info.result==='W'){mPts+=CONFIG.WIN_PTS;wins++;}
         else if(info.result==='L'){mPts+=CONFIG.LOSS_PTS;losses++;}
         mPts+=mRed*CONFIG.RED_CARD_PTS;
+        const mMotm=motmMap[di]?.[info.mi]===p.id;
+        if(mMotm){mPts+=CONFIG.MOTM_PTS;motmCount++;}
         goals+=mGoals;redCount+=mRed;if(mCS)csCount++;if(mOne)oneCount++;
         pts+=mPts;
-        matches.push({di,opponent:info.opponent,goals:mGoals,result:info.result,cs:mCS,one:mOne,redCount:mRed,pts:mPts});
+        matches.push({di,opponent:info.opponent,goals:mGoals,result:info.result,cs:mCS,one:mOne,redCount:mRed,motm:mMotm,pts:mPts});
       });
       // No floor at 0 — a scoreless loss (or a red card) can legitimately
       // take a player's round into negative points.
       const final=pts*mult;total+=final;
-      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,csCount,oneCount,played,isC,redCount,matches});
+      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,csCount,oneCount,motmCount,played,isC,redCount,matches});
     }));
     roundPts[ri]=total;roundDetail[ri]=detail;
     totalPts+=total;roundsPlayed++;
@@ -2573,6 +2656,7 @@ function openPlayerHistoryModal(idArg){
 function computePlayerMatchBreakdown(playerId,ri){
   const p=PLAYERS.find(x=>x.id===playerId);if(!p)return[];
   const r=FR[ri];const round=STATE.DB[ri];if(!r||!round)return[];
+  const motmMap=computeMatchMotm(ri,STATE.DB,STATE.division);
   const results=[];
   r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
     if(m[0]!==p.team&&m[1]!==p.team)return;
@@ -2587,12 +2671,14 @@ function computePlayerMatchBreakdown(playerId,ri){
     let pts=goals*CONFIG.PTS_POS[p.pos];
     let cs=false,one=false;
     if(p.pos==='G'||p.pos==='D'){
-      if(ga===0){cs=true;pts+=CONFIG.CS_PTS;}
-      else if(ga===1){one=true;pts+=CONFIG.ONE_GOAL_AGAINST_PTS;}
+      if(ga===0){cs=true;pts+=CONFIG.CS_PTS[p.pos];}
+      else if(ga===1){one=true;pts+=CONFIG.ONE_GOAL_AGAINST_PTS[p.pos];}
     }
     if(result==='W')pts+=CONFIG.WIN_PTS;else if(result==='L')pts+=CONFIG.LOSS_PTS;
     pts+=redCount*CONFIG.RED_CARD_PTS;
-    results.push({di,opponent,goals,result,cs,one,redCount,pts});
+    const motm=motmMap[di]?.[mi]===playerId;
+    if(motm)pts+=CONFIG.MOTM_PTS;
+    results.push({di,opponent,goals,result,cs,one,redCount,motm,pts});
   }));
   return results;
 }
@@ -2655,12 +2741,13 @@ function matchStatRowsHtml(m,pos){
   const rows=[];
   if(m.goals>0)rows.push([t('mstat_goals',m.goals,CONFIG.PTS_POS[pos]),m.goals*CONFIG.PTS_POS[pos]]);
   if(pos==='G'||pos==='D'){
-    if(m.cs)rows.push([t('mstat_cs'),CONFIG.CS_PTS]);
-    else if(m.one)rows.push([t('mstat_one'),CONFIG.ONE_GOAL_AGAINST_PTS]);
+    if(m.cs)rows.push([t('mstat_cs'),CONFIG.CS_PTS[pos]]);
+    else if(m.one)rows.push([t('mstat_one'),CONFIG.ONE_GOAL_AGAINST_PTS[pos]]);
   }
   if(m.result==='W')rows.push([t('mstat_win'),CONFIG.WIN_PTS]);
   else if(m.result==='L')rows.push([t('mstat_loss'),CONFIG.LOSS_PTS]);
   if(m.redCount>0)rows.push([t('mstat_red',m.redCount),m.redCount*CONFIG.RED_CARD_PTS]);
+  if(m.motm)rows.push([t('mstat_motm'),CONFIG.MOTM_PTS]);
   return rows.map(([lbl,val])=>`<div class="rrow"><span>${lbl}</span><span class="rp ${val<0?'neg':''}">${val>0?'+':''}${val}</span></div>`).join('')
     ||`<div class="rrow-empty">${t('zero_pts')}</div>`;
 }
@@ -3029,15 +3116,19 @@ function computeAllPlayerRoundPts(ri,db,div){
     else if(ag>hg){teamResults[m[1]].push('W');teamResults[m[0]].push('L');}
     else{teamResults[m[0]].push('D');teamResults[m[1]].push('D');}
   }));
+  const motmMap=computeMatchMotm(ri,db,div);
+  const motmCounts={};
+  Object.values(motmMap).forEach(dayMap=>Object.values(dayMap).forEach(id=>{if(id)motmCounts[id]=(motmCounts[id]||0)+1;}));
   players.forEach(p=>{
     const goals=scorerGoals[p.id]||0;const gaList=teamMatchGA[p.team]||[];const played=!!teamPlayed[p.team];
     const res=teamResults[p.team]||[];const wins=res.filter(x=>x==='W').length;const losses=res.filter(x=>x==='L').length;
     let val=goals*CONFIG.PTS_POS[p.pos];
     if(played&&(p.pos==='G'||p.pos==='D')){
-      gaList.forEach(ga=>{if(ga===0)val+=CONFIG.CS_PTS;else if(ga===1)val+=CONFIG.ONE_GOAL_AGAINST_PTS;});
+      gaList.forEach(ga=>{if(ga===0)val+=CONFIG.CS_PTS[p.pos];else if(ga===1)val+=CONFIG.ONE_GOAL_AGAINST_PTS[p.pos];});
     }
     val+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;
     val+=(reds[p.id]||0)*CONFIG.RED_CARD_PTS;
+    val+=(motmCounts[p.id]||0)*CONFIG.MOTM_PTS;
     pts[p.id]=val;
   });
   return pts;
@@ -3364,7 +3455,7 @@ async function renderLB(){
     }
     const ri=LB_ROUND;
     entries=allUsers.map(u=>{
-      const {roundPts}=computeScoring(u.mySquads||{},lbDB);
+      const {roundPts}=computeScoring(u.mySquads||{},lbDB,LB_DIVISION);
       return {
         name:u.name||u.email||t('fallback_player'),
         uid:u.id,
@@ -3383,7 +3474,7 @@ async function renderLB(){
     }
   }else{
     entries=allUsers.map(u=>{
-      const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},lbDB);
+      const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},lbDB,LB_DIVISION);
       return {
         name:u.name||u.email||t('fallback_player'),
         uid:u.id,
