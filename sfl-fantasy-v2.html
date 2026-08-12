@@ -778,10 +778,20 @@ a{color:var(--or)}
 
 <!-- STANDINGS -->
 <div class="page" id="page-standings">
-  <div class="swrap"><div class="pan">
+  <div class="swrap">
+  <div class="pan">
     <div class="ph"><h3 data-i18n="standings_title">A grupės lentelė</h3><span class="sub" data-i18n="standings_sub">prasideda nuo 0</span></div>
     <table class="st"><thead><tr><th>#</th><th data-i18n="th_team">Komanda</th><th data-i18n="th_played" data-i18n-title="th_played_full" title="Rungtynės">R</th><th data-i18n="th_wins" data-i18n-title="th_wins_full" title="Pergalės">P</th><th data-i18n="th_draws" data-i18n-title="th_draws_full" title="Lygiosios">L</th><th data-i18n="th_losses" data-i18n-title="th_losses_full" title="Pralaimėjimai">Pr</th><th data-i18n="th_goalsfor" data-i18n-title="th_goalsfor_full" title="Įmušti">Įm</th><th data-i18n="th_goalsagainst" data-i18n-title="th_goalsagainst_full" title="Praleisti">Pr</th><th>+/−</th><th data-i18n="th_points" data-i18n-title="th_points_full" title="Taškai">Tšk</th></tr></thead><tbody id="stand-full"></tbody></table>
-  </div></div>
+  </div>
+  <!-- Real top scorers for the division the viewer is currently looking at
+       (STATE.division — this page has no cross-division picker of its own,
+       unlike Leaders). Raw goals from the admin panel's match results, not
+       fantasy points. -->
+  <div class="pan" style="margin-top:16px">
+    <div class="ph"><h3 data-i18n="top_scorers_title">⚽ Rezultatyviausi žaidėjai</h3><span class="sub" id="lbsc-sub"></span></div>
+    <div id="lbsc-list"></div>
+  </div>
+  </div>
 </div>
 
 <!-- LEADERS -->
@@ -799,15 +809,7 @@ a{color:var(--or)}
     <div class="lb-sponsor-note" data-i18n="lb_sponsor_note">🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!</div>
     <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
-  </div>
-  <!-- Real top scorers for the selected division — raw goals from the admin
-       panel's match results, not fantasy points. Follows the same #lb-divsel
-       division picker above, so no separate filter of its own. -->
-  <div class="pan" style="margin-top:16px">
-    <div class="ph"><h3 data-i18n="top_scorers_title">⚽ Rezultatyviausi žaidėjai</h3><span class="sub" id="lbsc-sub"></span></div>
-    <div id="lbsc-list"></div>
-  </div>
-  </div>
+  </div></div>
 </div>
 
 <!-- TEAM OF THE SEASON — best real 1-2-2-2 XI by actual match points, not
@@ -994,7 +996,7 @@ const I18N={
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 11 fantasy turų · 22 rungtynių dienos`,btn_build_squad:'Sudaryti komandą →',
     btn_my_history:'Mano istorija',stat_rounds:'Fantasy turų',stat_teams:'Fantasy komandų',stat_prizes:'Prizai',
     stat_mypts:'Tavo taškai',stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
-    rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🔒 Praleista',
+    rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🚫 Praleista',
     players_header:'Žaidėjai',sort_by:'Rikiuoti pagal',position_label:'Pozicija',team_label:'Komanda',
     search_ph:'Ieškoti žaidėjo ar komandos...',pos_all:'Visos',your_team:'Tavo komanda',
     budget_label:'Biudžetas:',budget_used:'panaudota:',auto_title:'Sumesti atsitiktinę komandą',
@@ -1074,7 +1076,7 @@ const I18N={
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 11 fantasy gameweeks · 22 matchdays`,btn_build_squad:'Build Your Team →',
     btn_my_history:'My History',stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
     stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Gameweek Schedule',
-    rt_locked:'🔒 Locked',rt_waiting:'Pending',rt_missed:'🔒 Missed',
+    rt_locked:'🔒 Locked',rt_waiting:'Pending',rt_missed:'🚫 Missed',
     players_header:'Players',sort_by:'Sort by',position_label:'Position',team_label:'Team',
     search_ph:'Search player or team...',pos_all:'All',your_team:'Your Team',
     budget_label:'Budget:',budget_used:'used:',auto_title:'Generate a random team',
@@ -2878,6 +2880,9 @@ function renderStFull(){
     <td>${t.d}</td><td style="color:var(--red)">${t.l}</td><td>${t.gf}</td><td>${t.ga}</td>
     <td style="color:${t.gf>t.ga?'var(--or)':'var(--red)'}">${t.gf>t.ga?'+':''}${t.gf-t.ga}</td>
     <td style="font-weight:900;color:var(--or)">${t.pts}</td></tr>`).join('');
+  // Standings has no cross-division picker of its own — always the
+  // viewer's currently active division (matches the table above it).
+  renderTopScorers(STATE.DB,STATE.division);
 }
 
 // ═══════════════════════════════════════════════
@@ -3107,9 +3112,8 @@ function renderLBRoundTabs(){
 }
 function setLBRound(i){LB_ROUND=i;renderLBRoundTabs();renderLB();}
 
-// Real top-10 scorers panel on the Leaders tab — independent of the
-// season/gameweek fantasy-points toggle above it, so it's rendered
-// unconditionally as soon as the division's results doc is loaded.
+// Real top-10 scorers panel — lives on the Standings ("Lentelė") tab,
+// called from renderStFull(). Independent of fantasy points/anyone's picks.
 function renderTopScorers(db,div){
   const rows=topScorersList(db,div,10);
   const subEl=document.getElementById('lbsc-sub');
@@ -3132,7 +3136,6 @@ async function renderLB(){
   const allUsersAll=await fetchAllUsers();
   const allUsers=allUsersAll.filter(u=>(u.division||'A')===LB_DIVISION);
   const lbDB=await getDivisionDB(LB_DIVISION);
-  renderTopScorers(lbDB,LB_DIVISION);
   const prizeEl=document.getElementById('lb-prize');
   let entries;
   if(LB_MODE==='round'){
