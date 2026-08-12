@@ -57,6 +57,12 @@ a{color:var(--or)}
 .pchip-v{font-size:17px;font-weight:900;color:var(--or)}.pchip-l{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}
 .abtn{background:var(--card);border:1.5px solid var(--bor2);color:var(--mu);font-size:11px;font-weight:700;padding:7px 14px;border-radius:10px;cursor:pointer;transition:all .18s var(--ease)}
 .abtn:hover{color:var(--or);border-color:var(--or);box-shadow:var(--sh-xs)}.abtn.on{color:#fff;border-color:var(--or);background:var(--or-grad)}
+/* Admin division switcher — a compact tab row (A/B/C/D/E), same visual
+   language as .abtn.on but sized to sit five-wide in the topbar. */
+.admdivtabs{display:flex;gap:3px;background:var(--sur);border:1.5px solid var(--bor2);border-radius:10px;padding:3px}
+.divtab{background:transparent;border:none;color:var(--mu);font-size:11px;font-weight:800;width:24px;height:24px;border-radius:7px;cursor:pointer;transition:all .18s var(--ease)}
+.divtab:hover{color:var(--or)}
+.divtab.on{color:#fff;background:var(--or-grad);box-shadow:var(--sh-xs)}
 .user-chip{display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--bor);border-radius:12px;padding:6px 12px 6px 6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2);transition:all .18s var(--ease)}
 .user-chip:hover{border-color:var(--or);box-shadow:var(--sh-xs);transform:translateY(-1px)}
 .user-av{width:26px;height:26px;border-radius:50%;background:var(--or-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
@@ -583,7 +589,7 @@ a{color:var(--or)}
         <div class="lang-opt" data-lang="en" onclick="setLang('en')"><span class="flag-ic-wrap"></span>English</div>
       </div>
     </div>
-    <select class="abtn" id="admdivsw" style="display:none" onchange="switchDivision(this.value)" title="Admin: peržiūrėti kitą divizioną"></select>
+    <div class="admdivtabs" id="admdivsw" style="display:none" title="Admin: peržiūrėti kitą divizioną"></div>
     <button class="abtn" id="admbtn" style="display:none" onclick="showPage('admin',this)">⚙ Admin</button>
     <div class="pchip" id="pts-chip" style="display:none"><div class="pchip-v" id="hdr-pts">0</div><div class="pchip-l" data-i18n="pts_label">Taškai</div></div>
     <div class="user-chip" id="user-chip" style="display:none" onclick="openProfile()">
@@ -1631,12 +1637,40 @@ function updateTopbarForUser(){
   document.getElementById('admbtn').style.display=isAdmin()?'block':'none';
   const divSw=document.getElementById('admdivsw');
   if(isAdmin()){
-    divSw.style.display='block';
-    divSw.innerHTML=DIVISION_KEYS.map(d=>`<option value="${d}">${d} divizionas</option>`).join('');
-    divSw.value=STATE.division;
+    divSw.style.display='flex';
+    renderAdminDivTabs();
   }else{
     divSw.style.display='none';
   }
+}
+
+// Admin-only division tab row in the topbar (A/B/C/D/E) — renders once from
+// updateTopbarForUser() and again from switchDivision() so the active tab
+// always tracks STATE.division.
+function renderAdminDivTabs(){
+  const el=document.getElementById('admdivsw');
+  if(!el)return;
+  el.innerHTML=DIVISION_KEYS.map(d=>
+    `<button class="divtab ${d===STATE.division?'on':''}" onclick="switchDivision('${d}')" title="${d} divizionas">${d}</button>`).join('');
+}
+
+// Whichever page the admin is currently looking at, fully rebuild it for
+// the division just switched into — unlike the league-state onSnapshot
+// listener (which deliberately does a *partial* refresh so it never wipes
+// unsaved typing when someone else's write echoes back), this only ever
+// runs off an explicit admin tab click, so a full rebuild (including the
+// squad page's player list/pitch slots, and the admin match-entry grid)
+// is exactly right here — nothing in-progress to lose.
+function refreshActivePageForDivisionSwitch(){
+  const active=document.querySelector('.page.on');
+  const name=active?active.id.replace('page-',''):'dash';
+  if(name==='dash')      renderDash();
+  if(name==='squad')     {renderAllSlots();renderFilters();renderList();renderSquadMsg();renderFixtures();renderStMini();updateBottomBar();}
+  if(name==='history')   renderHistory();
+  if(name==='standings') renderStFull();
+  if(name==='leaders')   renderLB();
+  if(name==='teamseason')renderTeamOfSeason();
+  if(name==='admin')     renderAdmin();
 }
 
 // Admin-only: browse/manage any of the 5 divisions without changing which
@@ -1651,13 +1685,14 @@ async function switchDivision(div){
   STATE.division=div;
   setActiveDivision(div);
   applyStaticI18n();
+  renderAdminDivTabs();
   STATE.slots={G:[null],D:[null,null],M:[null,null],F:[null,null]};
   STATE.taken=new Set();STATE.takenTeams=new Set();STATE.captain=null;
   STATE.activePosF='Visos';STATE.activeTeamF='Visos';
   await loadLeagueState();
   subscribeLeagueState();
   loadRoundIntoPitch(STATE.curRound);
-  renderDash();
+  refreshActivePageForDivisionSwitch();
   toast(`Peržiūri ${div} divizioną (admin)`);
 }
 
