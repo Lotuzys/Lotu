@@ -456,13 +456,11 @@ a{color:var(--or)}
 
 /* STATISTICS — FPL-style all-players table (price/ownership/form/points) */
 .statswrap{max-width:960px;margin:0 auto;padding:22px 18px}
-.stats-controls{display:flex;align-items:center;gap:8px;padding:0 16px 14px}
-.stats-controls .fg-lbl{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
-.stats-controls .pl-sort-sel{flex:1;max-width:220px}
-.stats-dirbtn{background:var(--card);border:1.5px solid var(--bor2);color:var(--or);font-size:14px;font-weight:800;width:34px;height:34px;border-radius:10px;cursor:pointer;transition:all .18s var(--ease)}
-.stats-dirbtn:hover{border-color:var(--or);box-shadow:var(--sh-xs)}
 .stats-table-wrap{overflow-x:auto}
 .stats-table{min-width:640px}
+.stats-table th.stats-sortable{cursor:pointer;user-select:none;transition:opacity .15s var(--ease)}
+.stats-table th.stats-sortable:hover{opacity:.85}
+.stats-arrow{display:inline-block;margin-left:3px;font-size:9px}
 .stats-pname{display:flex;align-items:center;gap:8px;white-space:nowrap}
 .stats-pname span:first-of-type{font-weight:700}
 .stats-pos{font-size:9px;font-weight:800;color:#fff;padding:2px 6px;border-radius:5px;text-transform:uppercase}
@@ -853,23 +851,27 @@ a{color:var(--or)}
 
 <!-- STATISTICS — FPL-style all-players table (price/ownership/form/points).
      Defaults to the viewer's own division; the dropdown lets anyone peek
-     at another division's players, same pattern as Leaders/Team of Season. -->
+     at another division's players, same pattern as Leaders/Team of Season.
+     Sorting happens by clicking a column header (arrow shows the active
+     one); the position/team filters below replace what used to be a
+     generic "sort by" dropdown. -->
 <div class="page" id="page-stats">
   <div class="statswrap"><div class="pan">
     <div class="ph"><h3 data-i18n="nav_stats">Statistika</h3><span class="sub" id="stats-sub"></span></div>
     <div class="lb-filters">
       <select class="lb-divsel" id="stats-divsel" onchange="setStatsDivision(this.value)"></select>
     </div>
-    <div class="stats-controls">
-      <div class="fg-lbl" data-i18n="sort_by">Rikiuoti pagal</div>
-      <select class="pl-sort-sel" id="stats-sort-f" onchange="renderStats()"></select>
-      <button class="stats-dirbtn" id="stats-dir-btn" onclick="toggleStatsDir()" data-i18n-title="stats_dir_title" title="Keisti rikiavimo kryptį">↓</button>
-    </div>
+    <div class="fg"><div class="fg-lbl" data-i18n="position_label">Pozicija</div><div class="fg-row" id="stats-pos-f"></div></div>
+    <div class="fg noborder"><div class="fg-lbl" data-i18n="team_label">Komanda</div><div class="fg-row" id="stats-team-f"></div></div>
     <div class="stats-table-wrap">
       <table class="st stats-table"><thead><tr>
-        <th>#</th><th data-i18n="th_player">Žaidėjas</th><th data-i18n="th_team">Komanda</th>
-        <th data-i18n="sort_price">Kaina</th><th data-i18n="sort_own">Nuosavybė</th>
-        <th data-i18n="stats_form">Forma</th><th data-i18n="sort_total">Taškai</th>
+        <th>#</th>
+        <th class="stats-sortable" onclick="setStatsSort('name')"><span data-i18n="th_player">Žaidėjas</span><span class="stats-arrow" id="arr-name"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('team')"><span data-i18n="th_team">Komanda</span><span class="stats-arrow" id="arr-team"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('price')"><span data-i18n="sort_price">Kaina</span><span class="stats-arrow" id="arr-price"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('ownership')"><span data-i18n="sort_own">Nuosavybė</span><span class="stats-arrow" id="arr-ownership"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('form')"><span data-i18n="stats_form">Forma</span><span class="stats-arrow" id="arr-form"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('total')"><span data-i18n="sort_total">Taškai</span><span class="stats-arrow" id="arr-total"></span></th>
       </tr></thead><tbody id="stats-tbody"></tbody></table>
     </div>
   </div></div>
@@ -1026,8 +1028,7 @@ let LANG=localStorage.getItem(LANG_KEY)==='en'?'en':'lt';
 const I18N={
   lt:{
     nav_dash:'Pagrindinis',nav_myteam:'Mano komanda',nav_history:'Istorija',nav_teamseason:'Sezono rinktinė',
-    nav_stats:'Statistika',stats_form:'Forma',sort_team:'Komanda (A-Z)',th_player:'Žaidėjas',
-    stats_dir_title:'Keisti rikiavimo kryptį',
+    nav_stats:'Statistika',stats_form:'Forma',th_player:'Žaidėjas',
     nav_leaders:'Lyderiai',nav_standings:'Lentelė',pts_label:'Taškai',my_account:'Mano paskyra',
     brand_tooltip:'Į pagrindinį',league_sub:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 2026/27`,sponsor_tooltip:'Sezono rėmėjas',
     login_sub:'Prisijunk ir rink taškus kiekvieną turą',tab_login:'Prisijungti',tab_register:'Registruotis',
@@ -1108,8 +1109,7 @@ const I18N={
   },
   en:{
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
-    nav_stats:'Statistics',stats_form:'Form',sort_team:'Team (A-Z)',th_player:'Player',
-    stats_dir_title:'Toggle sort direction',
+    nav_stats:'Statistics',stats_form:'Form',th_player:'Player',
     nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',my_account:'My Account',
     brand_tooltip:'Go to home',league_sub:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 2026/27`,sponsor_tooltip:'Season Sponsor',
     login_sub:'Log in and score points every gameweek',tab_login:'Log In',tab_register:'Register',
@@ -3263,46 +3263,68 @@ function renderTopScorers(db,div){
 
 // Defaults to the viewer's own division; the dropdown lets anyone peek at
 // another division's player pool read-only, same pattern as LB_DIVISION/
-// TS_DIVISION above — doesn't touch STATE.division.
+// TS_DIVISION above — doesn't touch STATE.division. Position/team filters
+// reset on a division switch since a foreign division's team names don't
+// carry over.
 let STATS_DIVISION=null;
-function setStatsDivision(div){STATS_DIVISION=div;renderStats();}
+function setStatsDivision(div){STATS_DIVISION=div;STATS_POS_F='Visos';STATS_TEAM_F='Visos';renderStats();}
+// Sorting is by clicking a column header (see the <th onclick> in the
+// HTML) rather than a "sort by" dropdown — clicking the already-active
+// column flips its direction, clicking a new one switches to it with a
+// sensible default direction (numeric metrics start high-to-low, name/team
+// start A-Z).
 let STATS_SORT='total';
 let STATS_DIR='desc';
-function toggleStatsDir(){
-  STATS_DIR=STATS_DIR==='desc'?'asc':'desc';
-  const btn=document.getElementById('stats-dir-btn');
-  if(btn)btn.textContent=STATS_DIR==='desc'?'↓':'↑';
+function setStatsSort(key){
+  if(STATS_SORT===key){STATS_DIR=STATS_DIR==='desc'?'asc':'desc';}
+  else{STATS_SORT=key;STATS_DIR=(key==='name'||key==='team')?'asc':'desc';}
   renderStats();
 }
-function renderStatsSortOptions(){
-  const sel=document.getElementById('stats-sort-f');if(!sel)return;
-  const cur=sel.value||STATS_SORT;
-  sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>`+
-    `<option value="ownership">${t('sort_own')}</option><option value="form">${t('stats_form')}</option>`+
-    `<option value="team">${t('sort_team')}</option>`;
-  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'total';
+function updateStatsArrows(){
+  ['name','team','price','ownership','form','total'].forEach(k=>{
+    const el=document.getElementById('arr-'+k);
+    if(el)el.textContent=STATS_SORT===k?(STATS_DIR==='desc'?'▼':'▲'):'';
+  });
+}
+// Position/team filters — same idea as the squad-picker's own #pos-f/
+// #team-f (STATE.activePosF/activeTeamF), just scoped to STATS_DIVISION
+// (which may not be the viewer's own division) instead of the globally
+// active one.
+let STATS_POS_F='Visos';
+let STATS_TEAM_F='Visos';
+function setStatsPosF(p){STATS_POS_F=p;renderStats();}
+function setStatsTeamF(tm){STATS_TEAM_F=tm;renderStats();}
+function renderStatsFilters(){
+  const d=DIVISIONS[STATS_DIVISION]||DIVISIONS.A;
+  document.getElementById('stats-pos-f').innerHTML=['Visos','G','D','M','F'].map(p=>
+    `<button class="pf ${STATS_POS_F===p?'on':''}" onclick="setStatsPosF('${p}')">${p==='Visos'?t('pos_all'):POS_FL[p]}</button>`).join('');
+  document.getElementById('stats-team-f').innerHTML=['Visos',...d.teams].map(tm=>
+    `<button class="pf ${STATS_TEAM_F===tm?'on':''}" onclick="setStatsTeamF('${tm}')">${d.logos[tm]?`<img class="pf-logo" src="${d.logos[tm]}" alt="">`:''}${tm==='Visos'?t('pos_all'):tm}</button>`).join('');
 }
 async function renderStats(){
   if(!STATS_DIVISION)STATS_DIVISION=STATE.division;
   const divSel=document.getElementById('stats-divsel');
   divSel.innerHTML=DIVISION_KEYS.map(d=>
     `<option value="${d}" ${d===STATS_DIVISION?'selected':''}>${d} divizionas${d===STATE.division?' (tavo)':''}</option>`).join('');
-  renderStatsSortOptions();
-  STATS_SORT=document.getElementById('stats-sort-f')?.value||'total';
+  renderStatsFilters();
+  updateStatsArrows();
 
   const div=STATS_DIVISION;
   const db=await getDivisionDB(div);
   const totals=computeSeasonPlayerPts(db,div);
   const form=computeFormPts(db,div,2);
   const ownership=await computeOwnershipForDivision(div);
-  const players=PLAYERS.filter(p=>p.division===div&&p.active!==false);
+  let players=PLAYERS.filter(p=>p.division===div&&p.active!==false);
+  if(STATS_POS_F!=='Visos')players=players.filter(p=>p.pos===STATS_POS_F);
+  if(STATS_TEAM_F!=='Visos')players=players.filter(p=>p.team===STATS_TEAM_F);
 
   const metricFor={
+    name:p=>p.name,
+    team:p=>p.team,
     total:p=>totals[p.id]||0,
     price:p=>p.price,
     ownership:p=>ownership[p.id]||0,
     form:p=>form[p.id]||0,
-    team:p=>p.team,
   }[STATS_SORT]||(p=>totals[p.id]||0);
 
   const sorted=[...players].sort((a,b)=>{
