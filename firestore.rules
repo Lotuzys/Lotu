@@ -146,7 +146,17 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == uid;
-      allow update: if isSignedIn() && request.auth.uid == uid;
+      // `division` is set once at onboarding (create) and frozen after —
+      // without this, nothing stopped a signed-in user from writing their
+      // own doc directly (bypassing the app's UI, which never re-exposes
+      // onboarding) to jump into a different division's real-money prize
+      // pool at will. isAdmin() is exempted: switchDivision()'s "browse
+      // any division without changing which one you're actually onboarded
+      // into" already only ever mutates STATE.division locally for the
+      // admin's own session — this just lets that account's convenience
+      // saveCurrentState() calls go through while doing so, same as before.
+      allow update: if isSignedIn() && request.auth.uid == uid
+        && (isAdmin() || request.resource.data.division == resource.data.division);
 
       // A round's submitted squad. Writable (create or overwrite) only by
       // its owner, only before that round's deadline, and only if legal.

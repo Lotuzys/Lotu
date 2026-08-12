@@ -1869,7 +1869,7 @@ function selectFavTeam(tm,div){
   document.getElementById(id)?.classList.add('sel');
 }
 
-function finishOnboard(){
+async function finishOnboard(){
   const teamname=document.getElementById('ob-teamname').value.trim()||CURRENT_USER.name+"'s FC";
   if(!selectedFavTeam){toast('Pasirink mėgstamiausią komandą!');return;}
   STATE.favTeam=selectedFavTeam;
@@ -1877,6 +1877,15 @@ function finishOnboard(){
   STATE.division=selectedDivision||divisionForTeam(selectedFavTeam);
   setActiveDivision(STATE.division);
   applyStaticI18n();
+  // Bug fixed: loginUser() loads/subscribes league state BEFORE onboarding
+  // ever runs, so it's always division A's (the default STATE.division for
+  // a brand-new profile) — every new user who picked a division other than
+  // A here used to see division A's results (points, rank, fixtures) on
+  // their own dashboard for the rest of that session, since nothing ever
+  // re-pointed the results doc/listener at their actual division afterward.
+  unsubscribeLeagueState();
+  await loadLeagueState();
+  subscribeLeagueState();
   saveCurrentState();
   showMainApp();
 }
@@ -2176,7 +2185,13 @@ function ownershipPct(id){return OWNERSHIP[id]??0;}
 
 async function refreshOwnership(){
   try{
-    const allUsers=await fetchAllUsers();
+    // Scoped to the viewer's own division — bug fixed: this used to divide
+    // by every registered user across all 5 divisions, artificially
+    // deflating every real player's ownership % (the numerator can only
+    // ever come from same-division squads, since ids are division-reserved
+    // blocks, but the denominator was counting everyone else's teams too).
+    const allUsersAll=await fetchAllUsers();
+    const allUsers=allUsersAll.filter(u=>(u.division||'A')===STATE.division);
     // Whichever round is actually on the pitch right now — not always the
     // live round, since goRound() also lets you browse past ones. A past
     // squad is history; it says nothing about who's owned in the round
@@ -2433,9 +2448,14 @@ async function renderDash(){
   document.getElementById('d-mypts').textContent=totalPts;
   document.getElementById('hdr-pts').textContent=totalPts;
   if(STATE.fantasyTeamName)document.getElementById('dash-title').textContent=STATE.fantasyTeamName;
-  // Rank — each user's total is derived from their own squads + the same shared results
-  const allUsers=await fetchAllUsers();
-  const scores=allUsers.map(u=>computeScoring(u.mySquads||{},STATE.DB).totalPts).sort((a,b)=>b-a);
+  // Rank and team count — scoped to the viewer's own division. Bug fixed:
+  // this used to run against every registered user across all 5 divisions
+  // (inflating "Fantasy komandų" with everyone else's teams, and scoring
+  // other-division squads against THIS division's results doc, producing
+  // meaningless numbers that got mixed into the rank comparison).
+  const allUsersAll=await fetchAllUsers();
+  const allUsers=allUsersAll.filter(u=>(u.division||'A')===STATE.division);
+  const scores=allUsers.map(u=>computeScoring(u.mySquads||{},STATE.DB,STATE.division).totalPts).sort((a,b)=>b-a);
   const rank=scores.indexOf(totalPts)+1;
   document.getElementById('d-rank').textContent=rank>0?'#'+rank:'#1';
   document.getElementById('d-teams').textContent=allUsers.length;
@@ -2838,8 +2858,15 @@ function scoringBreakdownHtml(det,pos){
 
 // % of managers who had this player in their squad for a SPECIFIC round —
 // distinct from ownershipPct()/OWNERSHIP, which reflect the current round.
+// Scoped to the PLAYER's own division (looked up here, not assumed from
+// STATE.division) since this is also reachable while browsing a modal for
+// another division's player (e.g. Team of the Season/Statistika with their
+// own division filter) — bug fixed: this used to divide by every
+// registered user across all 5 divisions regardless of whose player it was.
 async function computeOwnershipForRound(playerId,ri){
-  const allUsers=await fetchAllUsers();
+  const div=PLAYERS.find(x=>x.id===playerId)?.division||STATE.division;
+  const allUsersAll=await fetchAllUsers();
+  const allUsers=allUsersAll.filter(u=>(u.division||'A')===div);
   const total=allUsers.length||1;
   let count=0;
   allUsers.forEach(u=>{
@@ -3705,19 +3732,31 @@ function saveM(key,ri,di,mi){
     if(pid)reds.push(pid);
   });
   const mk=`${ri}-${di}-${mi}`;
-  if(!STATE.savedMatches.has(mk)){
-    STATE.savedMatches.add(mk);
-    const m=FR[ri].days[di].m[mi];const h=STATE.teams[m[0]];const a=STATE.teams[m[1]];
-    if(h&&a){
-      h.gf+=hg;h.ga+=ag;a.gf+=ag;a.ga+=hg;
-      if(hg>ag){h.w++;h.pts+=3;a.l++;}else if(ag>hg){a.w++;a.pts+=3;h.l++;}else{h.d++;h.pts++;a.d++;a.pts++;}
-      if(ag===0)h.cs++;if(hg===0)a.cs++;
+  const m=FR[ri].days[di].m[mi];const h=STATE.teams[m[0]];const a=STATE.teams[m[1]];
+  // Bug fixed: this used to apply the score's W/D/L/goals/clean-sheet
+  // contribution to the standings table only the FIRST time a match was
+  // saved (guarded by savedMatches) — editing an already-entered result
+  // (a typo fix) still correctly overwrote STATE.DB below, so fantasy
+  // points updated fine, but the standings table silently kept the old,
+  // wrong score's contribution forever, with no way to correct it short of
+  // clearing all results and re-entering the whole season. Now every save
+  // first reverses whatever the PREVIOUS save (if any) contributed, then
+  // applies the new score — a genuine first save has nothing to reverse.
+  const old=STATE.DB[ri]?.[di]?.[mi];
+  if(h&&a){
+    if(old){
+      h.gf-=old.hg;h.ga-=old.ag;a.gf-=old.ag;a.ga-=old.hg;
+      if(old.hg>old.ag){h.w--;h.pts-=3;a.l--;}else if(old.ag>old.hg){a.w--;a.pts-=3;h.l--;}else{h.d--;h.pts--;a.d--;a.pts--;}
+      if(old.ag===0)h.cs--;if(old.hg===0)a.cs--;
     }
+    h.gf+=hg;h.ga+=ag;a.gf+=ag;a.ga+=hg;
+    if(hg>ag){h.w++;h.pts+=3;a.l++;}else if(ag>hg){a.w++;a.pts+=3;h.l++;}else{h.d++;h.pts++;a.d++;a.pts++;}
+    if(ag===0)h.cs++;if(hg===0)a.cs++;
   }
+  STATE.savedMatches.add(mk);
   if(!STATE.DB[ri])STATE.DB[ri]={};if(!STATE.DB[ri][di])STATE.DB[ri][di]={};
   STATE.DB[ri][di][mi]={hg,ag,scorers,reds};
   const svEl=document.getElementById(`sv-${key}`);if(svEl)svEl.classList.add('on');
-  const m=FR[ri].days[di].m[mi];
   toast(`${m[0]} ${hg}:${ag} ${m[1]} — išsaugota ✓`);
   // Tabs only, not a full renderAdmin() — a full rebuild would wipe any
   // unsaved scorer entries you're mid-typing on another match this round.
