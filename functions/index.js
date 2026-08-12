@@ -389,12 +389,12 @@ exports.syncPlayersNow = onRequest(async (req, res) => {
 // the same request doc. Firestore-trigger based (not onRequest) because the
 // *.a.run.app HTTPS endpoints aren't reachable either — only
 // *.googleapis.com is, so Firestore is the only round-trip available.
-// Only reachable by whoever can write to `debug/fetchQueue/*`, which is
+// Only reachable by whoever can write to `debugFetchQueue/*`, which is
 // nobody through firestore.rules (no rule grants it) — only direct
 // IAM-authenticated REST/Admin SDK access can create a request doc here.
 // Was used one-off to locate team crest image URLs on vilniausfutbolas.lt
 // for divisions B-E logos; remove this export once that work is done.
-exports.debugFetch = onDocumentCreated('debug/fetchQueue/{id}', async (event) => {
+exports.debugFetch = onDocumentCreated('debugFetchQueue/{id}', async (event) => {
   const snap = event.data;
   if (!snap) return;
   const url = snap.data().url;
