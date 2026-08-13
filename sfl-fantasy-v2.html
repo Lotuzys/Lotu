@@ -393,6 +393,16 @@ a{color:var(--or)}
 .rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
 .pmadd{width:100%;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}.pmadd:hover{transform:translateY(-1px)}.pmadd:disabled{opacity:.4;cursor:default;box-shadow:none}
 
+/* BOOT LOADING GATE — see the JS section right after auth.onAuthStateChanged()
+   for why this exists: masks the login page while Firebase is still
+   restoring/refreshing a persisted session in the background, so nobody can
+   type into (or misread) a login form that's about to be swapped out from
+   under them the moment that finishes. */
+#boot-gate{position:fixed;inset:0;z-index:900;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+#boot-gate img{height:44px;width:auto;opacity:.92}
+.boot-spin{width:26px;height:26px;border:3px solid var(--bor2);border-top-color:var(--or);border-radius:50%;animation:bootspin .7s linear infinite}
+@keyframes bootspin{to{transform:rotate(360deg)}}
+
 /* SQUAD TUTORIAL — first-visit 4-step walkthrough for fantasy newcomers */
 .tut-modal{background:var(--card);border:1px solid var(--bor);border-radius:24px;width:340px;max-width:92vw;overflow:hidden;box-shadow:var(--sh-lg);animation:popin .25s var(--ease)}
 .tut-head{background:var(--or-grad);padding:26px 22px 20px;text-align:center;color:#fff;position:relative;overflow:hidden}
@@ -610,6 +620,13 @@ a{color:var(--or)}
 </style>
 </head>
 <body>
+
+<!-- BOOT LOADING GATE — covers everything (including the login page
+     underneath) until Firebase reports whether this device already has a
+     valid session, so a login attempt can never race a background session
+     restore. Hidden by hideBootGate() the first time auth.onAuthStateChanged
+     fires, or by its own safety timeout if that takes unusually long. -->
+<div id="boot-gate"><img id="boot-gate-logo" alt=""><div class="boot-spin"></div></div>
 
 <!-- TOPBAR -->
 <div class="topbar">
@@ -1109,6 +1126,8 @@ const I18N={
     login_sub:'Prisijunk ir rink taškus kiekvieną turą',tab_login:'Prisijungti',tab_register:'Registruotis',
     label_email:'El. paštas',label_password:'Slaptažodis',forgot_pw:'Pamiršai slaptažodį?',
     err_login:'Neteisingi prisijungimo duomenys',
+    err_login_too_many:'Per daug bandymų — palauk kelias minutes ir bandyk dar kartą.',
+    err_login_network:'Nepavyko prisijungti prie interneto — patikrink ryšį ir bandyk dar kartą.',
     ok_pw_reset:'Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.',
     btn_login:'Prisijungti →',label_name:'Vardas',ph_name:'Tavo vardas',ph_password_min:'Min. 6 simboliai',
     err_register:'Toks el. paštas jau užregistruotas',btn_register:'Registruotis →',
@@ -1207,6 +1226,8 @@ const I18N={
     login_sub:'Log in and score points every gameweek',tab_login:'Log In',tab_register:'Register',
     label_email:'Email',label_password:'Password',forgot_pw:'Forgot your password?',
     err_login:'Incorrect login credentials',
+    err_login_too_many:'Too many attempts — wait a few minutes and try again.',
+    err_login_network:'Could not reach the network — check your connection and try again.',
     ok_pw_reset:'Password reset email sent — check your inbox.',
     btn_login:'Log In →',label_name:'Name',ph_name:'Your name',ph_password_min:'Min. 6 characters',
     err_register:'This email is already registered',btn_register:'Register →',
@@ -1702,6 +1723,8 @@ function renderBrandLogos(){
   if(loginLogo)loginLogo.innerHTML=`<img src="${SFL_MARK}" alt="SFL">`;
   const dball=document.getElementById('dball');
   if(dball)dball.innerHTML=`<img src="${SFL_LOGO_FULL}" alt="SFL — Sekmadienio Futbolo Lyga">`;
+  const bootLogo=document.getElementById('boot-gate-logo');
+  if(bootLogo)bootLogo.src=SFL_MARK;
 }
 renderBrandLogos();
 
@@ -1743,7 +1766,16 @@ async function doLogin(){
   try{
     await auth.signInWithEmailAndPassword(email,pass);
   }catch(e){
-    errEl.textContent='Neteisingi prisijungimo duomenys';
+    // Wrong password/no such user/malformed email all collapse to the same
+    // generic message on purpose — same reasoning as doPasswordReset()
+    // below, don't reveal which part was wrong. auth/too-many-requests and
+    // auth/network-request-failed are the two cases actually worth telling
+    // apart: neither is "your password is wrong", and the generic message
+    // sends people straight to "forgot password?" for a problem that a
+    // password reset can't fix.
+    if(e.code==='auth/too-many-requests')errEl.textContent=t('err_login_too_many');
+    else if(e.code==='auth/network-request-failed')errEl.textContent=t('err_login_network');
+    else errEl.textContent=t('err_login');
     errEl.classList.add('show');
   }
 }
@@ -1838,6 +1870,35 @@ async function doFacebookAuth(){
   }
 }
 
+// BOOT LOADING GATE — see the #boot-gate CSS comment for the full "why".
+// Firebase's persisted session isn't restored/refreshed synchronously: on a
+// slow connection, or simply because the cached ID token has expired after
+// being away a while, the FIRST onAuthStateChanged callback below can take
+// anywhere from well under a second to (on a bad mobile connection) closer
+// to a minute to fire. Without this gate, the static login page underneath
+// is fully visible and interactive for that whole window — a visitor who's
+// actually still signed in can end up typing into (and getting a
+// wrong-password error from) a login form that's about to be silently
+// swapped out from under them the moment their real, still-valid session
+// finishes restoring. A failed login attempt immediately followed by an
+// unexplained automatic sign-in, no password or reset email involved, is
+// exactly what got reported as a bug — it isn't one (nothing bypassed any
+// credential — that's how a persisted session is supposed to behave once you
+// really are signed in), but it sure looks like one, so the race is worth
+// eliminating outright rather than just documented away.
+let bootGateHidden=false;
+function hideBootGate(){
+  if(bootGateHidden)return;
+  bootGateHidden=true;
+  const gate=document.getElementById('boot-gate');
+  if(gate)gate.style.display='none';
+}
+// Safety valve: never trap a visitor behind the spinner forever if
+// onAuthStateChanged is unusually slow, or never fires at all (offline,
+// a blocked script, etc.) — falls back to the pre-gate behavior of just
+// showing the login page.
+setTimeout(hideBootGate,10000);
+
 // Single source of truth for post-auth UI: fires on login, register, and page reload (persisted session)
 auth.onAuthStateChanged(async user=>{
   if(user){
@@ -1853,6 +1914,7 @@ auth.onAuthStateChanged(async user=>{
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
     document.getElementById('page-login').classList.add('on');
   }
+  hideBootGate();
 });
 
 async function loginUser(user){
