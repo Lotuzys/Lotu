@@ -366,8 +366,6 @@ a{color:var(--or)}
 .pmfix-day{color:var(--mu);font-weight:600;font-size:11px}
 .pmfix-opp{display:flex;align-items:center;gap:5px}
 .pmhistlink{display:block;width:calc(100% - 28px);margin:12px 14px 0;padding:10px;background:var(--sur2);border:1px solid var(--bor);border-radius:12px;color:var(--ink2);font-size:12.5px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
-.pmcapmini{display:inline-block;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;margin-top:6px;margin-left:6px;background:var(--or);color:#fff;border:none;cursor:pointer;transition:all .15s var(--ease)}
-.pmcapmini:hover{background:var(--or2)}
 .pmhistlink:hover{background:var(--sur);border-color:var(--or)}
 .pmact{padding:14px}
 #rpm-breakdown{padding:4px 0 8px}
@@ -397,6 +395,14 @@ a{color:var(--or)}
 #rpm-breakdown .rrow:last-child{border-bottom:none}
 .rrow-empty{padding:16px;text-align:center;font-size:12px;color:var(--mu)}
 .pmadd{width:100%;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}.pmadd:hover{transform:translateY(-1px)}.pmadd:disabled{opacity:.4;cursor:default;box-shadow:none}
+/* Active "remove from squad" state for a player already picked — same
+   button, swapped color+label, instead of the old inert "Jau pasirinktas"
+   disabled state that gave no way to act on it from the modal. */
+.pmadd.pmremove{background:var(--red);box-shadow:0 10px 20px -8px rgba(239,68,68,.4)}
+/* Captain button — sits between the points-history link and the add/
+   remove widget below it, not up in the header next to the name anymore. */
+.pmcapbtn{display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:10px;background:var(--capbg);border:1px solid rgba(139,92,246,.35);border-radius:12px;color:var(--cap);font-size:12.5px;font-weight:800;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
+.pmcapbtn:hover{background:var(--cap);color:#fff}
 
 /* BOOT LOADING GATE — see the JS section right after auth.onAuthStateChanged()
    for why this exists: masks the login page while Firebase is still
@@ -970,7 +976,6 @@ a{color:var(--or)}
       <div class="pmname" id="pm-name"></div>
       <div class="pmteam" id="pm-team"></div>
       <span class="pmchip" id="pm-chip"></span>
-      <button class="pmcapmini" id="pm-cap-mini" style="display:none" onclick="toggleCaptainForPlayer(PM_CURRENT_ID);openPlayerModal(PM_CURRENT_ID)" data-i18n="pick_captain_btn">Rinktis C</button>
       <button class="pmclose" onclick="document.getElementById('pm-bg').classList.remove('open')">✕</button>
     </div>
     <div class="pmstats">
@@ -981,6 +986,7 @@ a{color:var(--or)}
     </div>
     <div class="pmfix" id="pm-fixtures"></div>
     <button class="pmhistlink" id="pm-hist-link" onclick="openPlayerHistoryModal()" data-i18n="hist_link">📊 Turų taškų istorija</button>
+    <button class="pmcapbtn" id="pm-cap-mini" style="display:none" onclick="toggleCaptainForPlayer(PM_CURRENT_ID);openPlayerModal(PM_CURRENT_ID)" data-i18n="pick_captain_btn">Rinktis C</button>
     <div class="pmact"><button class="pmadd" id="pm-add-btn" data-i18n="btn_add">Pridėti</button></div>
   </div>
 </div>
@@ -1209,7 +1215,7 @@ const I18N={
     pick_captain_btn:'Rinktis C',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
     prof_teamname:'Fantasy komanda',prof_favteam:'Mėgstama komanda',prof_totalpts:'Iš viso taškų',prof_roundsplayed:'Turų sužaista',
     btn_close:'Uždaryti',btn_logout:'Atsijungti',btn_ok_thanks:'Gerai, ačiū →',
-    pmfix_lbl:'Šio turo rungtynės',pm_locked:'Komanda užfiksuota',pm_taken:'Jau pasirinktas ✓',
+    pmfix_lbl:'Šio turo rungtynės',pm_locked:'Komanda užfiksuota',pm_remove:'Pašalinti ✕',
     pm_team_taken:'Komanda jau atstovaujama',pm_add_price:price=>`Pridėti (${price}M)`,
     phist_current_suffix:'(einamasis)',phist_total_label:n=>`Iš viso (${n} turai)`,
     match_vs:(i,opp)=>`${i} rungtynės — vs ${opp}`,no_data:'Nėra duomenų',
@@ -1307,7 +1313,7 @@ const I18N={
     pick_captain_btn:'Make Captain',stat_goals:'Goals',stat_price:'Price',hist_link:'📊 Gameweek Points History',btn_add:'Add',
     prof_teamname:'Fantasy Team',prof_favteam:'Favorite Team',prof_totalpts:'Total Points',prof_roundsplayed:'Gameweeks Played',
     btn_close:'Close',btn_logout:'Log Out',btn_ok_thanks:'OK, thanks →',
-    pmfix_lbl:'This gameweek\'s matches',pm_locked:'Team locked',pm_taken:'Already picked ✓',
+    pmfix_lbl:'This gameweek\'s matches',pm_locked:'Team locked',pm_remove:'Remove ✕',
     pm_team_taken:'Club already used',pm_add_price:price=>`Add (${price}M)`,
     phist_current_suffix:'(current)',phist_total_label:n=>`Total (${n} gameweeks)`,
     match_vs:(i,opp)=>`Match ${i} — vs ${opp}`,no_data:'No data',
@@ -2960,17 +2966,25 @@ function openPlayerModal(id){
     ).join('');
   }else{fixEl.innerHTML='';}
   const btn=document.getElementById('pm-add-btn');
-  if(isLocked()){btn.textContent=t('pm_locked');btn.disabled=true;}
-  else if(STATE.taken.has(p.id)){btn.textContent=t('pm_taken');btn.disabled=true;}
-  else if(STATE.takenTeams.has(p.team)){btn.textContent=t('pm_team_taken');btn.disabled=true;}
+  btn.classList.remove('pmremove');
+  if(isLocked()){btn.textContent=t('pm_locked');btn.disabled=true;btn.onclick=null;}
+  else if(STATE.taken.has(p.id)){
+    // Already in your squad — an active "Pašalinti" (Remove) button, not
+    // the old dead-end "Jau pasirinktas ✓" disabled state that told you
+    // WHERE the player was but gave no way to act on it from here.
+    btn.textContent=t('pm_remove');btn.disabled=false;btn.classList.add('pmremove');
+    btn.onclick=()=>{removePlayerById(p.id);document.getElementById('pm-bg').classList.remove('open');};
+  }
+  else if(STATE.takenTeams.has(p.team)){btn.textContent=t('pm_team_taken');btn.disabled=true;btn.onclick=null;}
   else{btn.textContent=t('pm_add_price',p.price.toFixed(1));btn.disabled=false;
     btn.onclick=()=>{selectPlayer(p.id);document.getElementById('pm-bg').classList.remove('open');};}
-  // "Rinktis C" only shows next to the position chip for a player who's
-  // already in your squad, the round is still editable, AND they aren't
-  // already captain — the current captain gets no extra field at all.
+  // "Rinktis C" — between the points-history link and the add/remove
+  // button below it. Only shown for a player who's already in your squad,
+  // the round is still editable, AND they aren't already captain — the
+  // current captain gets no extra field at all.
   const capMini=document.getElementById('pm-cap-mini');
   const ownIdx=STATE.taken.has(p.id)?STATE.slots[p.pos].findIndex(s=>s&&s.id===p.id):-1;
-  capMini.style.display=(ownIdx!==-1&&!isLocked()&&!isCaptain(p.pos,ownIdx))?'inline-block':'none';
+  capMini.style.display=(ownIdx!==-1&&!isLocked()&&!isCaptain(p.pos,ownIdx))?'block':'none';
   document.getElementById('pm-bg').classList.add('open');
 }
 
@@ -3209,6 +3223,15 @@ function selectPlayer(id){
 function removePlayerFromSlot(pos,idx){
   if(isLocked())return;
   setSlot(pos,idx,null);renderSlot(pos,idx);updateBottomBar();renderList();saveCurrentState();
+}
+// Same removal, looked up by player id instead of (pos,idx) — the player
+// modal only knows which player it's showing, not which slot they're in.
+// Same pattern as toggleCaptainForPlayer() below.
+function removePlayerById(playerId){
+  const p=PLAYERS.find(x=>x.id===playerId);if(!p)return;
+  const idx=STATE.slots[p.pos].findIndex(s=>s&&s.id===playerId);
+  if(idx===-1)return;
+  removePlayerFromSlot(p.pos,idx);
 }
 
 // Shared by the pitch avatar's "C" toggle and the player card's captain
