@@ -1002,7 +1002,7 @@ a{color:var(--or)}
   </div>
 </div>
 
-<!-- SQUAD TUTORIAL — shown once, the first time a player ever opens the squad-builder screen -->
+<!-- SQUAD TUTORIAL — shown only for the first round, while its squad is still empty -->
 <div class="mbg" id="tut-bg" onclick="if(event.target===this)closeSquadTutorial()">
   <div class="tut-modal">
     <div class="tut-head">
@@ -1961,7 +1961,6 @@ const STATE={
   mySquads:{},
   DB:{},teams:null,savedMatches:new Set(),
   favTeam:'',fantasyTeamName:'',division:'A',
-  seenSquadTutorial:false,
 };
 STATE.teams=freshTeams();
 
@@ -1973,7 +1972,6 @@ function resetStateData(){
   STATE.mySquads={};
   STATE.DB={};STATE.teams=freshTeams();STATE.savedMatches=new Set();
   STATE.favTeam='';STATE.fantasyTeamName='';STATE.division='A';
-  STATE.seenSquadTutorial=false;
 }
 
 // Per-user document (profile + in-progress pitch builder only — NOT
@@ -1988,7 +1986,6 @@ function stateToObj(){
     captain:STATE.captain,
     slots:Object.fromEntries(Object.entries(STATE.slots).map(([k,v])=>[k,v.map(p=>p?p.id:null)])),
     taken:[...STATE.taken],takenTeams:[...STATE.takenTeams],
-    seenSquadTutorial:STATE.seenSquadTutorial,
   };
 }
 
@@ -1996,10 +1993,6 @@ function loadStateFromObj(s){
   STATE.curRound=s.curRound??0;STATE.adminRound=s.adminRound??0;
   STATE.mySquads=s.mySquads??{};
   STATE.favTeam=s.favTeam??'';STATE.fantasyTeamName=s.fantasyTeamName??'';
-  // Missing on every account that existed before this flag was introduced —
-  // treated as "hasn't seen it" (false) rather than true, so existing
-  // players get the tutorial too the next time they open the squad screen.
-  STATE.seenSquadTutorial=s.seenSquadTutorial??false;
   // Existing accounts from before divisions B-E existed have no `division`
   // field saved yet — derive it from their favTeam (falls back to 'A',
   // which is what every one of them actually is) rather than defaulting
@@ -2416,15 +2409,18 @@ function ini(name){return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpp
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2600);}
 
 // ═══════════════════════════════════════════════
-// SQUAD TUTORIAL — first-visit walkthrough
+// SQUAD TUTORIAL — first-round walkthrough
 // ═══════════════════════════════════════════════
-// Shown exactly once per account, the first time the squad-builder screen
-// is ever opened (any entry path — nav tab, dashboard button, a round
-// tile — all funnel through showPage('squad',...) below). Kept to the
-// simplest possible explanation: what fantasy football is, how to build a
-// squad, the captain's double points, and the deadline/re-pick-each-round
-// rule — the handful of concepts a first-time player actually needs before
-// touching the pitch.
+// Shown only while BOTH hold: the round currently loaded onto the pitch is
+// the season's first round (STATE.curRound===0), AND no squad has been
+// saved for it yet (see the showPage('squad',...) trigger below). Not a
+// persisted "seen it once" flag — a squad-less second (or later) round
+// means the tutorial has nothing new to say (you already know the drill),
+// and a first round with a squad already saved means you clearly already
+// worked it out. Kept to the simplest possible explanation: what fantasy
+// football is, how to build a squad, the captain's double points, and the
+// deadline/re-pick-each-round rule — the handful of concepts a first-time
+// player actually needs before touching the pitch.
 let TUT_STEP=0;
 function tutSteps(){
   return [
@@ -2458,11 +2454,6 @@ function tutNext(){
 }
 function closeSquadTutorial(){
   document.getElementById('tut-bg').classList.remove('open');
-  // Marked seen (and persisted) on ANY dismissal — skip, "got it", or
-  // tapping the backdrop — not just finishing all 4 steps. It's a one-time
-  // orientation, not a gate; someone who skips it shouldn't get it shoved
-  // back in front of them next time they open the squad screen.
-  if(!STATE.seenSquadTutorial){STATE.seenSquadTutorial=true;saveCurrentState();}
 }
 
 // ═══════════════════════════════════════════════
@@ -2481,7 +2472,7 @@ function showPage(name,btn,opts){
   if(btn)btn.classList.add('on');
   document.getElementById('bbar').style.display=(name==='squad')?'flex':'none';
   if(name==='dash')     renderDash();
-  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();if(!STATE.seenSquadTutorial)openSquadTutorial();}
+  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();if(STATE.curRound===0&&!STATE.mySquads[0])openSquadTutorial();}
   if(name==='history')  renderHistory();
   if(name==='standings')renderStFull();
   if(name==='leaders')  renderLB();
