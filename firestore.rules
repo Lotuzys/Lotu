@@ -128,12 +128,31 @@ service cloud.firestore {
         + playerAt(idx,s[3].id).price + playerAt(idx,s[4].id).price + playerAt(idx,s[5].id).price
         + playerAt(idx,s[6].id).price;
     }
+    // A regular user's squad must match their OWN registered division
+    // (userDivision(uid), server-trusted from their profile doc) — an
+    // ordinary player can never claim a different division's players.
+    // The admin account is exempt: switchDivision() lets it browse/build
+    // squads in ANY division to test them, which means its own registered
+    // division is very often NOT the division the squad being submitted
+    // right now actually belongs to — requiring a match against
+    // userDivision(uid) for the admin made every one of those saves fail
+    // with a generic "couldn't save" error the moment it browsed anywhere
+    // but its own home division. For the admin, the division is instead
+    // read off slot 0's own player via the trusted index — never anything
+    // the client claims, even for the admin — so the check still enforces
+    // "all 7 players are really from one real division", just without
+    // forcing that division to be the admin's own. Computed ONCE here, not
+    // inside slotValid() (called 7x per write) — see the budget note on
+    // userDivision() above; this ternary is outside that multiplied path
+    // and doesn't reintroduce the problem it warns about.
+    function squadDivision(s, idx, uid) {
+      return isAdmin() ? playerAt(idx, s[0].id).division : userDivision(uid);
+    }
     function squadLegal(snap, uid) {
       let idx = playerIndex();
-      let div = userDivision(uid);
       let s = squadSlots(snap);
       return s.size()==7
-        && slotsValid(s, idx, div)
+        && slotsValid(s, idx, squadDivision(s, idx, uid))
         && teamsDistinct(slotTeams(s, idx))
         && squadBudget(s, idx) <= 50.01;
     }
