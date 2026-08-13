@@ -1002,7 +1002,7 @@ a{color:var(--or)}
   </div>
 </div>
 
-<!-- SQUAD TUTORIAL — shown only for the first round, while its squad is still empty -->
+<!-- SQUAD TUTORIAL — shown only on the live round, while this account has never saved a squad -->
 <div class="mbg" id="tut-bg" onclick="if(event.target===this)closeSquadTutorial()">
   <div class="tut-modal">
     <div class="tut-head">
@@ -2409,18 +2409,23 @@ function ini(name){return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpp
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2600);}
 
 // ═══════════════════════════════════════════════
-// SQUAD TUTORIAL — first-round walkthrough
+// SQUAD TUTORIAL — this player's first-ever round walkthrough
 // ═══════════════════════════════════════════════
 // Shown only while BOTH hold: the round currently loaded onto the pitch is
-// the season's first round (STATE.curRound===0), AND no squad has been
-// saved for it yet (see the showPage('squad',...) trigger below). Not a
-// persisted "seen it once" flag — a squad-less second (or later) round
-// means the tutorial has nothing new to say (you already know the drill),
-// and a first round with a squad already saved means you clearly already
-// worked it out. Kept to the simplest possible explanation: what fantasy
-// football is, how to build a squad, the captain's double points, and the
-// deadline/re-pick-each-round rule — the handful of concepts a first-time
-// player actually needs before touching the pitch.
+// the live one (STATE.curRound===computeCurrentRound()) — not a past round
+// being browsed read-only — AND this account has never saved a squad for
+// ANY round yet (STATE.mySquads is empty). Deliberately "this account's
+// first round it plays", not "the season's round 0" — someone who joins in
+// round 7 and has never built a squad still needs this exactly as much as
+// a day-1 signup. Not a persisted "seen it once" flag either: once a
+// squad's saved for whatever round that first one was, mySquads stops
+// being empty and the tutorial never shows again — a squad-less LATER
+// round after that means you've already been through the drill once
+// before, not that you need reminding. Kept to the simplest possible
+// explanation: what fantasy football is, how to build a squad, the
+// captain's double points, and the deadline/re-pick-each-round rule — the
+// handful of concepts a first-time player actually needs before touching
+// the pitch.
 let TUT_STEP=0;
 function tutSteps(){
   return [
@@ -2472,7 +2477,7 @@ function showPage(name,btn,opts){
   if(btn)btn.classList.add('on');
   document.getElementById('bbar').style.display=(name==='squad')?'flex':'none';
   if(name==='dash')     renderDash();
-  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();if(STATE.curRound===0&&!STATE.mySquads[0])openSquadTutorial();}
+  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();if(STATE.curRound===computeCurrentRound()&&Object.keys(STATE.mySquads).length===0)openSquadTutorial();}
   if(name==='history')  renderHistory();
   if(name==='standings')renderStFull();
   if(name==='leaders')  renderLB();
