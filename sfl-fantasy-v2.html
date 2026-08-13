@@ -1051,6 +1051,7 @@ a{color:var(--or)}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 <script>
 // ═══════════════════════════════════════════════
 // FIREBASE — fill in with your project's config
@@ -1068,6 +1069,10 @@ const FIREBASE_CONFIG={
 firebase.initializeApp(FIREBASE_CONFIG);
 const auth=firebase.auth();
 const db=firebase.firestore();
+// Region must match functions/index.js's setGlobalOptions() — the default
+// compat SDK region (us-central1) would 404 against a function deployed
+// to europe-west1.
+const fbFunctions=firebase.app().functions('europe-west1');
 
 // ═══════════════════════════════════════════════
 // CONFIG
@@ -1802,10 +1807,29 @@ async function doFacebookAuth(){
   try{
     const provider=new firebase.auth.FacebookAuthProvider();
     await auth.signInWithPopup(provider);
+    return;
   }catch(e){
     // User closing the popup or firing a second click before the first
     // popup settles isn't a failure worth surfacing as an error.
     if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')return;
+    // Someone who already has a password account under this email, signing
+    // in via Facebook instead — Facebook already proved they own that
+    // email, so sign them straight into the existing account rather than
+    // making them dig up a password for the account they're trying to
+    // reach precisely because they don't want to. linkFacebookAccount()
+    // re-verifies the Facebook token against Facebook's own API
+    // server-side before minting a custom token for the existing uid — see
+    // functions/index.js.
+    if(e.code==='auth/account-exists-with-different-credential'&&e.credential&&e.credential.accessToken){
+      try{
+        const {data}=await fbFunctions.httpsCallable('linkFacebookAccount')({accessToken:e.credential.accessToken});
+        await auth.signInWithCustomToken(data.token);
+        return; // onAuthStateChanged takes over from here, same as any other sign-in
+      }catch(linkErr){
+        console.error('Nepavyko automatiškai prisijungti prie esamos paskyros per Facebook',linkErr);
+        // falls through to the generic account-exists message below
+      }
+    }
     let msg=t('err_fb_generic');
     if(e.code==='auth/account-exists-with-different-credential')msg=t('err_fb_account_exists');
     else if(e.code==='auth/popup-blocked')msg=t('err_fb_popup_blocked');

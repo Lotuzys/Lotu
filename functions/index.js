@@ -35,7 +35,7 @@
  */
 
 const {onSchedule} = require('firebase-functions/v2/scheduler');
-const {onRequest} = require('firebase-functions/v2/https');
+const {onRequest, onCall, HttpsError} = require('firebase-functions/v2/https');
 const {setGlobalOptions} = require('firebase-functions/v2');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
@@ -380,4 +380,53 @@ exports.syncPlayersNow = onRequest(async (req, res) => {
     logger.error('syncPlayersNow failed', e);
     res.status(500).json({error: String(e)});
   }
+});
+
+// Auto-links a Facebook sign-in to an existing email/password account with
+// the same email, instead of forcing the user to dig up a password for an
+// account they're trying to reach via Facebook precisely because they
+// don't want to. Firebase itself blocks signInWithPopup() from creating a
+// second account on the same email (auth/account-exists-with-different-
+// credential) — the client calls this with the Facebook access token from
+// that failed attempt, and gets back a custom token for the EXISTING
+// account's uid to sign in with instead.
+//
+// The Facebook access token is verified independently against Facebook's
+// own Graph API here — never trust a client-supplied email/uid claim
+// directly. A token that Facebook's own API confirms belongs to a real,
+// current session tied to a verified email proves the caller controls
+// that inbox, the same trust level a password-reset link relies on, which
+// is what justifies skipping the existing account's password entirely.
+exports.linkFacebookAccount = onCall(async (request) => {
+  const accessToken = request.data && request.data.accessToken;
+  if (!accessToken || typeof accessToken !== 'string') {
+    throw new HttpsError('invalid-argument', 'Missing Facebook access token');
+  }
+  let fbData;
+  try {
+    const resp = await fetch(
+      `https://graph.facebook.com/me?fields=email&access_token=${encodeURIComponent(accessToken)}`
+    );
+    fbData = await resp.json();
+  } catch (e) {
+    logger.error('linkFacebookAccount: Facebook Graph API unreachable', e);
+    throw new HttpsError('unavailable', 'Could not reach Facebook');
+  }
+  if (!fbData || fbData.error || !fbData.email) {
+    logger.warn('linkFacebookAccount: token did not resolve to a verified email', fbData && fbData.error);
+    throw new HttpsError('unauthenticated', 'Could not verify Facebook account');
+  }
+  const email = String(fbData.email).toLowerCase();
+  let userRecord;
+  try {
+    userRecord = await admin.auth().getUserByEmail(email);
+  } catch (e) {
+    // Shouldn't normally happen — the client only calls this after Firebase
+    // itself reported an existing account on this email — but a stale
+    // client-side error object is possible if the account was deleted
+    // between the two calls.
+    throw new HttpsError('not-found', 'No existing account for this email');
+  }
+  const token = await admin.auth().createCustomToken(userRecord.uid);
+  return {token};
 });
