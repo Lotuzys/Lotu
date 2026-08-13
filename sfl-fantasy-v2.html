@@ -401,8 +401,8 @@ a{color:var(--or)}
 .pmadd.pmremove{background:var(--red);box-shadow:0 10px 20px -8px rgba(239,68,68,.4)}
 /* Captain button — sits between the points-history link and the add/
    remove widget below it, not up in the header next to the name anymore. */
-.pmcapbtn{display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:10px;background:var(--capbg);border:1px solid rgba(139,92,246,.35);border-radius:12px;color:var(--cap);font-size:12.5px;font-weight:800;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
-.pmcapbtn:hover{background:var(--cap);color:#fff}
+.pmcapbtn{display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:10px;background:var(--ordim);border:1px solid var(--orbor);border-radius:12px;color:var(--or);font-size:12.5px;font-weight:800;cursor:pointer;text-align:center;transition:all .15s var(--ease)}
+.pmcapbtn:hover{background:var(--or);color:#fff}
 
 /* BOOT LOADING GATE — see the JS section right after auth.onAuthStateChanged()
    for why this exists: masks the login page while Firebase is still
@@ -1212,7 +1212,7 @@ const I18N={
     lb_sponsor_note:'🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!',
     top_scorers_title:'⚽ Rezultatyviausi žaidėjai',lbsc_sub_count:n=>`po ${n} turų`,no_goals_yet:'Dar nėra įmuštų įvarčių',
     ts_mode_season:'Sezono rinktinė',ts_mode_round:'Turo rinktinė',
-    pick_captain_btn:'Rinktis C',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
+    pick_captain_btn:'Rinktis Kapitoną',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
     prof_teamname:'Fantasy komanda',prof_favteam:'Mėgstama komanda',prof_totalpts:'Iš viso taškų',prof_roundsplayed:'Turų sužaista',
     btn_close:'Uždaryti',btn_logout:'Atsijungti',btn_ok_thanks:'Gerai, ačiū →',
     pmfix_lbl:'Šio turo rungtynės',pm_locked:'Komanda užfiksuota',pm_remove:'Pašalinti ✕',
