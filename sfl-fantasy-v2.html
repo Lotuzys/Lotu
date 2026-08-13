@@ -127,6 +127,12 @@ a{color:var(--or)}
 .forgot-link{font-size:12px;color:var(--mu);text-align:right;margin-top:-8px;margin-bottom:16px}
 .forgot-link a{color:var(--or);text-decoration:none;cursor:pointer;font-weight:600}
 .forgot-link a:hover{text-decoration:underline}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--mu);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--bor)}
+.fb-btn{width:100%;padding:12px;background:#1877F2;color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);display:flex;align-items:center;justify-content:center;gap:9px}
+.fb-btn:hover{background:#166FE5;transform:translateY(-1px)}
+.fb-btn:active{transform:translateY(0)}
+.fb-btn svg{width:18px;height:18px;flex-shrink:0}
 
 /* ONBOARDING */
 .onboard-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:20px}
@@ -664,6 +670,8 @@ a{color:var(--or)}
         <div class="form-err" id="li-err" data-i18n="err_login">Neteisingi prisijungimo duomenys</div>
         <div class="form-ok" id="li-ok" data-i18n="ok_pw_reset">Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.</div>
         <button class="form-btn" onclick="doLogin()" data-i18n="btn_login">Prisijungti →</button>
+        <div class="auth-divider" data-i18n="auth_divider">arba</div>
+        <button class="fb-btn" onclick="doFacebookAuth()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M15.12 5.32h-1.62c-1.34 0-1.6 1.02-1.6 1.99v2.05h2.63l-.32 3.02h-2.31v7.62H8.7v-7.62H6.72v-3.02h1.98V6.99C8.7 4.5 10.28 3 12.5 3c1.06 0 1.98.08 2.24.11v2.21z"/></svg><span data-i18n="btn_facebook">Tęsti su Facebook</span></button>
       </div>
       <!-- REGISTER FORM -->
       <div id="form-register" style="display:none">
@@ -681,6 +689,8 @@ a{color:var(--or)}
         </div>
         <div class="form-err" id="reg-err" data-i18n="err_register">Toks el. paštas jau užregistruotas</div>
         <button class="form-btn" onclick="doRegister()" data-i18n="btn_register">Registruotis →</button>
+        <div class="auth-divider" data-i18n="auth_divider">arba</div>
+        <button class="fb-btn" onclick="doFacebookAuth()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M15.12 5.32h-1.62c-1.34 0-1.6 1.02-1.6 1.99v2.05h2.63l-.32 3.02h-2.31v7.62H8.7v-7.62H6.72v-3.02h1.98V6.99C8.7 4.5 10.28 3 12.5 3c1.06 0 1.98.08 2.24.11v2.21z"/></svg><span data-i18n="btn_facebook">Tęsti su Facebook</span></button>
       </div>
     </div>
   </div>
@@ -1097,6 +1107,10 @@ const I18N={
     ok_pw_reset:'Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.',
     btn_login:'Prisijungti →',label_name:'Vardas',ph_name:'Tavo vardas',ph_password_min:'Min. 6 simboliai',
     err_register:'Toks el. paštas jau užregistruotas',btn_register:'Registruotis →',
+    auth_divider:'arba',btn_facebook:'Tęsti su Facebook',
+    err_fb_account_exists:'Šis el. paštas jau užregistruotas su slaptažodžiu — prisijunk įprastu būdu.',
+    err_fb_popup_blocked:'Naršyklė užblokavo prisijungimo langą — leisk iššokančius langus ir bandyk dar kartą.',
+    err_fb_generic:'Nepavyko prisijungti per Facebook — pabandyk dar kartą.',
     ob_step1:'1 žingsnis iš 2',ob_step2:'2 žingsnis iš 2',ob_title1:'Pasirink mėgstamiausią komandą',division_label:'Divizionas',
     ob_sub1:'Ji bus rodoma lyderių lentelėje šalia tavo vardo',ob_title2:'Fantasy komandos pavadinimas',
     ph_teamname:'pvz. Osetrovų Genijus FC',btn_start:'Pradėti žaisti →',
@@ -1191,6 +1205,10 @@ const I18N={
     ok_pw_reset:'Password reset email sent — check your inbox.',
     btn_login:'Log In →',label_name:'Name',ph_name:'Your name',ph_password_min:'Min. 6 characters',
     err_register:'This email is already registered',btn_register:'Register →',
+    auth_divider:'or',btn_facebook:'Continue with Facebook',
+    err_fb_account_exists:'This email is already registered with a password — log in the usual way instead.',
+    err_fb_popup_blocked:'Your browser blocked the login popup — allow popups and try again.',
+    err_fb_generic:'Facebook sign-in failed — please try again.',
     ob_step1:'Step 1 of 2',ob_step2:'Step 2 of 2',ob_title1:'Pick your favorite team',division_label:'Division',
     ob_sub1:'Shown next to your name on the leaderboard',ob_title2:'Fantasy team name',
     ph_teamname:'e.g. Osetrov\'s Genius FC',btn_start:'Start Playing →',
@@ -1767,6 +1785,35 @@ async function doRegister(){
   }
 }
 
+// Facebook sign-in — shared by both the login and register tabs, since
+// signInWithPopup() auto-creates the Firebase account on a first-ever
+// sign-in and just logs an existing one in otherwise; there's no separate
+// "register" step to run. loginUser() (below, via onAuthStateChanged)
+// already handles both cases identically to email/password — it falls
+// back to user.displayName (which Facebook provides) when there's no
+// saved profile name yet, and routes a brand-new account into onboarding
+// the same way registration does.
+async function doFacebookAuth(){
+  const onLoginTab=document.getElementById('form-login').style.display!=='none';
+  const errEl=document.getElementById(onLoginTab?'li-err':'reg-err');
+  const okEl=document.getElementById('li-ok');
+  errEl.classList.remove('show');
+  if(okEl)okEl.classList.remove('show');
+  try{
+    const provider=new firebase.auth.FacebookAuthProvider();
+    await auth.signInWithPopup(provider);
+  }catch(e){
+    // User closing the popup or firing a second click before the first
+    // popup settles isn't a failure worth surfacing as an error.
+    if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')return;
+    let msg=t('err_fb_generic');
+    if(e.code==='auth/account-exists-with-different-credential')msg=t('err_fb_account_exists');
+    else if(e.code==='auth/popup-blocked')msg=t('err_fb_popup_blocked');
+    errEl.textContent=msg;
+    errEl.classList.add('show');
+  }
+}
+
 // Single source of truth for post-auth UI: fires on login, register, and page reload (persisted session)
 auth.onAuthStateChanged(async user=>{
   if(user){
@@ -1801,7 +1848,12 @@ async function loginUser(user){
   }
   const isNew=!doc;
   if(doc){loadStateFromObj(doc);}else{resetStateData();}
-  CURRENT_USER={uid:user.uid,email:user.email,name:(doc&&doc.name)||pendingRegisterName||user.displayName||user.email.split('@')[0]};
+  // user.email can be null for a Facebook sign-in whose account has no
+  // verified/shared email (email/password and Google accounts always have
+  // one) — guarded here rather than assumed, same idea as the isNew fetch
+  // failure above: a missing field shouldn't throw and strand the user on
+  // a blank screen.
+  CURRENT_USER={uid:user.uid,email:user.email,name:(doc&&doc.name)||pendingRegisterName||user.displayName||user.email?.split('@')[0]||'Žaidėjas'};
   pendingRegisterName=null;
   // Every division-scoped constant (TEAMS_KEYS/TEAM_ABBR/TEAM_KIT/TEAM_LOGOS/
   // HIST/FR) must point at this user's own division before anything below
