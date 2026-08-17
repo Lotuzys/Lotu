@@ -2,8 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Max session duration ────────────────────────────────────────────
+    // 1 hour from the moment an account actually signed in, enforced the
+    // same way on every device it's signed into — not just whichever one
+    // happens to notice first. auth_time is a standard ID token claim that
+    // stays fixed at the original sign-in through every silent background
+    // token refresh (only a genuine new sign-in resets it), so comparing
+    // it against request.time (the server's own clock, not anything a
+    // client can lie about) gives every device the identical wall-clock
+    // cutoff regardless of when each one's own token was last refreshed.
+    // The app's own client-side timer (armSessionTimeout() in
+    // sfl-fantasy-v2.html) exists only to turn this into a clean, explained
+    // sign-out instead of a silent pile of denied reads — this check is
+    // what actually enforces it, here, independent of that timer ever
+    // firing on time (or at all, e.g. a laptop asleep past the hour).
+    function sessionFresh() {
+      return request.time.toMillis() - request.auth.token.auth_time * 1000 < 3600000;
+    }
     function isSignedIn() {
-      return request.auth != null;
+      return request.auth != null && sessionFresh();
     }
     function isAdmin() {
       return isSignedIn() && request.auth.token.email == 'eima.lotuzys@gmail.com';
@@ -128,31 +145,28 @@ service cloud.firestore {
         + playerAt(idx,s[3].id).price + playerAt(idx,s[4].id).price + playerAt(idx,s[5].id).price
         + playerAt(idx,s[6].id).price;
     }
-    // A regular user's squad must match their OWN registered division
-    // (userDivision(uid), server-trusted from their profile doc) — an
-    // ordinary player can never claim a different division's players.
-    // The admin account is exempt: switchDivision() lets it browse/build
-    // squads in ANY division to test them, which means its own registered
-    // division is very often NOT the division the squad being submitted
-    // right now actually belongs to — requiring a match against
-    // userDivision(uid) for the admin made every one of those saves fail
-    // with a generic "couldn't save" error the moment it browsed anywhere
-    // but its own home division. For the admin, the division is instead
-    // read off slot 0's own player via the trusted index — never anything
-    // the client claims, even for the admin — so the check still enforces
-    // "all 7 players are really from one real division", just without
-    // forcing that division to be the admin's own. Computed ONCE here, not
-    // inside slotValid() (called 7x per write) — see the budget note on
-    // userDivision() above; this ternary is outside that multiplied path
-    // and doesn't reintroduce the problem it warns about.
-    function squadDivision(s, idx, uid) {
-      return isAdmin() ? playerAt(idx, s[0].id).division : userDivision(uid);
-    }
+    // A squad must match the submitting user's OWN registered division
+    // (userDivision(uid), server-trusted from their profile doc) — a
+    // player can never claim a different division's players. The admin
+    // account is not special-cased here: switchDivision() (client-side)
+    // persists STATE.division into the admin's own profile doc whenever
+    // they browse a different division, so userDivision(uid) always
+    // reflects whichever division the admin is currently viewing and this
+    // one plain check already does the right thing for them too — no
+    // second legality function or extra `allow` clause needed. (An
+    // isAdmin()-branched version of this WAS tried — both a ternary inside
+    // this function and a second unconditional `allow` clause running a
+    // parallel admin-only legality function — and both blew the 1000-
+    // expression budget the moment sessionFresh() added a little more
+    // work to isSignedIn()/isAdmin(). Removing the need for the branch
+    // entirely, rather than trying to make the branch cheaper, is what
+    // actually fit back under budget.)
     function squadLegal(snap, uid) {
       let idx = playerIndex();
+      let div = userDivision(uid);
       let s = squadSlots(snap);
       return s.size()==7
-        && slotsValid(s, idx, squadDivision(s, idx, uid))
+        && slotsValid(s, idx, div)
         && teamsDistinct(slotTeams(s, idx))
         && squadBudget(s, idx) <= 50.01;
     }

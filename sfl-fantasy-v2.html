@@ -697,9 +697,16 @@ a{color:var(--or)}
         <div class="forgot-link"><a onclick="doPasswordReset()" data-i18n="forgot_pw">Pamiršai slaptažodį?</a></div>
         <div class="form-err" id="li-err" data-i18n="err_login">Neteisingi prisijungimo duomenys</div>
         <div class="form-ok" id="li-ok" data-i18n="ok_pw_reset">Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.</div>
-        <button class="form-btn" onclick="doLogin()" data-i18n="btn_login">Prisijungti →</button>
+        <button class="form-btn" id="li-btn" onclick="doLogin()">
+          <span class="btn-spin" id="li-btn-spin" style="display:none"></span>
+          <span id="li-btn-label" data-i18n="btn_login">Prisijungti →</span>
+        </button>
         <div class="auth-divider" data-i18n="auth_divider">arba</div>
-        <button class="fb-btn" onclick="doFacebookAuth()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M15.12 5.32h-1.62c-1.34 0-1.6 1.02-1.6 1.99v2.05h2.63l-.32 3.02h-2.31v7.62H8.7v-7.62H6.72v-3.02h1.98V6.99C8.7 4.5 10.28 3 12.5 3c1.06 0 1.98.08 2.24.11v2.21z"/></svg><span data-i18n="btn_facebook">Tęsti su Facebook</span></button>
+        <button class="fb-btn" id="li-fb-btn" onclick="doFacebookAuth(this)">
+          <span class="btn-spin" id="li-fb-spin" style="display:none"></span>
+          <svg id="li-fb-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M15.12 5.32h-1.62c-1.34 0-1.6 1.02-1.6 1.99v2.05h2.63l-.32 3.02h-2.31v7.62H8.7v-7.62H6.72v-3.02h1.98V6.99C8.7 4.5 10.28 3 12.5 3c1.06 0 1.98.08 2.24.11v2.21z"/></svg>
+          <span id="li-fb-label" data-i18n="btn_facebook">Tęsti su Facebook</span>
+        </button>
       </div>
       <!-- REGISTER FORM -->
       <div id="form-register" style="display:none">
@@ -716,9 +723,16 @@ a{color:var(--or)}
           <input class="form-input" id="reg-pass" type="password" placeholder="Min. 6 simboliai" data-i18n-ph="ph_password_min">
         </div>
         <div class="form-err" id="reg-err" data-i18n="err_register">Toks el. paštas jau užregistruotas</div>
-        <button class="form-btn" onclick="doRegister()" data-i18n="btn_register">Registruotis →</button>
+        <button class="form-btn" id="reg-btn" onclick="doRegister()">
+          <span class="btn-spin" id="reg-btn-spin" style="display:none"></span>
+          <span id="reg-btn-label" data-i18n="btn_register">Registruotis →</span>
+        </button>
         <div class="auth-divider" data-i18n="auth_divider">arba</div>
-        <button class="fb-btn" onclick="doFacebookAuth()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M15.12 5.32h-1.62c-1.34 0-1.6 1.02-1.6 1.99v2.05h2.63l-.32 3.02h-2.31v7.62H8.7v-7.62H6.72v-3.02h1.98V6.99C8.7 4.5 10.28 3 12.5 3c1.06 0 1.98.08 2.24.11v2.21z"/></svg><span data-i18n="btn_facebook">Tęsti su Facebook</span></button>
+        <button class="fb-btn" id="reg-fb-btn" onclick="doFacebookAuth(this)">
+          <span class="btn-spin" id="reg-fb-spin" style="display:none"></span>
+          <svg id="reg-fb-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M15.12 5.32h-1.62c-1.34 0-1.6 1.02-1.6 1.99v2.05h2.63l-.32 3.02h-2.31v7.62H8.7v-7.62H6.72v-3.02h1.98V6.99C8.7 4.5 10.28 3 12.5 3c1.06 0 1.98.08 2.24.11v2.21z"/></svg>
+          <span id="reg-fb-label" data-i18n="btn_facebook">Tęsti su Facebook</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1142,6 +1156,7 @@ const I18N={
     err_login:'Neteisingi prisijungimo duomenys',
     err_login_too_many:'Per daug bandymų — palauk kelias minutes ir bandyk dar kartą.',
     err_login_network:'Nepavyko prisijungti prie interneto — patikrink ryšį ir bandyk dar kartą.',
+    toast_session_expired:'Sesija baigėsi po 1 valandos — prisijunk iš naujo.',
     ok_pw_reset:'Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.',
     btn_login:'Prisijungti →',label_name:'Vardas',ph_name:'Tavo vardas',ph_password_min:'Min. 6 simboliai',
     err_register:'Toks el. paštas jau užregistruotas',btn_register:'Registruotis →',
@@ -1242,6 +1257,7 @@ const I18N={
     err_login:'Incorrect login credentials',
     err_login_too_many:'Too many attempts — wait a few minutes and try again.',
     err_login_network:'Could not reach the network — check your connection and try again.',
+    toast_session_expired:'Your session expired after 1 hour — please log in again.',
     ok_pw_reset:'Password reset email sent — check your inbox.',
     btn_login:'Log In →',label_name:'Name',ph_name:'Your name',ph_password_min:'Min. 6 characters',
     err_register:'This email is already registered',btn_register:'Register →',
@@ -1771,14 +1787,35 @@ function switchLoginTab(t){
   document.getElementById('form-register').style.display=t==='up'?'block':'none';
 }
 
+// Shared loading-state toggle for a button built from the spinner+label
+// (+ optional icon) span pattern used by every auth/onboarding button —
+// disables the button and swaps its label to "Kraunama..." so a click
+// always visibly registers, even across a multi-step flow (e.g. Facebook's
+// popup plus a possible account-link retry) that has no single moment
+// where "done" is obvious otherwise.
+function setBtnLoading(btn,spinId,labelId,loading,normalLabel,iconId){
+  btn.disabled=loading;
+  const spin=document.getElementById(spinId);
+  const label=document.getElementById(labelId);
+  const icon=iconId?document.getElementById(iconId):null;
+  if(spin)spin.style.display=loading?'inline-block':'none';
+  if(icon)icon.style.display=loading?'none':'';
+  if(label)label.textContent=loading?t('ob_loading'):normalLabel;
+}
+
 async function doLogin(){
   const email=document.getElementById('li-email').value.trim().toLowerCase();
   const pass=document.getElementById('li-pass').value;
   const errEl=document.getElementById('li-err');
   const okEl=document.getElementById('li-ok');
+  const btn=document.getElementById('li-btn');
   errEl.classList.remove('show');okEl.classList.remove('show');
+  if(btn.disabled)return; // already mid-attempt, ignore a second click
+  setBtnLoading(btn,'li-btn-spin','li-btn-label',true);
   try{
     await auth.signInWithEmailAndPassword(email,pass);
+    // No need to reset the button on success — onAuthStateChanged takes
+    // over and navigates off the login page entirely.
   }catch(e){
     // Wrong password/no such user/malformed email all collapse to the same
     // generic message on purpose — same reasoning as doPasswordReset()
@@ -1791,6 +1828,7 @@ async function doLogin(){
     else if(e.code==='auth/network-request-failed')errEl.textContent=t('err_login_network');
     else errEl.textContent=t('err_login');
     errEl.classList.add('show');
+    setBtnLoading(btn,'li-btn-spin','li-btn-label',false,t('btn_login'));
   }
 }
 
@@ -1820,19 +1858,24 @@ async function doRegister(){
   const email=document.getElementById('reg-email').value.trim().toLowerCase();
   const pass=document.getElementById('reg-pass').value;
   const errEl=document.getElementById('reg-err');
+  const btn=document.getElementById('reg-btn');
   errEl.classList.remove('show');
   if(!name||!email||pass.length<6){
     errEl.textContent='Užpildyk visus laukus (slaptažodis min. 6 simboliai)';
     errEl.classList.add('show');return;
   }
+  if(btn.disabled)return;
+  setBtnLoading(btn,'reg-btn-spin','reg-btn-label',true);
   try{
     pendingRegisterName=name;
     const cred=await auth.createUserWithEmailAndPassword(email,pass);
     cred.user.updateProfile({displayName:name}).catch(()=>{});
+    // No reset on success — onAuthStateChanged takes over from here.
   }catch(e){
     pendingRegisterName=null;
     errEl.textContent=e.code==='auth/email-already-in-use'?'Toks el. paštas jau užregistruotas':'Registracijos klaida: '+e.message;
     errEl.classList.add('show');
+    setBtnLoading(btn,'reg-btn-spin','reg-btn-label',false,t('btn_register'));
   }
 }
 
@@ -1844,20 +1887,36 @@ async function doRegister(){
 // back to user.displayName (which Facebook provides) when there's no
 // saved profile name yet, and routes a brand-new account into onboarding
 // the same way registration does.
-async function doFacebookAuth(){
+async function doFacebookAuth(btn){
   const onLoginTab=document.getElementById('form-login').style.display!=='none';
   const errEl=document.getElementById(onLoginTab?'li-err':'reg-err');
   const okEl=document.getElementById('li-ok');
   errEl.classList.remove('show');
   if(okEl)okEl.classList.remove('show');
+  if(btn.disabled)return;
+  // Each button's spinner/icon/label ids share its own id as a prefix
+  // (li-fb-btn -> li-fb-spin/li-fb-icon/li-fb-label, same for reg-fb-*) —
+  // derived rather than hardcoded so the login and register tab's buttons
+  // (same handler, separate DOM elements) each animate independently.
+  const spinId=btn.id.replace('-btn','-spin'),iconId=btn.id.replace('-btn','-icon'),labelId=btn.id.replace('-btn','-label');
+  // Stays "loading" across the ENTIRE flow below, including the optional
+  // account-link round-trip to our own Cloud Function — that extra hop can
+  // take a couple of seconds (cold start), and with no visible feedback
+  // during it the button looked idle/stuck right before an error message
+  // flashed and then, once the link actually landed, logged the user in
+  // anyway. One continuous spinner the whole time removes that gap.
+  setBtnLoading(btn,spinId,labelId,true,null,iconId);
   try{
     const provider=new firebase.auth.FacebookAuthProvider();
     await auth.signInWithPopup(provider);
-    return;
+    return; // success — onAuthStateChanged takes over, page navigates away
   }catch(e){
     // User closing the popup or firing a second click before the first
     // popup settles isn't a failure worth surfacing as an error.
-    if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')return;
+    if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request'){
+      setBtnLoading(btn,spinId,labelId,false,t('btn_facebook'),iconId);
+      return;
+    }
     // Someone who already has a password account under this email, signing
     // in via Facebook instead — Facebook already proved they own that
     // email, so sign them straight into the existing account rather than
@@ -1881,6 +1940,7 @@ async function doFacebookAuth(){
     else if(e.code==='auth/popup-blocked')msg=t('err_fb_popup_blocked');
     errEl.textContent=msg;
     errEl.classList.add('show');
+    setBtnLoading(btn,spinId,labelId,false,t('btn_facebook'),iconId);
   }
 }
 
@@ -1914,13 +1974,78 @@ function hideBootGate(){
 setTimeout(hideBootGate,10000);
 
 // Single source of truth for post-auth UI: fires on login, register, and page reload (persisted session)
+// ═══════════════════════════════════════════════
+// MAX SESSION DURATION — 1 hour from the moment this account actually
+// signed in, enforced across every device it's signed into at once, not
+// just this one. Distinct from the inactivity-based auto-logout further
+// down this file (which resets on any click/tap and only ever affects
+// THIS device — someone actively using the app past 1h straight is never
+// touched by it): this one is a hard cap that fires regardless of
+// activity, based on Firebase's auth_time token claim, which stays fixed
+// at the original sign-in through every silent background token refresh
+// and only changes on a genuine new sign-in. firestore.rules' isSignedIn()
+// independently checks that exact same claim against the exact same 3600s
+// cutoff on every read/write — so every device loses read/write access at
+// the identical wall-clock moment, whether or not its own local timer
+// below happens to fire right on time. The timer here exists purely to
+// turn that into a clean, explained sign-out on whichever device is open
+// when the hour lands, instead of a silent pile of failed reads; the
+// league-state listener's error handler (see subscribeLeagueState) is the
+// catch-all for a device whose timer didn't fire on time (tab asleep,
+// backgrounded, laptop closed).
+const SESSION_MAX_MS=60*60*1000;
+let sessionTimeoutHandle=null;
+function clearSessionTimeout(){
+  if(sessionTimeoutHandle){clearTimeout(sessionTimeoutHandle);sessionTimeoutHandle=null;}
+}
+async function forceSessionExpiredLogout(){
+  clearSessionTimeout();
+  toast(t('toast_session_expired'));
+  await auth.signOut();
+}
+// Reads auth_time off the current ID token and arms a timer for whatever
+// remains of the 1h window — or signs out immediately if it's already
+// elapsed (a persisted session restored well past its own cutoff, e.g.
+// after the device was asleep for hours). Returns false when it triggered
+// an immediate sign-out, so loginUser() knows not to proceed with work
+// that assumes a live session.
+async function armSessionTimeout(user){
+  clearSessionTimeout();
+  try{
+    const idTokenResult=await user.getIdTokenResult();
+    const authTimeMs=idTokenResult.claims.auth_time*1000;
+    const remaining=SESSION_MAX_MS-(Date.now()-authTimeMs);
+    if(remaining<=0){await forceSessionExpiredLogout();return false;}
+    sessionTimeoutHandle=setTimeout(forceSessionExpiredLogout,remaining);
+    return true;
+  }catch(e){
+    // A failed claim lookup is a diagnostic problem, not proof the session
+    // is actually expired — don't block a real login over it.
+    console.error('Nepavyko patikrinti sesijos galiojimo',e);
+    return true;
+  }
+}
+
 auth.onAuthStateChanged(async user=>{
   if(user){
     await loginUser(user);
   }else{
+    clearSessionTimeout();
     unsubscribeLeagueState();
     CURRENT_USER=null;
     resetStateData();
+    // Ownership % and the in-progress team-favourite/division picks are
+    // this-session-only derived data, not part of STATE — resetStateData()
+    // doesn't touch them. Left alone, either could very briefly leak into
+    // the NEXT login on the same device/tab (a different account signing
+    // in right after this one signs out) before its own data overwrites
+    // them.
+    OWNERSHIP={};
+    selectedFavTeam='';selectedDivision='';
+    // Every overlay this account could have had open — a stray one left
+    // open would still show ON TOP of the freshly-shown login page below.
+    document.querySelectorAll('.mbg').forEach(m=>m.classList.remove('open'));
+    document.getElementById('res-panel')?.classList.remove('open');
     document.getElementById('main-nav').style.display='none';
     document.getElementById('admbtn').style.display='none';
     document.getElementById('pts-chip').style.display='none';
@@ -1932,6 +2057,11 @@ auth.onAuthStateChanged(async user=>{
 });
 
 async function loginUser(user){
+  // Checked FIRST, before any other read below — if this session's already
+  // past its 1h cutoff (e.g. a persisted session restored after being
+  // asleep for hours), armSessionTimeout() has already signed it back out;
+  // there's no point spending reads on a login that's not going to stand.
+  if(!(await armSessionTimeout(user)))return;
   let doc;
   try{
     doc=await getUserState(user.uid);
@@ -2043,6 +2173,13 @@ async function switchDivision(div){
   subscribeLeagueState();
   loadRoundIntoPitch(STATE.curRound);
   refreshActivePageForDivisionSwitch();
+  // Persist the browsed division onto the admin's own profile doc —
+  // without this, userDivision(uid) in firestore.rules keeps pointing at
+  // whichever division the admin was ORIGINALLY onboarded into, and every
+  // squad save made while browsing any other division gets rejected as
+  // "wrong division" by squadLegal(). This is the only division-aware
+  // moving part needed on the rules side; see squadLegal()'s comment.
+  saveCurrentState();
   toast(`Peržiūri ${div} divizioną (admin)`);
 }
 
@@ -2269,7 +2406,18 @@ function subscribeLeagueState(){
     // page each time. Switching rounds (setAdminRound) still does a full
     // rebuild, so the match grid catches up next time it's actually opened.
     if(document.getElementById('page-admin')?.classList.contains('on')&&isAdmin())renderAdminTabs();
-  },e=>console.error('League listener error',e));
+  },e=>{
+    console.error('League listener error',e);
+    // The one unambiguous signal that this device's session just crossed
+    // its 1h cutoff server-side: every signed-in account can read this doc
+    // (see firestore.rules), so a permission-denied here isn't "you picked
+    // an illegal squad" or any of the other reasons a write can fail — it
+    // means isSignedIn() itself just started rejecting this token. Catches
+    // exactly the device whose armSessionTimeout() timer didn't fire on
+    // time (tab asleep, backgrounded, laptop closed) — see the MAX SESSION
+    // DURATION comment above auth.onAuthStateChanged().
+    if(e.code==='permission-denied')forceSessionExpiredLogout();
+  });
 }
 
 function unsubscribeLeagueState(){if(leagueUnsub){leagueUnsub();leagueUnsub=null;}}
