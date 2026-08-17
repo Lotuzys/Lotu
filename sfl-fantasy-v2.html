@@ -2532,7 +2532,11 @@ function computeScoring(mySquads,db,div){
       // No floor at 0 — a scoreless loss (or a red card) can legitimately
       // take a player's round into negative points.
       const final=pts*mult;total+=final;
-      detail.push({name:p.name,team:p.team,pos,pts:final,goals,wins,losses,csCount,oneCount,motmCount,played,isC,redCount,matches});
+      // Keyed by id, not name — two real players can share the exact same
+      // name (confirmed to happen across this league's real rosters), and
+      // matching by name alone let renderHistory() attribute one player's
+      // points to the other whenever both ended up in the same squad.
+      detail.push({id:p.id,name:p.name,team:p.team,pos,pts:final,goals,wins,losses,csCount,oneCount,motmCount,played,isC,redCount,matches});
     }));
     roundPts[ri]=total;roundDetail[ri]=detail;
     totalPts+=total;roundsPlayed++;
@@ -3326,7 +3330,7 @@ async function openHistoricalPlayerModal(pos,idx){
   const snap=STATE.mySquads[STATE.curRound];
   const isC=!!(snap?.captain?.pos===pos&&snap?.captain?.idx===idx);
   const {roundDetail}=computeScoring({[STATE.curRound]:snap},STATE.DB);
-  const det=roundDetail[STATE.curRound]?.find(d=>d.name===p.name)||{pts:0,goals:0,wins:0,losses:0,played:false,matches:[]};
+  const det=roundDetail[STATE.curRound]?.find(d=>d.id===p.id)||{pts:0,goals:0,wins:0,losses:0,played:false,matches:[]};
   det.isC=isC;
   openStatModal(p,pos,[
     {val:p.price.toFixed(1)+'M',label:t('stat_price')},
@@ -3431,7 +3435,7 @@ function renderSlot(pos,idx){
     const sfx=el.querySelector('.sfx');
     if(historical){
       const {roundDetail}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
-      const det=roundDetail[STATE.curRound]?.find(d=>d.name===p.name);
+      const det=roundDetail[STATE.curRound]?.find(d=>d.id===p.id);
       sp.textContent=cap?`${det?det.pts:0}pts ⭐`:`${det?det.pts:0}pts`;sp.className=cap?'sp c':'sp';
       if(sfx)sfx.textContent='';
       el.onclick=()=>openHistoricalPlayerModal(pos,idx);
@@ -3575,7 +3579,7 @@ function renderHistory(){
       <div class="hcard-body">`;
     if(snap){['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
       if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
-      const det=detail?.find(d=>d.name===p.name);
+      const det=detail?.find(d=>d.id===p.id);
       html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
         <div class="hcp-name">${isC?'⭐ ':''}${p.name} <span class="hcp-pos">${POS_LT[pos]}</span></div>
         <div class="hcp-pts ${isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
