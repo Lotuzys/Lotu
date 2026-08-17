@@ -356,10 +356,15 @@ async function syncPlayers() {
   return summary;
 }
 
-// Scheduled: every 12 hours.
-exports.syncPlayersScheduled = onSchedule('every 12 hours', async () => {
-  await syncPlayers();
-});
+// Scheduled: twice a week, matching the league's own match days — Saturday
+// and Sunday at 06:00 Europe/Vilnius — instead of a fixed 12h cadence that
+// re-scraped rosters even on days nothing changed.
+exports.syncPlayersScheduled = onSchedule(
+    {schedule: '0 6 * * 6,0', timeZone: 'Europe/Vilnius'},
+    async () => {
+      await syncPlayers();
+    },
+);
 
 // Manual trigger for testing / forcing an immediate resync. Requires the
 // same admin identity the app itself trusts (checked via Firebase Auth ID
