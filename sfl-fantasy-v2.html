@@ -478,7 +478,6 @@ a{color:var(--or)}
 .lb-divsel{width:100%;padding:9px 10px;border:1.5px solid var(--bor);border-radius:10px;background:var(--sur);font-size:12px;font-weight:700;color:var(--ink);margin-bottom:11px;cursor:pointer}
 .lb-mb.on{background:var(--card);color:var(--or);box-shadow:var(--sh-xs)}
 .lb-prize{background:#fff5eb;border:1.5px solid var(--orbor);border-radius:var(--r);padding:10px 14px;margin:0 16px 13px;font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:8px}
-.lb-sponsor-note{background:#fdf6e8;border:1.5px solid rgba(217,119,6,.25);border-radius:var(--r);padding:9px 14px;margin:0 16px 13px;font-size:11.5px;color:var(--ink2)}
 .lbrow{display:grid;grid-template-columns:36px 24px 1fr auto auto;gap:8px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--bor);font-size:12px;transition:all .15s var(--ease)}
 .lbrow:hover{background:var(--sur)}.lbrow.me{background:linear-gradient(90deg,var(--ordim),transparent)!important;border-left:3px solid var(--or)}
 .lbrow:last-child{border-bottom:none}
@@ -919,7 +918,6 @@ a{color:var(--or)}
       <select class="lb-divsel" id="lb-divsel" onchange="setLBDivision(this.value)"></select>
       <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
     </div>
-    <div class="lb-sponsor-note" data-i18n="lb_sponsor_note">🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!</div>
     <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
   </div></div>
@@ -1224,7 +1222,6 @@ const I18N={
     th_played_full:'Rungtynės',th_wins_full:'Pergalės',th_draws_full:'Lygiosios',th_losses_full:'Pralaimėjimai',
     th_goalsfor_full:'Įmušti',th_goalsagainst_full:'Praleisti',th_points_full:'Taškai',
     leaders_title:'Fantasy lyderiai',lb_mode_season:'Sezono lyderiai',lb_mode_round:'Turo lyderiai',
-    lb_sponsor_note:'🍺 Šią lygą remia <strong>Carlsberg</strong> — kiekvieno turo lyderis laimi Carlsberg dėžę!',
     top_scorers_title:'⚽ Rezultatyviausi žaidėjai',lbsc_sub_count:n=>`po ${n} turų`,no_goals_yet:'Dar nėra įmuštų įvarčių',
     ts_mode_season:'Sezono rinktinė',ts_mode_round:'Turo rinktinė',
     pick_captain_btn:'Rinktis Kapitoną',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
@@ -1323,7 +1320,6 @@ const I18N={
     th_played_full:'Played',th_wins_full:'Wins',th_draws_full:'Draws',th_losses_full:'Losses',
     th_goalsfor_full:'Goals for',th_goalsagainst_full:'Goals against',th_points_full:'Points',
     leaders_title:'Fantasy Leaders',lb_mode_season:'Season Leaders',lb_mode_round:'Gameweek Leaders',
-    lb_sponsor_note:'🍺 This league is sponsored by <strong>Carlsberg</strong> — every gameweek\'s leader wins a Carlsberg crate!',
     top_scorers_title:'⚽ Top Scorers',lbsc_sub_count:n=>`after ${n} gameweeks`,no_goals_yet:'No goals scored yet',
     ts_mode_season:'Team of the Season',ts_mode_round:'Team of the Gameweek',
     pick_captain_btn:'Make Captain',stat_goals:'Goals',stat_price:'Price',hist_link:'📊 Gameweek Points History',btn_add:'Add',
@@ -2423,49 +2419,28 @@ function subscribeLeagueState(){
 function unsubscribeLeagueState(){if(leagueUnsub){leagueUnsub();leagueUnsub=null;}}
 
 // ═══════════════════════════════════════════════
-// MAN OF THE MATCH — +2 bonus for whoever scores the most RAW match points
-// (goal/CS/conceded-1/win-loss/red — never the captain multiplier, which is
-// a fantasy-squad overlay, not a real-world result) among every real player
-// on both rosters for that specific match. Computed once per round and
-// shared by every scoring engine below (computeScoring, computeAllPlayerRoundPts,
-// computePlayerMatchBreakdown) so they never disagree on who earned it —
-// it does NOT depend on anyone's fantasy squad, only on the match result +
-// the division's real player rosters, so a player earns it whether or not
-// any manager actually owns them.
-// Returns {[di]:{[mi]: playerId|null}}. Ties keep whoever PLAYERS lists
-// first (stable/deterministic — no random tie-break).
+// MAN OF THE MATCH — +2 bonus for whoever the admin picks as that specific
+// match's best player, entered alongside the score/scorers/red cards in the
+// results panel (renderAdminRound()/saveM()) — a real judgment call, not a
+// guess. Previously this was auto-computed (highest raw match points among
+// every real player on both rosters); every match saved before that field
+// existed was backfilled once with whatever that heuristic would have
+// picked, so no one's already-published points moved when this switched
+// over — admin can still revisit and correct any of them from the panel.
+// Computed once per round and shared by every scoring engine below
+// (computeScoring, computeAllPlayerRoundPts, computePlayerMatchBreakdown)
+// so they never disagree on who earned it.
+// Returns {[di]:{[mi]: playerId|null}}.
 function computeMatchMotm(ri,db,div){
   div=div||STATE.division;
   const r=(DIVISIONS[div]||DIVISIONS.A).fr[ri];
   const round=db?.[ri];
   const motm={};
-  if(!r||!round)return motm;
-  const byTeam={};
-  PLAYERS.filter(p=>p.division===div).forEach(p=>{(byTeam[p.team]=byTeam[p.team]||[]).push(p);});
+  if(!r)return motm;
   r.days.forEach((day,di)=>{
     motm[di]={};
     day.m.forEach((m,mi)=>{
-      const saved=round?.[di]?.[mi];
-      if(!saved){motm[di][mi]=null;return;}
-      const hg=saved.hg,ag=saved.ag;
-      let res0,res1;
-      if(hg>ag){res0='W';res1='L';}else if(ag>hg){res1='W';res0='L';}else{res0='D';res1='D';}
-      let bestId=null,bestPts=-Infinity;
-      [[m[0],ag,res0],[m[1],hg,res1]].forEach(([team,ga,result])=>{
-        (byTeam[team]||[]).forEach(p=>{
-          const mGoals=(saved.scorers||[]).filter(sc=>sc.pid===p.id).reduce((s,sc)=>s+sc.cnt,0);
-          const mRed=(saved.reds||[]).filter(pid=>pid===p.id).length;
-          let mPts=mGoals*CONFIG.PTS_POS[p.pos];
-          if(p.pos==='G'||p.pos==='D'){
-            if(ga===0)mPts+=CONFIG.CS_PTS[p.pos];
-            else if(ga===1)mPts+=CONFIG.ONE_GOAL_AGAINST_PTS[p.pos];
-          }
-          if(result==='W')mPts+=CONFIG.WIN_PTS;else if(result==='L')mPts+=CONFIG.LOSS_PTS;
-          mPts+=mRed*CONFIG.RED_CARD_PTS;
-          if(mPts>bestPts){bestPts=mPts;bestId=p.id;}
-        });
-      });
-      motm[di][mi]=bestId;
+      motm[di][mi]=round?.[di]?.[mi]?.motm??null;
     });
   });
   return motm;
@@ -4143,12 +4118,15 @@ function renderAdminRound(){
           <div class="slbl" style="margin-top:10px">Raudonos kortelės</div>
           <div id="rrows-${key}">${rrows}</div>
           <button class="addsc" onclick="addRc('${key}','${m[0]}','${m[1]}')">+ Pridėti raudoną kortelę</button>
+          <div class="slbl" style="margin-top:10px">Rungtynių žaidėjas (+2 tšk.)</div>
+          <select class="ssel" id="motm-${key}"><option value="">-- Žaidėjas --</option>${opts}</select>
           <button class="savem" onclick="saveM('${key}',${STATE.adminRound},${di},${mi})">💾 Išsaugoti</button>
         </div></div>`;
       if(saved){
         setTimeout(()=>{
           saved.scorers.forEach((sc,si)=>{const el=document.getElementById(`spl-${key}-${si}`);if(el)el.value=sc.pid;});
           (saved.reds||[]).forEach((pid,ri)=>{const el=document.getElementById(`rpl-${key}-${ri}`);if(el)el.value=pid;});
+          if(saved.motm){const el=document.getElementById(`motm-${key}`);if(el)el.value=saved.motm;}
         },60);
       }
     });
@@ -4188,6 +4166,8 @@ function saveM(key,ri,di,mi){
     if(!rpl)return;const pid=parseInt(rpl.value);
     if(pid)reds.push(pid);
   });
+  const motmVal=document.getElementById(`motm-${key}`)?.value;
+  const motm=motmVal?parseInt(motmVal):null;
   const mk=`${ri}-${di}-${mi}`;
   const m=FR[ri].days[di].m[mi];const h=STATE.teams[m[0]];const a=STATE.teams[m[1]];
   // Bug fixed: this used to apply the score's W/D/L/goals/clean-sheet
@@ -4212,7 +4192,7 @@ function saveM(key,ri,di,mi){
   }
   STATE.savedMatches.add(mk);
   if(!STATE.DB[ri])STATE.DB[ri]={};if(!STATE.DB[ri][di])STATE.DB[ri][di]={};
-  STATE.DB[ri][di][mi]={hg,ag,scorers,reds};
+  STATE.DB[ri][di][mi]={hg,ag,scorers,reds,motm};
   const svEl=document.getElementById(`sv-${key}`);if(svEl)svEl.classList.add('on');
   toast(`${m[0]} ${hg}:${ag} ${m[1]} — išsaugota ✓`);
   // Tabs only, not a full renderAdmin() — a full rebuild would wipe any
