@@ -186,7 +186,14 @@ function calcPrice(g, pos, team) {
 }
 
 function normName(s) {
-  return String(s || '').replace(/\s+/g, ' ').trim();
+  return String(s || '')
+      // The source site tags some reserve players with a trailing
+      // "(dubleris)" right in the name link's own text — strip it here so
+      // it never enters the players collection, instead of scrubbing it
+      // back out after the fact on every future sync.
+      .replace(/\s*\(\s*dubleris\s*\)\s*/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 }
 
 /** Run async tasks with bounded concurrency instead of one at a time or
