@@ -33,17 +33,17 @@ service cloud.firestore {
     // sfl-fantasy-v2.html exactly — update both together.
     function DEADLINES() {
       return {
-        '0':  timestamp.date(2026, 8, 4)  + duration.value(630, 'm'),
-        '1':  timestamp.date(2026, 8, 6)  + duration.value(630, 'm'),
-        '2':  timestamp.date(2026, 8, 8)  + duration.value(630, 'm'),
-        '3':  timestamp.date(2026, 8, 10) + duration.value(630, 'm'),
-        '4':  timestamp.date(2026, 8, 12) + duration.value(630, 'm'),
-        '5':  timestamp.date(2026, 8, 14) + duration.value(630, 'm'),
-        '6':  timestamp.date(2026, 8, 16) + duration.value(630, 'm'),
-        '7':  timestamp.date(2026, 8, 18) + duration.value(630, 'm'),
-        '8':  timestamp.date(2026, 8, 20) + duration.value(630, 'm'),
-        '9':  timestamp.date(2026, 8, 22) + duration.value(630, 'm'),
-        '10': timestamp.date(2026, 8, 24) + duration.value(630, 'm'),
+        '0':  timestamp.date(2026, 8, 25) + duration.value(630, 'm'),
+        '1':  timestamp.date(2026, 8, 27) + duration.value(630, 'm'),
+        '2':  timestamp.date(2026, 8, 29) + duration.value(630, 'm'),
+        '3':  timestamp.date(2026, 8, 31) + duration.value(630, 'm'),
+        '4':  timestamp.date(2026, 9, 2)  + duration.value(630, 'm'),
+        '5':  timestamp.date(2026, 9, 4)  + duration.value(630, 'm'),
+        '6':  timestamp.date(2026, 9, 6)  + duration.value(630, 'm'),
+        '7':  timestamp.date(2026, 9, 8)  + duration.value(630, 'm'),
+        '8':  timestamp.date(2026, 9, 10) + duration.value(630, 'm'),
+        '9':  timestamp.date(2026, 9, 12) + duration.value(630, 'm'),
+        '10': timestamp.date(2026, 9, 14) + duration.value(630, 'm'),
       };
     }
 
