@@ -626,6 +626,29 @@ a{color:var(--or)}
   #page-squad .sfx{font-size:8px;margin-top:0;max-width:66px}
   #page-squad .slot-icon{font-size:18px}
   #page-squad .slot-icon.sm{font-size:14px}
+  /* Same mobile pitch treatment as #page-squad above (untouched, this is a
+     plain duplicate under different selectors) applied to every other
+     pitch view — Sezono rinktinė and the foreign-squad viewer — so mobile
+     looks and behaves the same everywhere a pitch is shown. Both #ts-pitch
+     and #usq-pitch are themselves the .pitch element (not a wrapper around
+     one), hence the plain id selectors instead of "#id .pitch". Neither
+     renders a .sfx fixture line, so that rule isn't duplicated here. */
+  #ts-pitch{padding-top:90px}
+  #ts-pitch .prow{margin-bottom:12px;margin-top:5px}
+  #ts-pitch .slot{width:66px}
+  #ts-pitch .sc2{width:52px;height:52px;font-size:16px}
+  #ts-pitch .sn{font-size:10px;max-width:66px}
+  #ts-pitch .sp{margin-top:0}
+  #ts-pitch .slot-icon{font-size:18px}
+  #ts-pitch .slot-icon.sm{font-size:14px}
+  #usq-pitch{padding-top:90px}
+  #usq-pitch .prow{margin-bottom:12px;margin-top:5px}
+  #usq-pitch .slot{width:66px}
+  #usq-pitch .sc2{width:52px;height:52px;font-size:16px}
+  #usq-pitch .sn{font-size:10px;max-width:66px}
+  #usq-pitch .sp{margin-top:0}
+  #usq-pitch .slot-icon{font-size:18px}
+  #usq-pitch .slot-icon.sm{font-size:14px}
   /* The topbar is sticky everywhere else, but on mobile it wraps to
      ~148px tall (brand row + nav row) and, once stuck to top:0, permanently
      overlaps whatever content the user scrolled up to meet — most visibly
