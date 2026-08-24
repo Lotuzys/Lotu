@@ -606,24 +606,11 @@ a{color:var(--or)}
      falling out of the pitch, cut off by the bar. Give the pitch itself
      the breathing room instead of relying on far-away wrap padding. */
   .pitch{padding-bottom:100px;scroll-margin-top:156px}
-  /* Squad-picker pitch only (scoped to #page-squad — Sezono rinktinė reuses
-     the same .pitch/.rlbl/.slot/.sc2/.prow classes and must stay
-     untouched, both here and on desktop). Position labels hidden, icons
-     shrunk a touch, and the whole squad pushed well down + tightened up
-     vertically so goalkeeper/forwards land inside the pitch's white lines
-     instead of poking past them — the plain top/bottom-goal-box artwork is
-     comparatively short, so on a narrow mobile column the default spacing
-     pushed the first/last rows outside it. */
-  #page-squad .pitch{padding-top:90px}
-  #page-squad .pitch .rlbl{display:none}
-  #page-squad .prow{margin-bottom:12px;margin-top:5px}
-  #page-squad .slot{width:66px}
-  #page-squad .sc2{width:52px;height:52px;font-size:16px}
-  #page-squad .sn{font-size:10px;max-width:66px}
-  #page-squad .sp{margin-top:0}
-  #page-squad .sfx{font-size:8px;margin-top:0;max-width:66px}
-  #page-squad .slot-icon{font-size:18px}
-  #page-squad .slot-icon.sm{font-size:14px}
+  /* #page-squad's pitch used to get its own hidden-labels/shrunk-icons/
+     pushed-down mobile treatment here. Reverted — it's back to the same
+     plain, unmodified .pitch/.rlbl/.slot/.sc2/.prow styling every other
+     pitch (Sezono rinktinė's #ts-pitch, the foreign-squad viewer's
+     #usq-pitch) already uses on mobile, position labels included. */
   /* The topbar is sticky everywhere else, but on mobile it wraps to
      ~148px tall (brand row + nav row) and, once stuck to top:0, permanently
      overlaps whatever content the user scrolled up to meet — most visibly
@@ -2611,11 +2598,10 @@ function currentSeasonGoals(id){
 }
 
 // ═══════════════════════════════════════════════
-// OWNERSHIP — % of registered fantasy managers with this player in their
-// current (or, if they haven't re-picked yet this round, most recent)
-// squad. Recomputed on demand (entering the squad page) rather than on
-// every keystroke/filter click, since it requires a Firestore round-trip
-// across every user's squads.
+// OWNERSHIP — % of the managers who actually submitted a squad FOR THIS
+// ROUND that have this player in it. Recomputed on demand (entering the
+// squad page) rather than on every keystroke/filter click, since it
+// requires a Firestore round-trip across every user's squads.
 // ═══════════════════════════════════════════════
 let OWNERSHIP={};
 function ownershipPct(id){return OWNERSHIP[id]??0;}
@@ -2635,13 +2621,19 @@ async function refreshOwnership(){
     // being built now, so no falling back to someone's last-saved squad
     // when they haven't picked for this round yet — they just don't count.
     const round=STATE.curRound;
+    const squadsThisRound=allUsers.map(u=>(u.mySquads||{})[round]).filter(Boolean);
     const counts={};
-    allUsers.forEach(u=>{
-      const squad=(u.mySquads||{})[round];
-      if(!squad)return;
+    squadsThisRound.forEach(squad=>{
       Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
     });
-    const total=allUsers.length||1;
+    // Denominator is who actually PICKED for this round, not everyone
+    // registered in the division — bug fixed: a round where only 1 of 5
+    // registered users had submitted a squad showed 20% ownership for
+    // every one of that lone squad's players instead of the true 100%,
+    // because it divided by every registered account (including ones that
+    // joined well after this round's deadline had already passed, who
+    // could never possibly have picked for it at all).
+    const total=squadsThisRound.length||1;
     const pct={};
     PLAYERS.forEach(p=>{pct[p.id]=Math.round(((counts[p.id]||0)/total)*1000)/10;});
     OWNERSHIP=pct;
@@ -3372,12 +3364,15 @@ async function computeOwnershipForRound(playerId,ri){
   const div=PLAYERS.find(x=>x.id===playerId)?.division||STATE.division;
   const allUsersAll=await fetchAllUsers();
   const allUsers=allUsersAll.filter(u=>(u.division||'A')===div);
-  const total=allUsers.length||1;
-  let count=0;
-  allUsers.forEach(u=>{
-    const squad=(u.mySquads||{})[ri];if(!squad)return;
-    if(Object.values(squad.slots||{}).flat().some(p=>p&&p.id===playerId))count++;
-  });
+  // Denominator: how many actually submitted a squad for THIS round, not
+  // every registered division account — bug fixed: a round where a
+  // registered user joined (or simply never played) after this round's
+  // deadline had already passed was still counted in the denominator,
+  // deflating every real participant's ownership % below their true share
+  // of that round's actual submitted squads.
+  const squadsThisRound=allUsers.map(u=>(u.mySquads||{})[ri]).filter(Boolean);
+  const total=squadsThisRound.length||1;
+  const count=squadsThisRound.filter(squad=>Object.values(squad.slots||{}).flat().some(p=>p&&p.id===playerId)).length;
   return Math.round((count/total)*1000)/10;
 }
 
@@ -3840,15 +3835,21 @@ function computeFormPts(db,div,n){
 async function computeOwnershipForDivision(div){
   const allUsersAll=await fetchAllUsers();
   const allUsers=allUsersAll.filter(u=>(u.division||'A')===div);
-  const total=allUsers.length||1;
   const players=PLAYERS.filter(p=>p.division===div);
   const rounds=Array.from({length:computeCurrentRound()+1},(_,i)=>i);
   const sums={};players.forEach(p=>sums[p.id]=0);
   rounds.forEach(round=>{
+    // Denominator is per-round — how many actually submitted a squad for
+    // THIS round, not the division's whole registered headcount. Bug
+    // fixed: a fixed division-wide total (computed once, reused for every
+    // round) deflated every round's real % once even a single registered
+    // account existed that hadn't (yet, or ever) picked for that specific
+    // round — e.g. a round only 1 of 5 registered users had played showed
+    // 20% ownership for that lone squad's players instead of the true 100%.
+    const squadsThisRound=allUsers.map(u=>(u.mySquads||{})[round]).filter(Boolean);
+    const total=squadsThisRound.length||1;
     const counts={};
-    allUsers.forEach(u=>{
-      const squad=(u.mySquads||{})[round];
-      if(!squad)return;
+    squadsThisRound.forEach(squad=>{
       Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
     });
     players.forEach(p=>{sums[p.id]+=((counts[p.id]||0)/total)*100;});
