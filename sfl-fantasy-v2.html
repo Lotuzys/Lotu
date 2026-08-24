@@ -352,12 +352,25 @@ a{color:var(--or)}
 .mbg.open{display:flex;animation:fadein .2s var(--ease)}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 .pm{background:var(--card);border:1px solid var(--bor);border-radius:24px;width:310px;max-width:92vw;overflow:hidden;box-shadow:var(--sh-lg);animation:popin .25s var(--ease)}
+.pm.wide{width:400px}
 @keyframes popin{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 .pmh{padding:24px 18px 16px;text-align:center;position:relative}
 .pmav{width:78px;height:78px;border-radius:50%;margin:0 auto 11px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;box-shadow:var(--sh)}
 .pmname{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:3px;letter-spacing:-.01em}.pmteam{font-size:11px;color:var(--mu)}
 .pmchip{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;margin-top:6px}
 .pmclose{position:absolute;top:12px;right:12px;background:var(--sur);border:1px solid var(--bor);color:var(--mu);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
+/* Round-navigator strip — jump to another round's squad without leaving the
+   current screen. Reused by the squad page (own history, bottom-left under
+   the player list) and the foreign-squad viewer modal (bottom, under the
+   pitch) — same look, different data feeding it. */
+.squad-rnav{padding:12px 14px 14px;border-top:1px solid var(--bor)}
+.rnav-lbl{font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.rnav-row{display:flex;flex-wrap:wrap;gap:6px}
+.rnav-chip{min-width:30px;height:28px;padding:0 6px;border-radius:8px;border:1px solid var(--bor);background:var(--sur2);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s var(--ease)}
+.rnav-chip:hover:not(:disabled){border-color:var(--or)}
+.rnav-chip.played{border-color:rgba(255,122,0,.4)}
+.rnav-chip.on{background:var(--or);border-color:var(--or);color:#fff}
+.rnav-chip:disabled{opacity:.35;cursor:not-allowed}
 .pmclose:hover{background:var(--sur2);color:var(--ink)}
 .pmstats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bor);border-top:1px solid var(--bor);border-bottom:1px solid var(--bor)}
 .pmst{background:var(--sur);padding:12px 5px;text-align:center}
@@ -481,7 +494,7 @@ a{color:var(--or)}
 .lb-divsel{width:100%;padding:9px 10px;border:1.5px solid var(--bor);border-radius:10px;background:var(--sur);font-size:12px;font-weight:700;color:var(--ink);margin-bottom:11px;cursor:pointer}
 .lb-mb.on{background:var(--card);color:var(--or);box-shadow:var(--sh-xs)}
 .lb-prize{background:#fff5eb;border:1.5px solid var(--orbor);border-radius:var(--r);padding:10px 14px;margin:0 16px 13px;font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:8px}
-.lbrow{display:grid;grid-template-columns:36px 24px 1fr auto auto;gap:8px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--bor);font-size:12px;transition:all .15s var(--ease)}
+.lbrow{display:grid;grid-template-columns:36px 24px 1fr auto auto;gap:8px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--bor);font-size:12px;transition:all .15s var(--ease);cursor:pointer}
 .lbrow:hover{background:var(--sur)}.lbrow.me{background:linear-gradient(90deg,var(--ordim),transparent)!important;border-left:3px solid var(--or)}
 .lbrow:last-child{border-bottom:none}
 .lbpos{font-size:13px;font-weight:800;color:var(--or);text-align:center}.lbpos.g{color:var(--gold)}
@@ -507,6 +520,8 @@ a{color:var(--or)}
 .stats-table th.stats-sortable{cursor:pointer;user-select:none;transition:opacity .15s var(--ease)}
 .stats-table th.stats-sortable:hover{opacity:.85}
 .stats-arrow{display:inline-block;margin-left:3px;font-size:9px}
+.stats-row{cursor:pointer;transition:background .15s var(--ease)}
+.stats-row:hover{background:var(--sur)}
 .stats-pname{display:flex;align-items:center;gap:8px;white-space:nowrap}
 .stats-pname span:first-of-type{font-weight:700}
 .stats-pos{font-size:9px;font-weight:800;color:#fff;padding:2px 6px;border-radius:5px;text-transform:uppercase}
@@ -802,6 +817,7 @@ a{color:var(--or)}
         <div class="fg noborder"><div class="fg-lbl" data-i18n="team_label">Komanda</div><div class="fg-row" id="team-f"></div></div>
         <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." data-i18n-ph="search_ph" oninput="renderList()"></div>
         <div class="pl-list" id="pl-list"></div>
+        <div class="squad-rnav" id="squad-rnav"></div>
       </div>
     </div>
     <div>
@@ -1025,6 +1041,26 @@ a{color:var(--or)}
   </div>
 </div>
 
+<!-- FOREIGN SQUAD VIEWER — opened from a Lyderiai row: another entrant's
+     squad for one of their own past (deadline-passed) rounds, with a round
+     navigator in the same screen to page through the rest of their history.
+     Current-round squads are never reachable here — renderUserRoundNav()
+     only ever offers rounds whose deadline has passed, matching what
+     firestore.rules itself would allow a non-owner to read anyway. -->
+<div class="mbg" id="usq-bg" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="pm wide">
+    <div class="pmh">
+      <div class="pmname" id="usq-title"></div>
+      <div class="pmteam" id="usq-sub"></div>
+      <button class="pmclose" onclick="document.getElementById('usq-bg').classList.remove('open')">✕</button>
+    </div>
+    <div class="pw" style="padding:4px 16px 6px">
+      <div class="pitch" id="usq-pitch"></div>
+    </div>
+    <div class="squad-rnav" id="usq-rnav"></div>
+  </div>
+</div>
+
 <!-- STAT MODAL — read-only player detail, reused for a historical round's
      squad (price / round ownership / round points + breakdown) and for
      Sezono rinktinė (price / season points). No "add" action, just info. -->
@@ -1175,6 +1211,7 @@ const I18N={
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 11 fantasy turų · 22 rungtynių dienos`,btn_build_squad:'Sudaryti komandą →',
     btn_my_history:'Mano istorija',
     season_over_title:'🏆 Ačiū už dalyvavimą — sezonas baigtas',season_over_sub:'Iki susitikimo kitame SFL fantasy turnyre!',
+    rnav_label:'Turai',
     stat_rounds:'Fantasy turų',stat_teams:'Fantasy komandų',stat_prizes:'Prizai',
     stat_mypts:'Tavo taškai',stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
     rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🚫 Praleista',
@@ -1277,6 +1314,7 @@ const I18N={
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 11 fantasy gameweeks · 22 matchdays`,btn_build_squad:'Build Your Team →',
     btn_my_history:'My History',
     season_over_title:'🏆 Thanks for playing — the season is over',season_over_sub:'See you in the next SFL fantasy tournament!',
+    rnav_label:'Gameweeks',
     stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
     stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Gameweek Schedule',
     rt_locked:'🔒 Locked',rt_waiting:'Pending',rt_missed:'🚫 Missed',
@@ -2802,7 +2840,7 @@ function showPage(name,btn,opts){
   if(btn)btn.classList.add('on');
   document.getElementById('bbar').style.display=(name==='squad')?'flex':'none';
   if(name==='dash')     renderDash();
-  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();if(STATE.curRound===computeCurrentRound()&&Object.keys(STATE.mySquads).length===0)openSquadTutorial();}
+  if(name==='squad')    {renderSquadMsg();renderFixtures();updateBottomBar();renderSquadRoundNav();if(STATE.curRound===computeCurrentRound()&&Object.keys(STATE.mySquads).length===0)openSquadTutorial();}
   if(name==='history')  renderHistory();
   if(name==='standings')renderStFull();
   if(name==='leaders')  renderLB();
@@ -2819,7 +2857,7 @@ function showMainApp(){
   document.getElementById('page-dash').classList.add('on');
   document.querySelectorAll('.nb')[0].classList.add('on');
   document.getElementById('bbar').style.display='none';
-  renderDash();renderStMini();renderLB();renderSquadMsg();renderFixtures();updateBottomBar();renderAllSlots();renderFilters();renderList();
+  renderDash();renderStMini();renderLB();renderSquadMsg();renderFixtures();updateBottomBar();renderAllSlots();renderFilters();renderList();renderSquadRoundNav();
   if(STATE.fantasyTeamName)document.getElementById('squad-panel-title').textContent=STATE.fantasyTeamName;
   history.replaceState({page:'dash'},'','#dash');
 }
@@ -3461,6 +3499,21 @@ function renderSlot(pos,idx){
 }
 function renderAllSlots(){Object.keys(STATE.slots).forEach(pos=>STATE.slots[pos].forEach((_,idx)=>renderSlot(pos,idx)));}
 
+// Round navigator under the player list — jump straight to any other
+// opened round's squad (live or already-locked) without leaving the squad
+// page. Every opened round is offered, not just past ones, since this is
+// your OWN squad — goRound() already re-renders the whole page for it.
+function renderSquadRoundNav(){
+  const el=document.getElementById('squad-rnav');if(!el)return;
+  const live=computeCurrentRound();
+  el.innerHTML=`<div class="rnav-lbl" data-i18n="rnav_label">${t('rnav_label')}</div><div class="rnav-row">`+
+    FR.map((r,i)=>{
+      const played=STATE.mySquads[i]!==undefined;
+      const future=i>live;
+      return `<button class="rnav-chip ${i===STATE.curRound?'on':''} ${played?'played':''}" ${future?'disabled':''} onclick="goRound(${i})" title="${roundName(i)}">${i+1}</button>`;
+    }).join('')+'</div>';
+}
+
 // Called by setLang() after a language switch — re-renders whatever
 // dynamic (JS-generated) content is currently on screen so it picks up
 // the new language too, not just the static chrome around it.
@@ -3468,7 +3521,7 @@ function refreshDynamicI18n(){
   if(!CURRENT_USER)return;
   if(document.getElementById('page-dash')?.classList.contains('on'))renderDash();
   if(document.getElementById('page-squad')?.classList.contains('on')){
-    renderFilters();renderList();renderSquadMsg();renderFixtures();updateBottomBar();renderAllSlots();
+    renderFilters();renderList();renderSquadMsg();renderFixtures();updateBottomBar();renderAllSlots();renderSquadRoundNav();
   }
   if(document.getElementById('page-history')?.classList.contains('on'))renderHistory();
   if(document.getElementById('page-standings')?.classList.contains('on'))renderStFull();
@@ -3991,7 +4044,7 @@ async function renderStats(){
 
   document.getElementById('stats-sub').textContent=sorted.length+' '+t('players_count_suffix');
   document.getElementById('stats-tbody').innerHTML=sorted.map((p,i)=>`
-    <tr><td>${i+1}</td>
+    <tr class="stats-row" onclick="openStatsPlayerModal(${p.id})"><td>${i+1}</td>
       <td><div class="stats-pname">${kitSvg(p.team,22)}<span>${p.name}</span><span class="stats-pos" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div></td>
       <td>${teamLogoImg(p.team,16)}${p.team}</td>
       <td>${p.price.toFixed(1)}M</td>
@@ -3999,6 +4052,26 @@ async function renderStats(){
       <td>${form[p.id]??0}</td>
       <td style="font-weight:800;color:var(--or)">${totals[p.id]||0}</td>
     </tr>`).join('')||`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--mu)">${t('not_found')}</td></tr>`;
+}
+
+// Clicking a Statistika row — the exact same 4 figures that row already
+// shows (price/populiarumas/forma/taškai), as the shared read-only stat
+// card, same pattern as Sezono rinktinė's openTSPlayerModal(). No separate
+// breakdown here (there's no single round to break down) — the card's own
+// "Turų taškų istorija" link is what opens the round-by-round view.
+async function openStatsPlayerModal(id){
+  const p=PLAYERS.find(x=>x.id===id);if(!p)return;
+  const div=p.division;
+  const db=await getDivisionDB(div);
+  const totals=computeSeasonPlayerPts(db,div);
+  const form=computeFormPts(db,div,2);
+  const ownership=await computeOwnershipForDivision(div);
+  openStatModal(p,p.pos,[
+    {val:p.price.toFixed(1)+'M',label:t('stat_price')},
+    {val:(ownership[p.id]??0)+'%',label:t('sort_own')},
+    {val:form[p.id]??0,label:t('stats_form')},
+    {val:totals[p.id]||0,label:t('sort_total')},
+  ],'');
 }
 
 async function renderLB(){
@@ -4057,7 +4130,7 @@ async function renderLB(){
   // why email isn't stored at all; name IS still stored, just deliberately
   // not surfaced on this shared, everyone-sees-everyone page).
   document.getElementById('lb-list').innerHTML=entries.map((r,i)=>`
-    <div class="lbrow ${r.isMe?'me':''}">
+    <div class="lbrow ${r.isMe?'me':''}" onclick="openUserSquadViewer('${r.uid}')">
       <span class="lbpos ${i<2?'g':''}">${medals[i]||i+1}</span>
       <span class="lb-fav" title="${escHtml(r.favTeam)}">${r.favTeam?'⚽':''}</span>
       <div>
@@ -4067,6 +4140,95 @@ async function renderLB(){
       <span class="lbr">${LB_MODE==='round'?'':t('rounds_count',r.rounds)}</span>
       <span class="lbpts">${r.pts}</span>
     </div>`).join('')||`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_participants')}</div>`;
+}
+
+// ═══════════════════════════════════════════════
+// FOREIGN SQUAD VIEWER — opened from a Lyderiai row. Read-only, and only
+// ever shows rounds whose deadline has already passed: that's the same
+// boundary firestore.rules itself enforces for a non-owner's direct squad
+// read, so this never offers to show something the server would refuse.
+// Current-round picks stay visible to nobody but their own owner.
+// ═══════════════════════════════════════════════
+let USQ_UID=null;
+let USQ_ROUND=null;
+
+async function openUserSquadViewer(uid){
+  const allUsersAll=await fetchAllUsers();
+  const u=allUsersAll.find(x=>x.id===uid);
+  if(!u){toast('Nepavyko rasti dalyvio');return;}
+  USQ_UID=uid;
+  const playable=FR.map((_,i)=>i).filter(i=>isPastDeadline(i)&&u.mySquads&&u.mySquads[i]);
+  USQ_ROUND=playable.length?playable[playable.length-1]:null;
+  document.getElementById('usq-bg').classList.add('open');
+  renderUserSquadViewer(u);
+}
+function goUserRound(ri){
+  USQ_ROUND=ri;
+  fetchAllUsers().then(allUsersAll=>{
+    const u=allUsersAll.find(x=>x.id===USQ_UID);
+    if(u)renderUserSquadViewer(u);
+  });
+}
+async function renderUserSquadViewer(u){
+  const div=u.division||'A';
+  document.getElementById('usq-title').textContent=u.fantasyTeamName||(t('fallback_player')+"'s FC");
+  document.getElementById('usq-sub').innerHTML=u.favTeam?`⚽ ${escHtml(u.favTeam)}`:'';
+  const pitchEl=document.getElementById('usq-pitch');
+  const snap=USQ_ROUND!==null?(u.mySquads||{})[USQ_ROUND]:null;
+  if(!snap){
+    pitchEl.innerHTML=`<div style="padding:40px 10px;text-align:center;color:var(--mu);font-size:13px">${t('hist_no_squad')}</div>`;
+    renderUserRoundNav(u);
+    return;
+  }
+  const db=await getDivisionDB(div);
+  const {roundDetail}=computeScoring({[USQ_ROUND]:snap},db,div);
+  const detail=roundDetail[USQ_ROUND]||[];
+  const rows=[['G',t('rlbl_gk')],['D',t('rlbl_def')],['M',t('rlbl_mid')],['F',t('rlbl_fwd')]];
+  pitchEl.innerHTML=rows.map(([pos,label])=>{
+    const arr=snap.slots[pos]||[];
+    return `<div class="rlbl">${label}</div><div class="prow">`+arr.map((p,idx)=>{
+      if(!p)return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">·</span></div><div class="sn">—</div></div>`;
+      const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+      const det=detail.find(d=>d.id===p.id);
+      const badge=DIVISIONS[div]?.logos?.[p.team]?`<img class="slot-badge" src="${DIVISIONS[div].logos[p.team]}" alt="">`:'';
+      return `<div class="slot filled" onclick="openUserSquadPlayerModal(${p.id},'${pos}',${idx})">
+        <div class="sc2" style="background:rgba(255,255,255,.12);border-color:${isC?'#fff':'rgba(255,255,255,.4)'};border-style:solid">
+          ${kitSvg(p.team,50)}${badge}
+        </div>
+        <div class="sn">${isC?'⭐ ':''}${escHtml(p.name.split(' ').slice(-1)[0])}</div>
+        <div class="sp">${det?det.pts:0}pts</div>
+      </div>`;
+    }).join('')+'</div>';
+  }).join('');
+  renderUserRoundNav(u);
+}
+function renderUserRoundNav(u){
+  const el=document.getElementById('usq-rnav');if(!el)return;
+  const rounds=FR.map((_,i)=>i).filter(i=>isPastDeadline(i));
+  el.innerHTML=`<div class="rnav-lbl">${t('rnav_label')}</div><div class="rnav-row">`+
+    rounds.map(i=>{
+      const played=!!(u.mySquads&&u.mySquads[i]);
+      return `<button class="rnav-chip ${i===USQ_ROUND?'on':''} ${played?'played':''}" ${played?'':'disabled'} onclick="goUserRound(${i})" title="${roundName(i)}">${i+1}</button>`;
+    }).join('')+'</div>';
+}
+// Same tiles + breakdown as openHistoricalPlayerModal(), just sourced from
+// the OTHER user's squad snapshot for the round currently shown here
+// instead of STATE.mySquads.
+async function openUserSquadPlayerModal(pid,pos,idx){
+  const allUsersAll=await fetchAllUsers();
+  const u=allUsersAll.find(x=>x.id===USQ_UID);if(!u)return;
+  const div=u.division||'A';
+  const snap=(u.mySquads||{})[USQ_ROUND];if(!snap)return;
+  const p=snap.slots[pos]?.[idx];if(!p)return;
+  const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+  const db=await getDivisionDB(div);
+  const {roundDetail}=computeScoring({[USQ_ROUND]:snap},db,div);
+  const det=roundDetail[USQ_ROUND]?.find(d=>d.id===p.id)||{pts:0,goals:0,wins:0,losses:0,played:false,matches:[]};
+  det.isC=isC;
+  openStatModal(p,pos,[
+    {val:p.price.toFixed(1)+'M',label:t('stat_price')},
+    {val:det.pts+'pts',label:t('round_pts_label')},
+  ],scoringBreakdownHtml(det,pos));
 }
 
 // ═══════════════════════════════════════════════
