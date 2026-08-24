@@ -345,6 +345,7 @@ a{color:var(--or)}
 .srm2{background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;opacity:.6;padding:0 1px}.srm2:hover{opacity:1}
 .addsc{font-size:11px;font-weight:600;color:var(--or);background:var(--ordim);border:1px solid var(--orbor);border-radius:8px;padding:5px 11px;cursor:pointer;margin-top:2px}
 .savem{width:100%;margin-top:10px;padding:8px;background:var(--sur);color:var(--or);border:1.5px solid var(--orbor);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s var(--ease)}
+.savem:disabled{opacity:.4;cursor:default}
 .savem:hover{background:var(--ordim)}
 
 /* PLAYER MODAL */
@@ -4046,6 +4047,96 @@ async function computeOwnershipForDivision(div){
   players.forEach(p=>{pct[p.id]=Math.round((sums[p.id]/rounds.length)*10)/10;});
   return pct;
 }
+// Same per-round ownership-% computation as the inner loop above, pulled
+// out standalone for the automatic price update below (which only ever
+// needs ONE round, not a season average) — kept separate rather than
+// having computeOwnershipForDivision() call this in a loop, since that
+// would turn its single fetchAllUsers() call into one per round.
+async function computeOwnershipMapForRound(div,round){
+  const allUsersAll=await fetchAllUsers();
+  const allUsers=allUsersAll.filter(u=>(u.division||'A')===div);
+  const squadsThisRound=allUsers.map(u=>(u.mySquads||{})[round]).filter(Boolean);
+  const total=squadsThisRound.length||1;
+  const counts={};
+  squadsThisRound.forEach(squad=>{
+    Object.values(squad.slots||{}).flat().forEach(p=>{if(p)counts[p.id]=(counts[p.id]||0)+1;});
+  });
+  const pct={};
+  PLAYERS.filter(p=>p.division===div).forEach(p=>{pct[p.id]=Math.round(((counts[p.id]||0)/total)*1000)/10;});
+  return pct;
+}
+
+// ═══════════════════════════════════════════════
+// AUTOMATIC PRICE UPDATES — admin-triggered, once a round's results are
+// fully entered (see recalcPricesForRound()). Rules fixed by the league
+// owner:
+//   RISE — both can apply, summed: ownership 30-49.99% → +0.5M, 50%+ →
+//   +1M; round points 15-24 → +0.5M, 25+ → +1M.
+//   FALL — one tier per ownership bracket, the stricter points cutoff
+//   always wins over the milder one (never both): ownership 20%+ and
+//   points <5 → -1M, else points <10 → -0.5M; ownership 5-19.99% and
+//   points <1 → -1M, else points <5 → -0.5M. Below 5% ownership: no fall.
+//   RISE and FALL are independent of each other and both apply the same
+//   round if triggered (e.g. a widely-owned player having a bad round
+//   nets a rise from ownership against a fall from underperforming) —
+//   summed, not one overriding the other.
+//   Floor: price never drops below PRICE_FLOOR regardless of the total.
+// ═══════════════════════════════════════════════
+const PRICE_FLOOR=3;
+function priceDeltaFor(ownershipPct,roundPts){
+  const ownRise=ownershipPct>=50?1:ownershipPct>=30?0.5:0;
+  const ptsRise=roundPts>=25?1:roundPts>=15?0.5:0;
+  let fall=0;
+  if(ownershipPct>=20)fall=roundPts<5?1:roundPts<10?0.5:0;
+  else if(ownershipPct>=5)fall=roundPts<1?1:roundPts<5?0.5:0;
+  return ownRise+ptsRise-fall;
+}
+// True only once every match in the round has a saved result — recalculating
+// against a partially-entered round would silently treat every not-yet-
+// entered match's players as having scored 0, wrongly triggering the fall
+// rules for players who simply haven't had their result typed in yet.
+function roundResultsComplete(div,round){
+  const fr=(DIVISIONS[div]||DIVISIONS.A).fr[round];
+  return fr.days.every((day,di)=>day.m.every((m,mi)=>!!STATE.DB?.[round]?.[di]?.[mi]));
+}
+// Recomputes and writes every player's price for one division, from one
+// round's ownership % and round points. Safe to re-run for the same round
+// (e.g. after fixing a wrongly-entered scorer) — each player's price is
+// always recomputed from `priceBase.{round}`, the price they had
+// IMMEDIATELY BEFORE this round's adjustment, captured once on the first
+// run and reused (never overwritten) on every later one; without pinning
+// that base, a second run would apply the round's delta on top of the
+// already-adjusted price instead of replacing it.
+async function recalcPricesForRound(div,round){
+  if(!isAdmin()){toast('Prieiga tik administratoriui');return;}
+  const roundLbl=(DIVISIONS[div]||DIVISIONS.A).fr[round].n;
+  if(!roundResultsComplete(div,round)){
+    toast(`Ne visos „${roundLbl}“ rungtynės dar išsaugotos — pirma įrašyk visus rezultatus`);
+    return;
+  }
+  if(!confirm(`Perskaičiuoti ${div} diviziono žaidėjų kainas pagal „${roundLbl}“ rezultatus?`))return;
+  const [ownMap,ptsMap,snap]=await Promise.all([
+    computeOwnershipMapForRound(div,round),
+    Promise.resolve(computeAllPlayerRoundPts(round,STATE.DB,div)),
+    db.collection('players').where('division','==',div).get(),
+  ]);
+  const batch=db.batch();
+  let up=0,down=0,same=0;
+  snap.forEach(docSnap=>{
+    const p=docSnap.data();
+    if(!p.id)return;
+    const base=(p.priceBase&&p.priceBase[round]!==undefined)?p.priceBase[round]:p.price;
+    const delta=priceDeltaFor(ownMap[p.id]||0,ptsMap[p.id]||0);
+    const newPrice=Math.max(PRICE_FLOOR,Math.round((base+delta)*2)/2);
+    if(newPrice>p.price)up++;else if(newPrice<p.price)down++;else same++;
+    batch.update(docSnap.ref,{price:newPrice,[`priceBase.${round}`]:base,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  });
+  await batch.commit();
+  await loadPlayersFromFirestore();
+  await syncPlayerIndex();
+  toast(`Kainos perskaičiuotos (${roundLbl}): ↑${up} ↓${down} =${same}`);
+  if(document.getElementById('page-admin')?.classList.contains('on'))renderAdminRound();
+}
 // One player per slot, ranked purely by points — no budget/one-per-club
 // constraint, since this is "who actually performed best", not a fantasy
 // pick. Slots with no scoring data yet come back null.
@@ -4498,7 +4589,12 @@ function rcRow(key,idx,opts){
     <button class="srm2" onclick="rmRc('${key}',${idx})">✕</button></div>`;
 }
 function renderAdminRound(){
-  const fr=FR[STATE.adminRound];let html='';
+  const fr=FR[STATE.adminRound];
+  const priceReady=roundResultsComplete(STATE.division,STATE.adminRound);
+  let html=`<div style="margin-bottom:14px">
+    <button class="savem" style="color:var(--gr);border-color:var(--gr)" ${priceReady?'':'disabled'} onclick="recalcPricesForRound('${STATE.division}',${STATE.adminRound})">💰 Perskaičiuoti ${STATE.division} diviziono kainas — ${fr.n}</button>
+    ${priceReady?'':`<div style="font-size:11px;color:var(--mu);margin-top:4px;text-align:center">Įrašyk visų šio turo rungtynių rezultatus, kad galėtum perskaičiuoti kainas</div>`}
+  </div>`;
   fr.days.forEach((day,di)=>{
     html+=`<div class="day-block"><div class="day-lbl">${day.l}</div><div class="mgrid">`;
     day.m.forEach((m,mi)=>{

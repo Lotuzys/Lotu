@@ -33,7 +33,9 @@ something that special-cases specific player names or a specific season:
   `posFactor = {G:.5, D:.3, M:.25, F:.2}` and `teamBonus` derives from the
   team's last-season win count (`HIST`). A resync never touches
   `goals`/`price` on an existing player doc — only `name`/`pos`/`team`/
-  `division`/`active` get updated live.
+  `division`/`active` get updated live. Price DOES change later through a
+  completely separate, deliberate mechanism — see "Automatic price
+  updates" below — a roster resync must still never touch it.
 - **Division is always concrete**, never missing/null, on every player
   doc and on the `meta/players` mirror — `firestore.rules`' `squadLegal()`
   relies on that with no fallback.
@@ -90,6 +92,55 @@ something that special-cases specific player names or a specific season:
   `isCurRoundFrozen()`); every other page (dashboard, stats, fixtures,
   other users' squads, history) stays fully viewable throughout. Round 0
   has no previous round to wait on and is never frozen.
+
+## Automatic price updates — rules fixed by the league owner, do not alter
+
+`recalcPricesForRound(div, round)` in `sfl-fantasy-v2.html` (button in the
+Admin round panel, next to that round's match-entry forms) recomputes
+every player's price in one division from that round's ownership % and
+round points. These are business rules the owner set explicitly — treat
+them as fixed unless the owner asks to change them, not as something to
+"improve":
+
+- **Rise** — both can apply, summed onto the price: ownership 30-49.99% →
+  +0.5M, 50%+ → +1M; round points 15-24 → +0.5M, 25+ → +1M.
+- **Fall** — one tier per ownership bracket; the stricter points cutoff
+  always wins over the milder one (never both, never stacked): ownership
+  20%+ and points <5 → -1M, else points <10 → -0.5M; ownership 5-19.99%
+  and points <1 → -1M, else points <5 → -0.5M. Below 5% ownership: no
+  fall regardless of points.
+- **Rise and fall are independent and both apply the same round if
+  triggered** (e.g. a widely-owned player having a bad round nets a rise
+  from ownership against a fall from underperforming) — summed, not one
+  overriding the other.
+- **Floor**: price never drops below `PRICE_FLOOR` (3.0M) regardless of
+  the computed total.
+- **Ownership/points are per-round, division-scoped values** —
+  `computeOwnershipMapForRound(div,round)` (submitted-squad-based, same
+  denominator convention as everywhere else) and
+  `computeAllPlayerRoundPts(round,STATE.DB,div)` (the player's own base
+  score — goals/clean-sheets/MOTM/etc — never captain-doubled, since
+  captaincy is a per-user choice, not a player property).
+- **Idempotent by design via `priceBase`**: each player doc's
+  `priceBase.{round}` map field freezes the price they had immediately
+  BEFORE that round's adjustment, captured on the first run and never
+  overwritten afterward. Every recompute (including a deliberate re-run
+  after the admin fixes a wrongly-entered scorer) always applies the
+  round's delta on top of that same frozen base, never on top of an
+  already-adjusted price — re-running for the same round is always safe.
+  Never "simplify" this into reading `price` directly as the base.
+  `functions/index.js`'s roster-resync price-freeze invariant (above) and
+  this mechanism are deliberately separate — a resync must never touch
+  `priceBase` either.
+- **Blocked until the round is fully entered**: `roundResultsComplete()`
+  requires every match in the round to have a saved result before the
+  button is even enabled — a partially-entered round would silently treat
+  every not-yet-entered match's players as having scored 0, wrongly
+  triggering the fall rules for players who simply haven't had their
+  result typed in yet.
+- Admin-triggered per division (not a scheduled background job) —
+  matches this app's existing pattern of explicit, reviewable admin
+  actions (`saveM()` for match results) rather than a silent write.
 
 ## Operating conventions for this repo
 

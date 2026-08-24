@@ -28,6 +28,13 @@
  *    They are written ONCE, at first-seen, and never touched again by a
  *    resync — live in-season scoring is tracked separately by the app via
  *    admin-entered match results (currentSeasonGoals()), not by this figure.
+ *    `price` DOES change later, but only through a completely separate
+ *    mechanism: the admin-triggered automatic price update
+ *    (recalcPricesForRound() in sfl-fantasy-v2.html), which adjusts it
+ *    after each round based on that round's ownership % and points, and
+ *    tracks its own `priceBase` map so re-running it for an
+ *    already-adjusted round stays idempotent. A roster resync running
+ *    later must still never touch `price` itself.
  *  - Players are never deleted from Firestore, only marked `active:false`
  *    when they drop off a team's roster page (retired/transferred out).
  *    Deleting would leave a gap in the id sequence and break the
