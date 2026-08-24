@@ -370,13 +370,11 @@ a{color:var(--or)}
 .pmchip{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;margin-top:6px}
 .pmclose{position:absolute;top:12px;right:12px;background:var(--sur);border:1px solid var(--bor);color:var(--mu);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
 /* Round-navigator strip — jump to another round's squad without leaving the
-   current screen. Reused by the squad page (own history, bottom-left under
-   the player list) and the foreign-squad viewer modal (bottom, under the
-   pitch) — same look, different data feeding it. */
+   current screen. Reused by the squad page (own history, right under the
+   pitch, above the fixtures list) and the foreign-squad viewer modal
+   (right under the title, above the pitch) — same look, different data
+   feeding it. */
 .squad-rnav{padding:12px 14px 14px;border-top:1px solid var(--bor)}
-/* Mobile-only duplicate (above the player list) is hidden on desktop —
-   see the @media(max-width:680px) block for the swap. */
-.squad-rnav-mobile{display:none}
 .rnav-lbl{font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .rnav-row{display:flex;flex-wrap:wrap;gap:6px}
 .rnav-chip{min-width:30px;height:28px;padding:0 6px;border-radius:8px;border:1px solid var(--bor);background:var(--sur2);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s var(--ease)}
@@ -611,17 +609,15 @@ a{color:var(--or)}
   .pitch{padding-bottom:100px;scroll-margin-top:156px}
   /* Squad-picker pitch only (scoped to #page-squad — Sezono rinktinė reuses
      the same .pitch/.rlbl/.slot/.sc2/.prow classes and must stay
-     untouched, both here and on desktop). Position labels hidden, icons
-     shrunk a touch, and the whole squad pushed well down + tightened up
-     vertically so goalkeeper/forwards land inside the pitch's white lines
-     instead of poking past them — the plain top/bottom-goal-box artwork is
-     comparatively short, so on a narrow mobile column the default spacing
-     pushed the first/last rows outside it.
-     DO NOT MODIFY — pixel-tuned and user-approved across many screenshot
-     rounds (see the original commit). Briefly reverted and restored once
-     already; leave it alone regardless of what else changes around it. */
+     untouched, both here and on desktop). Icons shrunk a touch, and the
+     whole squad pushed well down + tightened up vertically so goalkeeper/
+     forwards land inside the pitch's white lines instead of poking past
+     them — the plain top/bottom-goal-box artwork is comparatively short,
+     so on a narrow mobile column the default spacing pushed the first/
+     last rows outside it. Position labels (Vartininkas/Gynėjai/Saugai/
+     Puolėjai) are shown, same as everywhere else — an earlier version of
+     this block hid them; that's reverted. */
   #page-squad .pitch{padding-top:90px}
-  #page-squad .pitch .rlbl{display:none}
   #page-squad .prow{margin-bottom:12px;margin-top:5px}
   #page-squad .slot{width:66px}
   #page-squad .sc2{width:52px;height:52px;font-size:16px}
@@ -670,13 +666,6 @@ a{color:var(--or)}
      without needing to shrink or hide anything on the pitch itself. */
   .rnav-chip{min-width:25px;height:24px;padding:0 4px;font-size:11px}
   .squad-rnav{padding:8px 12px 10px}
-  /* On mobile, the squad page's own round-nav moves above the player list
-     instead of sitting next to the team name (desktop keeps it there) —
-     #squad-rnav-mobile is the duplicate populated by the same
-     renderSquadRoundNav() call, just shown/hidden by viewport instead of
-     by JS. */
-  #squad-rnav{display:none}
-  #squad-rnav-mobile{display:block}
 }
 </style>
 </head>
@@ -849,12 +838,6 @@ a{color:var(--or)}
         <div class="fg"><div class="fg-lbl" data-i18n="position_label">Pozicija</div><div class="fg-row" id="pos-f"></div></div>
         <div class="fg noborder"><div class="fg-lbl" data-i18n="team_label">Komanda</div><div class="fg-row" id="team-f"></div></div>
         <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." data-i18n-ph="search_ph" oninput="renderList()"></div>
-        <!-- Mobile-only duplicate of the round-nav strip below, shown
-             above the player list instead of next to the team name (which
-             is where the desktop one — #squad-rnav — stays). Both are kept
-             in sync by renderSquadRoundNav(); toggled via the
-             @media(max-width:680px) rule, never via JS. -->
-        <div class="squad-rnav squad-rnav-mobile" id="squad-rnav-mobile"></div>
         <div class="pl-list" id="pl-list"></div>
       </div>
     </div>
@@ -864,7 +847,6 @@ a{color:var(--or)}
           <h3 id="squad-panel-title" data-i18n="your_team">Tavo komanda</h3>
           <span class="sub" id="slot-cnt">0/7</span>
         </div>
-        <div class="squad-rnav" id="squad-rnav"></div>
         <div class="pw">
           <div class="pitch-top">
             <span class="bbar-lbl" data-i18n="budget_label">Biudžetas:</span>
@@ -894,6 +876,7 @@ a{color:var(--or)}
             </div>
           </div>
         </div>
+        <div class="squad-rnav" id="squad-rnav"></div>
       </div>
       <!-- FIXTURES BELOW SQUAD -->
       <div id="fix-display"></div>
@@ -3546,25 +3529,20 @@ function renderSlot(pos,idx){
 }
 function renderAllSlots(){Object.keys(STATE.slots).forEach(pos=>STATE.slots[pos].forEach((_,idx)=>renderSlot(pos,idx)));}
 
-// Round navigator under the player list — jump straight to any other
-// opened round's squad (live or already-locked) without leaving the squad
-// page. Every opened round is offered, not just past ones, since this is
-// your OWN squad — goRound() already re-renders the whole page for it.
+// Round navigator under the pitch (below the squad, above the fixtures
+// list) — jump straight to any other opened round's squad (live or
+// already-locked) without leaving the squad page. Every opened round is
+// offered, not just past ones, since this is your OWN squad — goRound()
+// already re-renders the whole page for it.
 function renderSquadRoundNav(){
-  // Two containers share this markup: #squad-rnav (desktop, next to the
-  // team name) and #squad-rnav-mobile (same content, shown instead of it
-  // on mobile, above the player list) — CSS media queries decide which
-  // one is actually visible, this just keeps both in sync.
-  const els=[document.getElementById('squad-rnav'),document.getElementById('squad-rnav-mobile')].filter(Boolean);
-  if(!els.length)return;
+  const el=document.getElementById('squad-rnav');if(!el)return;
   const live=computeCurrentRound();
-  const html=`<div class="rnav-lbl" data-i18n="rnav_label">${t('rnav_label')}</div><div class="rnav-row">`+
+  el.innerHTML=`<div class="rnav-lbl" data-i18n="rnav_label">${t('rnav_label')}</div><div class="rnav-row">`+
     FR.map((r,i)=>{
       const played=STATE.mySquads[i]!==undefined;
       const future=i>live;
       return `<button class="rnav-chip ${i===STATE.curRound?'on':''} ${played?'played':''}" ${future?'disabled':''} onclick="goRound(${i})" title="${roundName(i)}">${i+1}</button>`;
     }).join('')+'</div>';
-  els.forEach(el=>el.innerHTML=html);
 }
 
 // Called by setLang() after a language switch — re-renders whatever
