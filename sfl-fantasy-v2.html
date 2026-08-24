@@ -817,7 +817,6 @@ a{color:var(--or)}
         <div class="fg noborder"><div class="fg-lbl" data-i18n="team_label">Komanda</div><div class="fg-row" id="team-f"></div></div>
         <div class="pl-search"><input id="srch" placeholder="Ieškoti žaidėjo ar komandos..." data-i18n-ph="search_ph" oninput="renderList()"></div>
         <div class="pl-list" id="pl-list"></div>
-        <div class="squad-rnav" id="squad-rnav"></div>
       </div>
     </div>
     <div>
@@ -826,6 +825,7 @@ a{color:var(--or)}
           <h3 id="squad-panel-title" data-i18n="your_team">Tavo komanda</h3>
           <span class="sub" id="slot-cnt">0/7</span>
         </div>
+        <div class="squad-rnav" id="squad-rnav"></div>
         <div class="pw">
           <div class="pitch-top">
             <span class="bbar-lbl" data-i18n="budget_label">Biudžetas:</span>
@@ -1053,11 +1053,11 @@ a{color:var(--or)}
       <div class="pmname" id="usq-title"></div>
       <div class="pmteam" id="usq-sub"></div>
       <button class="pmclose" onclick="document.getElementById('usq-bg').classList.remove('open')">✕</button>
+      <div class="squad-rnav" id="usq-rnav"></div>
     </div>
     <div class="pw" style="padding:4px 16px 6px">
       <div class="pitch" id="usq-pitch"></div>
     </div>
-    <div class="squad-rnav" id="usq-rnav"></div>
   </div>
 </div>
 
