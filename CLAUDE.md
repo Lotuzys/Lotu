@@ -80,6 +80,16 @@ something that special-cases specific player names or a specific season:
   from an approved commit after being accidentally altered once. Leave it
   alone; if the same mobile treatment needs to appear elsewhere, duplicate
   it under the other selector instead of touching this block.
+- **36h post-deadline pick freeze.** Once a round's deadline passes,
+  squad-picking for the next round stays closed league-wide for 36h
+  (`PICK_FREEZE_MS` / `isPickingFrozen()` / `pickFreezeUntil()` in
+  `sfl-fantasy-v2.html`, mirrored server-side by `pickWindowOpen()` in
+  `firestore.rules` — keep both durations in sync) — this is the window
+  the admin uses to update player prices/goals before the next round
+  opens. It only ever gates picking/editing a squad (`isLocked()`,
+  `isCurRoundFrozen()`); every other page (dashboard, stats, fixtures,
+  other users' squads, history) stays fully viewable throughout. Round 0
+  has no previous round to wait on and is never frozen.
 
 ## Operating conventions for this repo
 

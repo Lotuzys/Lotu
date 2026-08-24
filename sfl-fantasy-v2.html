@@ -1291,6 +1291,7 @@ const I18N={
     msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
     msg_history_pts:(r,pts)=>`<strong>${r}</strong> (istorija) — surinkta <strong>${pts}</strong> ${ltForm(pts,'taškas','taškai','taškų')}.`,
     msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> terminas praėjo (${dl}) — komanda nebuvo pateikta laiku, šis turas — 0 taškų.`,
+    msg_pick_frozen:dl=>`🔒 Žaidėjų kainos šiuo metu atnaujinamos — komandos pasirinkimas atsidarys <strong>${dl}</strong>.`,
     fix_title:r=>`🗓 ${r} — rungtynės`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pasirink ${pos} iš sąrašo ${dir}`,toast_dir_above:'aukščiau ↑',toast_dir_left:'kairėje ←',
     posAcc:{G:'vartininką',D:'gynėją',M:'saugą',F:'puolėją'},
@@ -1299,13 +1300,16 @@ const I18N={
     toast_budget_short:m=>`Nepakanka biudžeto! Trūksta ${m}M`,toast_added:(n,t)=>`${n} (${t}) pridėtas ✓`,
     toast_need7:'Reikia 7 žaidėjų!',toast_need_captain:'Pasirink kapitoną — spausk C ženkliuką ant žaidėjo',
     toast_deadline_submit:dl=>`Terminas praėjo (${dl}) — komandos pateikti nebegalima`,
+    toast_pick_frozen:dl=>`Žaidėjų kainos atnaujinamos — komandos pasirinkti negalima iki ${dl}`,
     toast_save_fail:'Nepavyko išsaugoti komandos — pabandyk dar kartą arba susisiek su administratoriumi',
     toast_captain_set:n=>`${n} — Kapitonas ⭐ ×2`,toast_captain_removed:'Kapitonas pašalintas',
     toast_auto_fail:'Nepavyko sudaryti komandos — pabandyk dar kartą',
     toast_auto_ok:'Atsitiktinė komanda sudaryta ✓ Nepamiršk pasirinkti kapitono!',
     bb_selected:'Pasirinkta:',bb_review:'Peržiūra (istorija)',bb_deadline_passed:'Terminas praėjo',
+    bb_pick_frozen:'🔒 Kainos atnaujinamos',
     bb_update:'Atnaujinti komandą ✓',bb_submit:'Pateikti komandą ▶',bb_saving:'Saugoma...',
     toast_round_not_open:'Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas',
+    toast_new_round_frozen:(n,dl)=>`${n} prasidėjo — žaidėjų kainos atnaujinamos, komandos pasirinkimas atsidarys ${dl}.`,
     players_count_suffix:'žaid.',team_full:'komanda pilna',not_found:'Nerasta',
     res_lbl:(r,isUpdate)=>`${r} — komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
     hist_title:'Turų istorija',
@@ -1398,6 +1402,7 @@ const I18N={
     msg_open_sub:(d1,d2,dl)=>`${d1} and ${d2} · deadline ${dl}`,
     msg_history_pts:(r,pts)=>`<strong>${r}</strong> (history) — scored <strong>${pts}</strong> points.`,
     msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> deadline passed (${dl}) — team wasn't submitted in time, 0 points this gameweek.`,
+    msg_pick_frozen:dl=>`🔒 Player prices are being updated right now — squad picking reopens <strong>${dl}</strong>.`,
     fix_title:r=>`🗓 ${r} — matches`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pick a ${pos} from the list ${dir}`,toast_dir_above:'above ↑',toast_dir_left:'on the left ←',
     posAcc:{G:'goalkeeper',D:'defender',M:'midfielder',F:'forward'},
@@ -1406,13 +1411,16 @@ const I18N={
     toast_budget_short:m=>`Not enough budget! Short by ${m}M`,toast_added:(n,t)=>`${n} (${t}) added ✓`,
     toast_need7:'You need 7 players!',toast_need_captain:'Pick a captain — tap the C badge on a player',
     toast_deadline_submit:dl=>`Deadline passed (${dl}) — you can no longer submit a team`,
+    toast_pick_frozen:dl=>`Player prices are being updated — picking is closed until ${dl}`,
     toast_save_fail:'Failed to save team — try again or contact the admin',
     toast_captain_set:n=>`${n} — Captain ⭐ ×2`,toast_captain_removed:'Captain removed',
     toast_auto_fail:'Couldn\'t build a team — try again',
     toast_auto_ok:'Random team generated ✓ Don\'t forget to pick a captain!',
     bb_selected:'Selected:',bb_review:'Review (history)',bb_deadline_passed:'Deadline passed',
+    bb_pick_frozen:'🔒 Prices updating',
     bb_update:'Update Team ✓',bb_submit:'Submit Team ▶',bb_saving:'Saving...',
     toast_round_not_open:'This gameweek isn\'t open yet — wait for the previous one to close',
+    toast_new_round_frozen:(n,dl)=>`${n} has started — player prices are being updated, squad picking opens ${dl}.`,
     players_count_suffix:'players',team_full:'team full',not_found:'No results',
     res_lbl:(r,isUpdate)=>`${r} — team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
     hist_title:'Gameweek History',
@@ -1841,6 +1849,11 @@ function setActiveDivision(div){
 
 function formatDeadline(i){
   return new Intl.DateTimeFormat(LANG==='en'?'en-GB':'lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(FR[i].deadline);
+}
+// Same formatting as formatDeadline(), for the moment squad-picking reopens
+// after the post-deadline price-update freeze — see pickFreezeUntil().
+function formatPickFreezeUntil(){
+  return new Intl.DateTimeFormat(LANG==='en'?'en-GB':'lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(pickFreezeUntil());
 }
 // Round/day display names — FR[ri].n / FR[ri].days[di].l ("1 Fantasy
 // Turas" / "1-oji diena") are the Lithuanian schedule data itself, not UI
@@ -2780,10 +2793,34 @@ function computeCurrentRound(){
   for(let i=0;i<FR.length;i++){ if(!isPastDeadline(i)) return i; }
   return FR.length-1;
 }
-// Editing is only ever allowed on the live round, before its own deadline —
-// any other round being viewed (history, or a round whose deadline just
-// passed) is read-only.
-function isLocked(){return STATE.curRound!==computeCurrentRound()||isPastDeadline(STATE.curRound);}
+// Once a round's deadline passes, squad-picking stays closed league-wide
+// for the next 36h — the window the admin uses to update player prices/
+// goals before the next round opens for picks. Everything else (dashboard,
+// stats, fixtures, other users' squads, history) stays fully viewable;
+// this only ever gates picking/editing a squad. Mirrored server-side by
+// pickWindowOpen() in firestore.rules — keep PICK_FREEZE_MS and that
+// duration in sync if either ever changes.
+const PICK_FREEZE_MS=36*60*60*1000;
+function pickFreezeUntil(){
+  const cr=computeCurrentRound();
+  // Round 0 has no previous round to wait on, and once the season's very
+  // last round has itself passed its deadline there's no next round to
+  // prep for either — nothing frozen in either case.
+  if(cr===0||isPastDeadline(cr))return 0;
+  return FR[cr-1].deadline+PICK_FREEZE_MS;
+}
+function isPickingFrozen(){return Date.now()<pickFreezeUntil();}
+// Editing is only ever allowed on the live round, before its own deadline,
+// and outside the post-deadline price-update freeze — any other round
+// being viewed (history, or a round whose deadline just passed) is
+// read-only.
+function isLocked(){return STATE.curRound!==computeCurrentRound()||isPastDeadline(STATE.curRound)||isPickingFrozen();}
+// True only when the round on screen is the live one AND picking for it
+// specifically is what's frozen right now — unlike isPickingFrozen() alone,
+// which stays true for the whole 36h window regardless of which (possibly
+// historical) round happens to be on screen. Used to tell "frozen" apart
+// from "you're just looking at an already-closed round" in the UI.
+function isCurRoundFrozen(){return STATE.curRound===computeCurrentRound()&&!isPastDeadline(STATE.curRound)&&isPickingFrozen();}
 
 // Slot mutations
 function setSlot(pos,idx,player){
@@ -3075,7 +3112,14 @@ function goRound(i){
 // ═══════════════════════════════════════════════
 function renderSquadMsg(){
   const el=document.getElementById('squad-msg');
-  const isLive=STATE.curRound===computeCurrentRound()&&!isPastDeadline(STATE.curRound);
+  // Frozen (post-deadline price-update window) is its own state, distinct
+  // from "open" and from "deadline passed" — the round being viewed IS the
+  // live one and its own deadline is still days away, picking just hasn't
+  // reopened yet. A frozen round can never already have a squad on it (no
+  // one could have submitted one — picking only opens once the freeze
+  // lifts), so this ordering never needs to consider hasSquad for it.
+  const frozen=isCurRoundFrozen();
+  const isLive=STATE.curRound===computeCurrentRound()&&!isPastDeadline(STATE.curRound)&&!frozen;
   const hasSquad=STATE.mySquads[STATE.curRound]!==undefined;
   if(isLive&&hasSquad){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
@@ -3087,6 +3131,9 @@ function renderSquadMsg(){
       <div class="ti-info"><div class="ti-lbl">${roundName(STATE.curRound)}</div>
       <div class="ti-sub">${t('msg_open_sub',dayLabel(STATE.curRound,0),dayLabel(STATE.curRound,1),formatDeadline(STATE.curRound))}</div></div>
       <span class="ti-badge open">${t('msg_open_badge')}</span></div>`;
+  }else if(frozen){
+    el.innerHTML=`<div class="locked-msg"><div class="lm-icon">🔒</div>
+      <div class="lm-txt">${t('msg_pick_frozen',formatPickFreezeUntil())}</div></div>`;
   }else if(hasSquad){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
     const pts=roundPts[STATE.curRound]||0;
@@ -3705,7 +3752,7 @@ function updateBottomBar(){
   const hasSquad=STATE.mySquads[STATE.curRound]!==undefined;
   btn.disabled=f<7||isLocked();
   btn.textContent=isLocked()
-    ? (hasSquad?t('bb_review'):t('bb_deadline_passed'))
+    ? (isCurRoundFrozen()?t('bb_pick_frozen'):(hasSquad?t('bb_review'):t('bb_deadline_passed')))
     : (hasSquad?t('bb_update'):t('bb_submit'));
 }
 
@@ -3714,6 +3761,7 @@ function updateBottomBar(){
 // ═══════════════════════════════════════════════
 async function submitSquad(){
   if(isPastDeadline(STATE.curRound)){toast(t('toast_deadline_submit',formatDeadline(STATE.curRound)));return;}
+  if(isCurRoundFrozen()){toast(t('toast_pick_frozen',formatPickFreezeUntil()));return;}
   if(filledSlots()<7){toast(t('toast_need7'));return;}
   if(!STATE.captain){toast(t('toast_need_captain'));return;}
   const isUpdate=STATE.mySquads[STATE.curRound]!==undefined;
@@ -4581,7 +4629,11 @@ setInterval(()=>{
     // browsing an already-closed round must never get swept forward.
     ENTERED_ROUND_LIVE=false;
     goRound(live);
-    toast(`${FR[live].n} — naujas turas atidarytas, rinkis komandą!`);
+    // The round that just opened is always still inside its own 36h price-
+    // update freeze at this exact moment (it only just became "live" this
+    // instant) — so this is never the "go pick now" message, always the
+    // frozen one.
+    toast(t('toast_new_round_frozen',roundName(live),formatPickFreezeUntil()));
   }else{
     renderSquadMsg();updateBottomBar();renderAllSlots();
   }

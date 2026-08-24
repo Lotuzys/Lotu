@@ -47,6 +47,20 @@ service cloud.firestore {
       };
     }
 
+    // ── Post-deadline pick freeze ───────────────────────────────────────
+    // Once a round's deadline passes, squad-picking stays closed for the
+    // NEXT round too, for 36h — the window the admin uses to update player
+    // prices/goals before picking reopens. Mirrors PICK_FREEZE_MS /
+    // isPickingFrozen() in sfl-fantasy-v2.html exactly (keep both in sync
+    // if the duration ever changes) so the freeze can't be bypassed by
+    // writing straight to Firestore instead of going through the app.
+    // Round '0' has no previous round to wait on — it opens the moment the
+    // season starts, same as before this existed.
+    function pickWindowOpen(round) {
+      return int(round) == 0
+        || request.time >= DEADLINES()[string(int(round) - 1)] + duration.value(2160, 'm');
+    }
+
     // ── Trusted player data ─────────────────────────────────────────────
     // meta/players holds a copy of sfl-fantasy-v2.html's PLAYERS array
     // (position/team/price only, indexed 0..n-1 for ids 1..n — array order
@@ -220,10 +234,12 @@ service cloud.firestore {
         && profileFieldsSafe(request.resource.data);
 
       // A round's submitted squad. Writable (create or overwrite) only by
-      // its owner, only before that round's deadline, and only if legal.
-      // Once the deadline passes, neither create nor update is granted by
-      // any rule below — the round is frozen. No delete rule exists either,
-      // so deleting a submitted squad is always denied.
+      // its owner, only before that round's own deadline, only once its
+      // 36h post-previous-deadline pick freeze has lifted (pickWindowOpen()
+      // above), and only if legal. Once the deadline passes, neither create
+      // nor update is granted by any rule below — the round is frozen. No
+      // delete rule exists either, so deleting a submitted squad is always
+      // denied.
       //
       // Read is owner-only WHILE the round is still open, and opens up to
       // everyone signed in once its deadline passes — otherwise anyone
@@ -238,6 +254,7 @@ service cloud.firestore {
         allow read: if isSignedIn() && (request.auth.uid == uid || request.time >= DEADLINES()[round]);
         allow create, update: if isSignedIn() && request.auth.uid == uid
           && request.time < DEADLINES()[round]
+          && pickWindowOpen(round)
           && squadLegal(request.resource.data, uid);
       }
     }
