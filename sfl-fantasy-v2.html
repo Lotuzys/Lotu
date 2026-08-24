@@ -162,6 +162,9 @@ a{color:var(--or)}
 .dtitle{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1.2px;margin-bottom:6px;position:relative}
 .dsub{font-size:13px;color:rgba(255,255,255,.85);margin-bottom:22px;position:relative}
 .dactions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative}
+.dseason-over{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;padding:4px 12px}
+.dseason-over-title{font-size:21px;font-weight:800;color:#fff;text-align:center;line-height:1.3;letter-spacing:-.3px}
+.dseason-over-sub{font-size:14px;font-weight:600;color:rgba(255,255,255,.88);text-align:center}
 .btnp{background:#fff;color:var(--or2);font-size:13px;font-weight:800;padding:11px 24px;border:none;border-radius:12px;cursor:pointer;transition:all .18s var(--ease);box-shadow:0 6px 16px -4px rgba(0,0,0,.25)}
 .btnp:hover{transform:translateY(-2px);box-shadow:0 10px 22px -4px rgba(0,0,0,.3)}
 .btns{background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:600;padding:11px 24px;border:1.5px solid rgba(255,255,255,.5);border-radius:12px;cursor:pointer;transition:all .18s var(--ease);backdrop-filter:blur(6px)}
@@ -764,9 +767,13 @@ a{color:var(--or)}
     <div class="dball" id="dball"></div>
     <div class="dtitle" id="dash-title">Betsson 7x7 Fantasy</div>
     <div class="dsub" data-i18n="dash_subtitle">A Divizionas · 11 fantasy turų · 22 rungtynių dienos</div>
-    <div class="dactions">
+    <div class="dactions" id="dash-actions">
       <button class="btnp" onclick="goRound(computeCurrentRound())" data-i18n="btn_build_squad">Sudaryti komandą →</button>
       <button class="btns" onclick="showPage('history',document.querySelectorAll('.nb')[2])" data-i18n="btn_my_history">Mano istorija</button>
+    </div>
+    <div class="dseason-over" id="dash-season-over" style="display:none">
+      <div class="dseason-over-title" data-i18n="season_over_title">🏆 Ačiū už dalyvavimą — sezonas baigtas</div>
+      <div class="dseason-over-sub" data-i18n="season_over_sub">Iki susitikimo kitame SFL fantasy turnyre!</div>
     </div>
     <div class="dspons" id="dspons"><span class="dspons-lbl" data-i18n="sponsor_tooltip">Sezono rėmėjas</span></div>
   </div>
@@ -1166,7 +1173,9 @@ const I18N={
     ob_sub1:'Pasirinkus komandą būsi nukreiptas žaisti būtent jos divizione — ne rodomas prie jos lentelėje',ob_title2:'Fantasy komandos pavadinimas',
     ph_teamname:'Įrašyk savo komandos pavadinimą',btn_start:'Pradėti žaisti →',ob_loading:'Kraunama...',
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 11 fantasy turų · 22 rungtynių dienos`,btn_build_squad:'Sudaryti komandą →',
-    btn_my_history:'Mano istorija',stat_rounds:'Fantasy turų',stat_teams:'Fantasy komandų',stat_prizes:'Prizai',
+    btn_my_history:'Mano istorija',
+    season_over_title:'🏆 Ačiū už dalyvavimą — sezonas baigtas',season_over_sub:'Iki susitikimo kitame SFL fantasy turnyre!',
+    stat_rounds:'Fantasy turų',stat_teams:'Fantasy komandų',stat_prizes:'Prizai',
     stat_mypts:'Tavo taškai',stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
     rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🚫 Praleista',
     players_header:'Žaidėjai',sort_by:'Rikiuoti pagal',position_label:'Pozicija',team_label:'Komanda',
@@ -1266,7 +1275,9 @@ const I18N={
     ob_sub1:"Picking a team places you in that team's own division — it isn't just shown next to it on a table",ob_title2:'Fantasy team name',
     ph_teamname:'Enter your team name',btn_start:'Start Playing →',ob_loading:'Loading...',
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 11 fantasy gameweeks · 22 matchdays`,btn_build_squad:'Build Your Team →',
-    btn_my_history:'My History',stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
+    btn_my_history:'My History',
+    season_over_title:'🏆 Thanks for playing — the season is over',season_over_sub:'See you in the next SFL fantasy tournament!',
+    stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
     stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Gameweek Schedule',
     rt_locked:'🔒 Locked',rt_waiting:'Pending',rt_missed:'🚫 Missed',
     players_header:'Players',sort_by:'Sort by',position_label:'Position',team_label:'Team',
@@ -2869,6 +2880,13 @@ async function renderDash(){
   document.getElementById('d-mypts').textContent=totalPts;
   document.getElementById('hdr-pts').textContent=totalPts;
   if(STATE.fantasyTeamName)document.getElementById('dash-title').textContent=STATE.fantasyTeamName;
+  // Once the very last round's deadline has passed, the season is over —
+  // "build a squad"/"my history" stop being useful actions (there's nothing
+  // left to build, and history is one click away from every other page
+  // too), so swap them for a plain thank-you banner instead.
+  const seasonOver=isPastDeadline(FR.length-1);
+  document.getElementById('dash-actions').style.display=seasonOver?'none':'flex';
+  document.getElementById('dash-season-over').style.display=seasonOver?'flex':'none';
   // Rank and team count — scoped to the viewer's own division. Bug fixed:
   // this used to run against every registered user across all 5 divisions
   // (inflating "Fantasy komandų" with everyone else's teams, and scoring
