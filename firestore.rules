@@ -183,8 +183,17 @@ service cloud.firestore {
     function safeProfileText(s, maxLen) {
       return s is string && s.size() <= maxLen && !s.matches('.*[<>].*');
     }
+    // users/{uid} is readable by every signed-in user (leaderboard/ownership
+    // need to see everyone's profile) — email must never land in it, or it
+    // leaks to the entire league the moment anyone calls fetchAllUsers().
+    // The app itself was fixed to stop writing it (email now comes only
+    // from Firebase Auth's own token, never this document), and every
+    // existing account's stored copy was scrubbed in the same migration —
+    // this is the server-side backstop so a future accidental write of it
+    // is rejected outright instead of silently reopening the leak.
     function profileFieldsSafe(data) {
-      return (!('name' in data) || safeProfileText(data.name, 60))
+      return !('email' in data)
+        && (!('name' in data) || safeProfileText(data.name, 60))
         && (!('fantasyTeamName' in data) || safeProfileText(data.fantasyTeamName, 40))
         && (!('favTeam' in data) || safeProfileText(data.favTeam, 40));
     }

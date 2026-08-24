@@ -1241,7 +1241,7 @@ const I18N={
     hist_no_squad:'Komanda nepasirinkta',round_tab:n=>`${n} turas`,
     own_round_label:n=>`Nuosavybė (${n} turas)`,round_pts_label:'Turo taškai',season_pts_label:'Sezono taškai',
     no_finished_rounds:'Dar nėra pasibaigusių turų',whole_season:'visas sezonas',fallback_player:'Žaidėjas',
-    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas, laimi Carlsberg dėžę!`,
+    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas!`,
     lb_sub_count:n=>`${n} dalyvių`,you_suffix:'(Tu)',rounds_count:n=>`${n} turų`,no_participants:'Dar nėra dalyvių',
   },
   en:{
@@ -1339,7 +1339,7 @@ const I18N={
     hist_no_squad:'No team picked',round_tab:n=>`Gameweek ${n}`,
     own_round_label:n=>`Ownership (Gameweek ${n})`,round_pts_label:'Gameweek Points',season_pts_label:'Season Points',
     no_finished_rounds:'No finished gameweeks yet',whole_season:'whole season',fallback_player:'Player',
-    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} winner, wins a Carlsberg crate!`,
+    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} winner!`,
     lb_sub_count:n=>`${n} participants`,you_suffix:'(You)',rounds_count:n=>`${n} gameweeks`,no_participants:'No participants yet',
   },
 };
@@ -2293,7 +2293,14 @@ function resetStateData(){
 function stateToObj(){
   return {
     name:CURRENT_USER?CURRENT_USER.name:undefined,
-    email:CURRENT_USER?CURRENT_USER.email:undefined,
+    // email is deliberately NEVER written here — users/{uid} is readable by
+    // every signed-in user (the leaderboard/ownership stats need to see
+    // everyone's profile), so anything stored on it is visible to the
+    // entire league. Email only ever needs to be known to its own owner,
+    // and CURRENT_USER.email already comes straight from Firebase Auth
+    // (onAuthStateChanged's user object) — never from this document — so
+    // there's nothing to read back. See firestore.rules' profileFieldsSafe
+    // sibling check, which also rejects this field server-side.
     curRound:STATE.curRound,adminRound:STATE.adminRound,
     favTeam:STATE.favTeam,fantasyTeamName:STATE.fantasyTeamName,division:STATE.division,
     captain:STATE.captain,
@@ -3997,18 +4004,17 @@ async function renderLB(){
     entries=allUsers.map(u=>{
       const {roundPts}=computeScoring(u.mySquads||{},lbDB,LB_DIVISION);
       return {
-        name:u.name||u.email||t('fallback_player'),
         uid:u.id,
         pts:roundPts[ri]||0,
         favTeam:u.favTeam||'',
-        teamName:u.fantasyTeamName||(u.name||t('fallback_player'))+"'s FC",
+        teamName:u.fantasyTeamName||t('fallback_player')+"'s FC",
         isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
       };
     }).sort((a,b)=>b.pts-a.pts);
     document.getElementById('lb-sub').textContent=roundName(ri);
     if(entries.length&&entries[0].pts>0){
       prizeEl.style.display='flex';
-      prizeEl.innerHTML=`<span style="font-size:20px">🍺</span><span>${t('lb_round_winner',entries[0].name,roundName(ri))}</span>`;
+      prizeEl.innerHTML=`<span style="font-size:20px">🏆</span><span>${t('lb_round_winner',escHtml(entries[0].teamName),roundName(ri))}</span>`;
     }else{
       prizeEl.style.display='none';
     }
@@ -4016,12 +4022,11 @@ async function renderLB(){
     entries=allUsers.map(u=>{
       const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},lbDB,LB_DIVISION);
       return {
-        name:u.name||u.email||t('fallback_player'),
         uid:u.id,
         pts:totalPts,
         rounds:roundsPlayed,
         favTeam:u.favTeam||'',
-        teamName:u.fantasyTeamName||(u.name||t('fallback_player'))+"'s FC",
+        teamName:u.fantasyTeamName||t('fallback_player')+"'s FC",
         isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
       };
     }).sort((a,b)=>b.pts-a.pts);
@@ -4029,13 +4034,17 @@ async function renderLB(){
     prizeEl.style.display='none';
   }
   const medals=['🥇','🥈','🥉'];
+  // Only the fantasy team name + supported real-world team are shown here —
+  // never the manager's own display name (see stateToObj()'s comment on
+  // why email isn't stored at all; name IS still stored, just deliberately
+  // not surfaced on this shared, everyone-sees-everyone page).
   document.getElementById('lb-list').innerHTML=entries.map((r,i)=>`
     <div class="lbrow ${r.isMe?'me':''}">
       <span class="lbpos ${i<2?'g':''}">${medals[i]||i+1}</span>
       <span class="lb-fav" title="${escHtml(r.favTeam)}">${r.favTeam?'⚽':''}</span>
       <div>
-        <div class="lbname">${escHtml(r.name)}${r.isMe?' '+t('you_suffix'):''}</div>
-        <div class="lbteamname">${escHtml(r.teamName)}${r.favTeam?' · '+escHtml(r.favTeam):''}</div>
+        <div class="lbname">${escHtml(r.teamName)}${r.isMe?' '+t('you_suffix'):''}</div>
+        <div class="lbteamname">${r.favTeam?escHtml(r.favTeam):''}</div>
       </div>
       <span class="lbr">${LB_MODE==='round'?'':t('rounds_count',r.rounds)}</span>
       <span class="lbpts">${r.pts}</span>
