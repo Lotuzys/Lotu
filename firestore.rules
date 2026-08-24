@@ -171,6 +171,24 @@ service cloud.firestore {
         && squadBudget(s, idx) <= 50.01;
     }
 
+    // name/fantasyTeamName/favTeam are free text a user picks for their own
+    // profile, and the leaderboard renders every OTHER signed-in user's
+    // copy of them (the client HTML-escapes there — this is defense in
+    // depth for that, since nothing else here stops a signed-in user from
+    // writing their own users/{uid} doc directly with a raw SDK/API call
+    // that skips the app's own maxlength/trim entirely). Caps length and
+    // blocks angle brackets rather than matching an exact team-name
+    // picklist — cheap here (plain string ops, no get()) and doesn't risk
+    // the squad-write budget the way a get()-based check would.
+    function safeProfileText(s, maxLen) {
+      return s is string && s.size() <= maxLen && !s.matches('.*[<>].*');
+    }
+    function profileFieldsSafe(data) {
+      return (!('name' in data) || safeProfileText(data.name, 60))
+        && (!('fantasyTeamName' in data) || safeProfileText(data.fantasyTeamName, 40))
+        && (!('favTeam' in data) || safeProfileText(data.favTeam, 40));
+    }
+
     // Profile + in-progress pitch-builder state. Everyone signed in can
     // read (needed for the leaderboard — every viewer recomputes every
     // user's points client-side from this plus each round's squad doc and
@@ -178,7 +196,7 @@ service cloud.firestore {
     // that's entirely on the squads subcollection below.
     match /users/{uid} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() && request.auth.uid == uid && profileFieldsSafe(request.resource.data);
       // `division` is set once at onboarding (create) and frozen after —
       // without this, nothing stopped a signed-in user from writing their
       // own doc directly (bypassing the app's UI, which never re-exposes
@@ -189,7 +207,8 @@ service cloud.firestore {
       // admin's own session — this just lets that account's convenience
       // saveCurrentState() calls go through while doing so, same as before.
       allow update: if isSignedIn() && request.auth.uid == uid
-        && (isAdmin() || request.resource.data.division == resource.data.division);
+        && (isAdmin() || request.resource.data.division == resource.data.division)
+        && profileFieldsSafe(request.resource.data);
 
       // A round's submitted squad. Writable (create or overwrite) only by
       // its owner, only before that round's deadline, and only if legal.

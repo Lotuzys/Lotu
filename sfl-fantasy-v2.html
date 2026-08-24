@@ -3587,6 +3587,16 @@ function renderStFull(){
   renderTopScorers(STATE.DB,STATE.division);
 }
 
+// HTML-escapes untrusted text before it goes into an innerHTML template —
+// needed anywhere another user's own profile fields (name, fantasy team
+// name, favourite team) get rendered, since those are free text a
+// signed-in user can set to literally anything on their own users/{uid}
+// doc (firestore.rules only locks `division`) and every other viewer of
+// the leaderboard renders them.
+function escHtml(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 // ═══════════════════════════════════════════════
 // LEADERBOARD — reads all users from Firestore
 // ═══════════════════════════════════════════════
@@ -4022,10 +4032,10 @@ async function renderLB(){
   document.getElementById('lb-list').innerHTML=entries.map((r,i)=>`
     <div class="lbrow ${r.isMe?'me':''}">
       <span class="lbpos ${i<2?'g':''}">${medals[i]||i+1}</span>
-      <span class="lb-fav" title="${r.favTeam}">${r.favTeam?'⚽':''}</span>
+      <span class="lb-fav" title="${escHtml(r.favTeam)}">${r.favTeam?'⚽':''}</span>
       <div>
-        <div class="lbname">${r.name}${r.isMe?' '+t('you_suffix'):''}</div>
-        <div class="lbteamname">${r.teamName}${r.favTeam?' · '+r.favTeam:''}</div>
+        <div class="lbname">${escHtml(r.name)}${r.isMe?' '+t('you_suffix'):''}</div>
+        <div class="lbteamname">${escHtml(r.teamName)}${r.favTeam?' · '+escHtml(r.favTeam):''}</div>
       </div>
       <span class="lbr">${LB_MODE==='round'?'':t('rounds_count',r.rounds)}</span>
       <span class="lbpts">${r.pts}</span>
