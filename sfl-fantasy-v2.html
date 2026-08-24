@@ -727,7 +727,7 @@ a{color:var(--or)}
     </div>
     <div class="admdivtabs" id="admdivsw" style="display:none" title="Admin: peržiūrėti kitą divizioną"></div>
     <button class="abtn" id="admbtn" style="display:none" onclick="showPage('admin',this)">⚙ Admin</button>
-    <div class="pchip" id="pts-chip" style="display:none"><div class="pchip-v" id="hdr-pts">0</div><div class="pchip-l" data-i18n="pts_label">Taškai</div></div>
+    <div class="pchip" id="pts-chip" style="display:none"><div class="pchip-v" id="hdr-pts">0</div><div class="pchip-l" id="hdr-pts-lbl">Taškai</div></div>
     <div class="user-chip" id="user-chip" style="display:none" onclick="openProfile()">
       <div class="user-av" id="user-av">?</div>
       <span id="user-chip-name" data-i18n="my_account">Mano paskyra</span>
@@ -841,7 +841,7 @@ a{color:var(--or)}
     <div class="sc"><div class="sv">11</div><div class="sl" data-i18n="stat_rounds">Fantasy turų</div></div>
     <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl" id="stat-teams-lbl">Fantasy komandų</div></div>
     <div class="sc"><div class="sv">600€</div><div class="sl" data-i18n="stat_prizes">Prizai</div></div>
-    <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl" data-i18n="stat_mypts">Tavo taškai</div></div>
+    <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl" id="stat-mypts-lbl">Tavo taškai</div></div>
     <div class="sc"><div class="sv" id="d-rank">—</div><div class="sl" data-i18n="stat_rank">Vieta</div></div>
   </div>
   <div class="dsec"><div class="sec-title" data-i18n="sched_title">Fantasy turų tvarkaraštis</div><div class="rgrid" id="d-rounds"></div></div>
@@ -1060,7 +1060,7 @@ a{color:var(--or)}
     </div>
     <div class="pmstats">
       <div class="pmst"><div class="pmstv" id="pm-goals"></div><div class="pmstl" data-i18n="stat_goals">Įvarčiai</div></div>
-      <div class="pmst"><div class="pmstv" id="pm-szpts"></div><div class="pmstl" data-i18n="pts_label">Taškai</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-szpts"></div><div class="pmstl" id="pm-szpts-lbl">Taškai</div></div>
       <div class="pmst"><div class="pmstv" id="pm-price"></div><div class="pmstl" data-i18n="stat_price">Kaina</div></div>
       <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl" data-i18n="sort_own">Populiarumas</div></div>
     </div>
@@ -1135,8 +1135,8 @@ a{color:var(--or)}
     <div class="prof-body">
       <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_teamname">Fantasy komanda</span><span class="prof-row-val" id="prof-teamname">—</span></div>
       <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_favteam">Mėgstama komanda</span><span class="prof-row-val" id="prof-favteam">—</span></div>
-      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_totalpts">Iš viso taškų</span><span class="prof-row-val" id="prof-pts">0</span></div>
-      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_roundsplayed">Turų sužaista</span><span class="prof-row-val" id="prof-rounds">0</span></div>
+      <div class="prof-row"><span class="prof-row-lbl" id="prof-totalpts-lbl">Iš viso taškų</span><span class="prof-row-val" id="prof-pts">0</span></div>
+      <div class="prof-row"><span class="prof-row-lbl" id="prof-roundsplayed-lbl">Turų sužaista</span><span class="prof-row-val" id="prof-rounds">0</span></div>
       <button class="prof-close" onclick="document.getElementById('prof-bg').classList.remove('open')" data-i18n="btn_close">Uždaryti</button>
       <button class="prof-logout" onclick="doLogout()" data-i18n="btn_logout">Atsijungti</button>
     </div>
@@ -1235,7 +1235,9 @@ const I18N={
   lt:{
     nav_dash:'Pagrindinis',nav_myteam:'Mano komanda',nav_history:'Istorija',nav_teamseason:'Sezono rinktinė',
     nav_stats:'Statistika',stats_form:'Forma',th_player:'Žaidėjas',
-    nav_leaders:'Lyderiai',nav_standings:'Lentelė',pts_label:'Taškai',my_account:'Mano paskyra',
+    nav_leaders:'Lyderiai',nav_standings:'Lentelė',pts_label:'Taškai',
+    ptsWord:n=>ltForm(n,'taškas','taškai','taškų'),
+    my_account:'Mano paskyra',
     brand_tooltip:'Į pagrindinį',league_sub:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 2026/27`,sponsor_tooltip:'Sezono rėmėjas',
     login_sub:'Prisijunk ir rink taškus kiekvieną turą',tab_login:'Prisijungti',tab_register:'Registruotis',
     label_email:'El. paštas',label_password:'Slaptažodis',forgot_pw:'Pamiršai slaptažodį?',
@@ -1258,7 +1260,7 @@ const I18N={
     season_over_title:'🏆 Ačiū už dalyvavimą — sezonas baigtas',season_over_sub:'Iki susitikimo kitame SFL fantasy turnyre!',
     rnav_label:'Turai',
     stat_rounds:'Fantasy turų',stat_teams:n=>`Fantasy ${ltForm(n,'komanda','komandos','komandų')}`,stat_prizes:'Prizai',
-    stat_mypts:'Tavo taškai',stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
+    stat_mypts:n=>ltForm(n,'Taškas','Taškai','Taškų'),stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
     rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🚫 Praleista',
     players_header:'Žaidėjai',sort_by:'Rikiuoti pagal',position_label:'Pozicija',team_label:'Komanda',
     search_ph:'Ieškoti žaidėjo ar komandos...',pos_all:'Visos',your_team:'Tavo komanda',
@@ -1287,7 +1289,7 @@ const I18N={
     msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
     msg_open_badge:'Atviras',
     msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
-    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (istorija) — surinkta <strong>${pts}</strong> taškų.`,
+    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (istorija) — surinkta <strong>${pts}</strong> ${ltForm(pts,'taškas','taškai','taškų')}.`,
     msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> terminas praėjo (${dl}) — komanda nebuvo pateikta laiku, šis turas — 0 taškų.`,
     fix_title:r=>`🗓 ${r} — rungtynės`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pasirink ${pos} iš sąrašo ${dir}`,toast_dir_above:'aukščiau ↑',toast_dir_left:'kairėje ←',
@@ -1316,7 +1318,9 @@ const I18N={
     top_scorers_title:'⚽ Rezultatyviausi žaidėjai',lbsc_sub_count:n=>`po ${n} turų`,no_goals_yet:'Dar nėra įmuštų įvarčių',
     ts_mode_season:'Sezono rinktinė',ts_mode_round:'Turo rinktinė',
     pick_captain_btn:'Rinktis Kapitoną',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
-    prof_teamname:'Fantasy komanda',prof_favteam:'Mėgstama komanda',prof_totalpts:'Iš viso taškų',prof_roundsplayed:'Turų sužaista',
+    prof_teamname:'Fantasy komanda',prof_favteam:'Mėgstama komanda',
+    prof_totalpts:n=>`Iš viso ${ltForm(n,'taškas','taškai','taškų')}`,
+    prof_roundsplayed:n=>`${ltForm(n,'Turas','Turai','Turų')} sužaista`,
     btn_close:'Uždaryti',btn_logout:'Atsijungti',btn_ok_thanks:'Gerai, ačiū →',
     pmfix_lbl:'Šio turo rungtynės',pm_locked:'Komanda užfiksuota',pm_remove:'Pašalinti ✕',
     pm_team_taken:'Komanda jau atstovaujama',pm_add_price:price=>`Pridėti (${price}M)`,
@@ -1328,9 +1332,11 @@ const I18N={
     zero_pts:'0 taškų',no_result_yet:'Šiam turui dar nėra rezultato',zero_pts_round:'0 taškų šį turą',
     captain_label:'Kapitonas',
     toast_new_round:r=>`${r} — rinkis naują komandą!`,
-    hist_sub_count:n=>`${n} turų sužaista`,hist_empty:'Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!',
+    hist_sub_count:n=>`${n} ${ltForm(n,'turas','turai','turų')} sužaista`,hist_empty:'Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!',
     hist_no_squad:'Komanda nepasirinkta',round_tab:n=>`${n} turas`,
-    own_round_label:n=>`Populiarumas (${n} turas)`,round_pts_label:'Turo taškai',season_pts_label:'Sezono taškai',
+    own_round_label:n=>`Populiarumas (${n} turas)`,
+    round_pts_label:n=>`Turo ${ltForm(n,'taškas','taškai','taškų')}`,
+    season_pts_label:n=>`Sezono ${ltForm(n,'taškas','taškai','taškų')}`,
     no_finished_rounds:'Dar nėra pasibaigusių turų',whole_season:'visas sezonas',fallback_player:'Žaidėjas',
     lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas!`,
     lb_sub_count:n=>`${n} ${ltForm(n,'dalyvis','dalyviai','dalyvių')}`,you_suffix:'(Tu)',rounds_count:n=>`${n} ${ltForm(n,'turas','turai','turų')}`,no_participants:'Dar nėra dalyvių',
@@ -1338,7 +1344,9 @@ const I18N={
   en:{
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
     nav_stats:'Statistics',stats_form:'Form',th_player:'Player',
-    nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',my_account:'My Account',
+    nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',
+    ptsWord:n=>n===1?'point':'points',
+    my_account:'My Account',
     brand_tooltip:'Go to home',league_sub:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 2026/27`,sponsor_tooltip:'Season Sponsor',
     login_sub:'Log in and score points every gameweek',tab_login:'Log In',tab_register:'Register',
     label_email:'Email',label_password:'Password',forgot_pw:'Forgot your password?',
@@ -2988,6 +2996,8 @@ async function renderDash(){
   const {roundPts,totalPts}=computeScoring(STATE.mySquads,STATE.DB);
   document.getElementById('d-mypts').textContent=totalPts;
   document.getElementById('hdr-pts').textContent=totalPts;
+  document.getElementById('stat-mypts-lbl').textContent=t('stat_mypts',totalPts);
+  document.getElementById('hdr-pts-lbl').textContent=t('ptsWord',totalPts);
   if(STATE.fantasyTeamName)document.getElementById('dash-title').textContent=STATE.fantasyTeamName;
   // Once the very last round's deadline has passed, the season is over —
   // "build a squad"/"my history" stop being useful actions (there's nothing
@@ -3228,7 +3238,9 @@ function openPlayerModal(id){
   document.getElementById('pm-goals').textContent=currentSeasonGoals(p.id);
   // Real fantasy points actually earned in matches played this season — not
   // the old pre-season estimate, and not last season's data.
-  document.getElementById('pm-szpts').textContent=(computeSeasonPlayerPts()[p.id]||0)+'pts';
+  const pmSzPts=computeSeasonPlayerPts()[p.id]||0;
+  document.getElementById('pm-szpts').textContent=pmSzPts+'pts';
+  document.getElementById('pm-szpts-lbl').textContent=t('ptsWord',pmSzPts);
   document.getElementById('pm-price').textContent=p.price.toFixed(1)+'M';
   document.getElementById('pm-owner').textContent=ownershipPct(p.id)+'%';
   const fixtures=teamFixturesForRound(p.team,STATE.curRound);
@@ -3487,7 +3499,7 @@ async function openHistoricalPlayerModal(pos,idx){
   openStatModal(p,pos,[
     {val:p.price.toFixed(1)+'M',label:t('stat_price')},
     {val:'…',label:t('own_round_label',STATE.curRound+1),id:'rpm-round-owner'},
-    {val:det.pts+'pts',label:t('round_pts_label')},
+    {val:det.pts+'pts',label:t('round_pts_label',det.pts)},
   ],scoringBreakdownHtml(det,pos));
   const pct=await computeOwnershipForRound(p.id,STATE.curRound);
   const el=document.getElementById('rpm-round-owner');if(el)el.textContent=pct+'%';
@@ -3660,7 +3672,9 @@ function updateBottomBar(){
   document.getElementById('slot-cnt').textContent=`${f}/7`;
   document.getElementById('bb-n').textContent=f;
   document.getElementById('bb-b').textContent=`${t('budget_label')} ${left.toFixed(1)}M`;
-  document.getElementById('hdr-pts').textContent=computeScoring(STATE.mySquads,STATE.DB).totalPts;
+  const hdrTotalPts=computeScoring(STATE.mySquads,STATE.DB).totalPts;
+  document.getElementById('hdr-pts').textContent=hdrTotalPts;
+  document.getElementById('hdr-pts-lbl').textContent=t('ptsWord',hdrTotalPts);
   const btn=document.getElementById('bb-btn');
   const hasSquad=STATE.mySquads[STATE.curRound]!==undefined;
   btn.disabled=f<7||isLocked();
@@ -4000,7 +4014,7 @@ async function openTSPlayerModal(pos,playerId){
   const seasonTotal=computeSeasonPlayerPts(tsDB,TS_DIVISION||STATE.division)[playerId]||0;
   openStatModal(p,pos,[
     {val:p.price.toFixed(1)+'M',label:t('stat_price')},
-    {val:seasonTotal+'pts',label:t('season_pts_label')},
+    {val:seasonTotal+'pts',label:t('season_pts_label',seasonTotal)},
   ],'',p.division);
 }
 
@@ -4349,7 +4363,7 @@ async function openUserSquadPlayerModal(pid,pos,idx){
   det.isC=isC;
   openStatModal(p,pos,[
     {val:p.price.toFixed(1)+'M',label:t('stat_price')},
-    {val:det.pts+'pts',label:t('round_pts_label')},
+    {val:det.pts+'pts',label:t('round_pts_label',det.pts)},
   ],scoringBreakdownHtml(det,pos),div);
 }
 
@@ -4367,6 +4381,8 @@ function openProfile(){
   const {totalPts,roundsPlayed}=computeScoring(STATE.mySquads,STATE.DB);
   document.getElementById('prof-pts').textContent=totalPts;
   document.getElementById('prof-rounds').textContent=roundsPlayed;
+  document.getElementById('prof-totalpts-lbl').textContent=t('prof_totalpts',totalPts);
+  document.getElementById('prof-roundsplayed-lbl').textContent=t('prof_roundsplayed',roundsPlayed);
   document.getElementById('prof-bg').classList.add('open');
 }
 
