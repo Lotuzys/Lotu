@@ -142,6 +142,65 @@ them as fixed unless the owner asks to change them, not as something to
   matches this app's existing pattern of explicit, reviewable admin
   actions (`saveM()` for match results) rather than a silent write.
 
+## Real match-results scraping — confirmed site facts, not yet built
+
+The owner's plan (not yet implemented): stop hand-entering match results
+in the Admin panel and instead scrape them from vilniausfutbolas.lt, the
+same way rosters already are — the admin panel stays as the fallback/
+correction UI, but the scraped data becomes the source of truth the
+moment every match in a round has been scraped. Investigated this
+directly (via a temporary `onSchedule` probe function, fired on-demand
+through the Cloud Scheduler API's `jobs.run` since this dev sandbox's own
+egress policy blocks `*.cloudfunctions.net`/`*.run.app`/vilniausfutbolas.lt
+directly but allows `*.googleapis.com` control-plane APIs including
+Firestore and Cloud Scheduler — reuse that same probing technique if
+investigating this site again from a similarly-restricted session).
+Confirmed facts, so this doesn't need re-discovering:
+
+- **Results-list page, one per division, shows every match at once**:
+  `http://www.vilniausfutbolas.lt/rezultatai/3?comp_id={id}` — table
+  columns `Nr. | Data | Laikas | Turas | Turnyras | Rungtynės | Stadionas`,
+  score embedded in the `Rungtynės` cell as `"TeamA X-Y TeamB"`. Confirmed
+  `comp_id`s: A=5, B=6, C=7, D=35, E=40. `Turas` gives the site's own round
+  number per match — NOT yet confirmed whether it lines up 1:1 with this
+  app's "Fantasy Turas" (2 real match-days per fantasy round) grouping;
+  verify once the new season's first real rounds are scraped.
+- **Each match has its own detail page**:
+  `http://www.vilniausfutbolas.lt/varzybos/{TeamA}-{TeamB}/{matchId}`,
+  linked from the results-list `Nr.` column. Contains a scorer-by-goal
+  list (name, team, minute) plus a standings table and head-to-head
+  history for the two teams.
+- **Scorer names on the match page link to the player's profile with the
+  SAME id format the roster scraper already extracts** —
+  `/zaidejas/{Name}/{extId}/3/35`. This means scraped scorers resolve to
+  internal player docs via `extId` matching (already stored on every
+  `players/{extId}` doc), never fragile name-string matching — critical
+  given same-surname collisions are common (see `pitchSurname` above).
+- **MOTM is not marked on the site yet** (checked one real finished match,
+  found nothing) — the owner confirmed it isn't in use yet either; expect
+  it to start appearing once real matches are actually played and design
+  the scraper to read it once an example exists, not before.
+- **Red cards**: not yet located/confirmed on the match detail page —
+  still needs checking once a match with one exists to look at.
+
+Decisions the owner has already made for when this gets built:
+- Once every match in a round is scraped, `recalcPricesForRound` must
+  fire **automatically** — no longer an admin-clicked-only button. The
+  button can stay as a manual override/re-run, but the primary trigger
+  becomes scrape-completion, ported server-side (Cloud Function, Admin
+  SDK — a client-only trigger can't fire itself unattended).
+- If the admin corrects a scraped result after prices were already
+  recalculated for that round, the correction must **immediately
+  re-trigger** the price recalculation again (safe already, since
+  `priceBase` makes it idempotent) — not wait for a manual re-click.
+
+Immediate next step (not a redesign): once round 1's deadline passes
+(2026-08-25 13:30 EEST), manually scrape that round's actual results
+(2 matches per team) from the results-list pages above and enter them
+into the Admin panel/`league/state_{div}`, since the automated version
+doesn't exist yet — this is expected to happen by hand for round 1 while
+the real scraper is designed against real (not synthetic) match data.
+
 ## Operating conventions for this repo
 
 - Single source file: `sfl-fantasy-v2.html`. Verify JS syntax (extract
