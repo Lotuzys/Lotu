@@ -3101,9 +3101,10 @@ function renderFilters(){
 function setPosF(p){STATE.activePosF=p;renderFilters();renderList();}
 function setTeamF(t){STATE.activeTeamF=t;renderFilters();renderList();}
 
-// Sort-by dropdown: price (default), season total points, or any single
-// round's points — only rounds with actual results entered are offered,
-// so sorting never silently ranks everyone as 0.
+// Sort-by dropdown: price, season total points, or any single round's
+// points — only rounds with actual results entered are offered, so
+// sorting never silently ranks everyone as 0. Default depends on the
+// round you're viewing — see renderSortOptions() below.
 // Which round to use for the "Paskutinis turas" sort option — the most
 // recent round that actually has results entered, not just the highest
 // round index.
@@ -3111,15 +3112,26 @@ function lastRoundWithData(){
   const withData=FR.map((r,ri)=>ri).filter(ri=>STATE.DB[ri]);
   return withData.length?withData[withData.length-1]:null;
 }
+// Which round the sort dropdown's current value was last set for — lets
+// renderSortOptions() tell "you just switched rounds" apart from "you
+// clicked a position/team filter" or "you switched language", which both
+// also re-render this dropdown but must never clobber whatever sort you
+// already had picked.
+let LAST_SORT_ROUND=null;
 function renderSortOptions(){
   const sel=document.getElementById('sort-f');if(!sel)return;
-  // Default sort is season points, not price — that's what actually helps
-  // decide who to pick. Only falls back to price as a secondary tiebreak
-  // (see renderList) once points run out, e.g. before a round with data.
-  const cur=sel.value||'total';
+  const roundChanged=LAST_SORT_ROUND!==STATE.curRound;
+  LAST_SORT_ROUND=STATE.curRound;
+  // Round 1 has no fantasy points yet at all — price is the only
+  // meaningful thing to sort by. From round 2 on, season points so far is
+  // what actually helps decide who to pick. Only resets to this default
+  // when the round being viewed just changed; any other re-render keeps
+  // whatever sort you already had selected.
+  const roundDefault=STATE.curRound===0?'price':'total';
+  const cur=roundChanged?roundDefault:(sel.value||roundDefault);
   const lastOpt=lastRoundWithData()!==null?`<option value="last">${t('sort_last')}</option>`:'';
   sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>${lastOpt}<option value="ownership">${t('sort_own')}</option><option value="goals">${t('sort_goals')}</option>`;
-  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'total';
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:roundDefault;
 }
 
 function renderList(){
