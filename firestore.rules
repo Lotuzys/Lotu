@@ -224,21 +224,62 @@ service cloud.firestore {
       // Once the deadline passes, neither create nor update is granted by
       // any rule below — the round is frozen. No delete rule exists either,
       // so deleting a submitted squad is always denied.
+      //
+      // Read is owner-only WHILE the round is still open, and opens up to
+      // everyone signed in once its deadline passes — otherwise anyone
+      // could read a rival's still-open picks (via this direct path, the
+      // app's own "load my squads" call always queries its own uid, so the
+      // owner side of this OR is exactly that self-read; a foreign uid only
+      // ever reaches this path through someone deliberately querying it)
+      // and copy them before submitting their own. request.auth.uid==uid is
+      // checked first and CEL short-circuits `||`, so an owner's own read
+      // never depends on DEADLINES() having an entry for this round at all.
       match /squads/{round} {
-        allow read: if isSignedIn();
+        allow read: if isSignedIn() && (request.auth.uid == uid || request.time >= DEADLINES()[round]);
         allow create, update: if isSignedIn() && request.auth.uid == uid
           && request.time < DEADLINES()[round]
           && squadLegal(request.resource.data, uid);
       }
     }
 
-    // Nested `match` blocks only govern direct-path access — a
-    // collectionGroup('squads') query (used by the leaderboard, which reads
-    // every user's squads at once) needs its own {path=**} rule to be
-    // readable at all. Read-only; writes still go through the per-user path
-    // above, which is the one that actually enforces ownership + legality.
+    // A {path=**} wildcard pattern like this one structurally matches the
+    // SAME documents the nested match above does — Firestore evaluates
+    // EVERY match block whose path pattern fits a given request and grants
+    // it if ANY of them allow it (this is not "most specific match wins";
+    // confirmed against the emulator the hard way, after a first version
+    // of this rule left `allow read: if isSignedIn()` here unconditionally
+    // and that alone was enough to let anyone read anyone's still-open
+    // squad through a plain single-document get() on the direct path
+    // above too — the nested rule's owner/deadline check never mattered,
+    // because this one, being also-applicable and more permissive, was
+    // enough on its own). So `get` here needs the SAME deadline gate as
+    // the direct path, split out from `list`:
+    //
+    // - `get` (a single document read, however it's addressed) is
+    //   deadline-gated exactly like the nested rule — `round`/`resource`
+    //   ARE reliably bound for a targeted get(), so this works and closes
+    //   the bypass above. Alice reading her own still-open squad through
+    //   this pattern still succeeds regardless, because the nested rule's
+    //   independent owner grant applies too (any matching rule allowing
+    //   it is enough).
+    // - `list` (collectionGroup('squads').get(), used by the
+    //   leaderboard/ownership stats to read every user's squads at once)
+    //   stays unconditional. Tried deadline-gating it the same way first —
+    //   confirmed against the emulator that Firestore leaves `round`,
+    //   `resource.id`, AND `resource.data` all unbound for a plain
+    //   collectionGroup list query with no matching where() filter; any
+    //   expression touching any of them throws instead of evaluating,
+    //   denying the ENTIRE query outright rather than filtering per
+    //   document. Real per-round filtering here needs the client's query
+    //   itself constrained on an indexed field Firestore can statically
+    //   check (a bigger schema/client change, deliberately not done
+    //   silently — see the chat for the options this was weighed
+    //   against). So: a rival's still-open squad can't be read by
+    //   targeting it directly any more, but IS currently still readable
+    //   to anyone signed in through this specific bulk-read path.
     match /{path=**}/squads/{round} {
-      allow read: if isSignedIn();
+      allow get: if isSignedIn() && request.time >= DEADLINES()[round];
+      allow list: if isSignedIn();
     }
 
     // Match results, goalscorers and league standings — shared by everyone,
