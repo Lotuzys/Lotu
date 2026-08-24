@@ -353,6 +353,16 @@ a{color:var(--or)}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 .pm{background:var(--card);border:1px solid var(--bor);border-radius:24px;width:310px;max-width:92vw;overflow:hidden;box-shadow:var(--sh-lg);animation:popin .25s var(--ease)}
 .pm.wide{width:400px}
+/* Foreign-squad viewer specifically: title/close/round-nav are the part
+   that must always stay reachable, so THEY are the fixed, non-scrolling
+   part of the card — only the pitch below scrolls, and only if it truly
+   doesn't fit. Caps the whole card to the viewport height so the close
+   button can never end up above the visible screen the way it did before
+   (content taller than the viewport pushed the centered card, ✕ included,
+   partly off the top — reachable only by scrolling the page itself). */
+#usq-bg .pm.wide{max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+#usq-bg .pmh{flex-shrink:0}
+#usq-bg .pw{flex:1;min-height:0;overflow-y:auto}
 @keyframes popin{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 .pmh{padding:24px 18px 16px;text-align:center;position:relative}
 .pmav{width:78px;height:78px;border-radius:50%;margin:0 auto 11px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;box-shadow:var(--sh)}
@@ -644,6 +654,21 @@ a{color:var(--or)}
   .dball img{height:52px}
 
   .pm,.prof-modal{width:290px}
+
+  /* Foreign-squad viewer: same compact pitch treatment as the squad
+     picker's own mobile pitch (no row labels, smaller avatars) so the
+     whole card — header, round-nav, all 7 slots — realistically fits one
+     screen instead of relying on the fallback internal scroll above. */
+  #usq-pitch .rlbl{display:none}
+  #usq-pitch .prow{margin-bottom:8px;margin-top:4px;gap:16px}
+  #usq-pitch .slot{width:58px}
+  #usq-pitch .sc2{width:44px;height:44px}
+  #usq-pitch .sn{font-size:9px;max-width:58px}
+  #usq-pitch .sp{font-size:10px}
+  /* Tighter round-nav chips — used both here and on the squad page's own
+     history strip, so this benefits both. */
+  .rnav-chip{min-width:25px;height:24px;padding:0 4px;font-size:11px}
+  .squad-rnav{padding:8px 12px 10px}
 }
 </style>
 </head>
