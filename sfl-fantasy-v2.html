@@ -839,7 +839,7 @@ a{color:var(--or)}
   </div>
   <div class="dstats">
     <div class="sc"><div class="sv">11</div><div class="sl" data-i18n="stat_rounds">Fantasy turų</div></div>
-    <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl" data-i18n="stat_teams">Fantasy komandų</div></div>
+    <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl" id="stat-teams-lbl">Fantasy komandų</div></div>
     <div class="sc"><div class="sv">600€</div><div class="sl" data-i18n="stat_prizes">Prizai</div></div>
     <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl" data-i18n="stat_mypts">Tavo taškai</div></div>
     <div class="sc"><div class="sv" id="d-rank">—</div><div class="sl" data-i18n="stat_rank">Vieta</div></div>
@@ -1257,7 +1257,7 @@ const I18N={
     btn_my_history:'Mano istorija',
     season_over_title:'🏆 Ačiū už dalyvavimą — sezonas baigtas',season_over_sub:'Iki susitikimo kitame SFL fantasy turnyre!',
     rnav_label:'Turai',
-    stat_rounds:'Fantasy turų',stat_teams:'Fantasy komandų',stat_prizes:'Prizai',
+    stat_rounds:'Fantasy turų',stat_teams:n=>`Fantasy ${ltForm(n,'komanda','komandos','komandų')}`,stat_prizes:'Prizai',
     stat_mypts:'Tavo taškai',stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
     rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🚫 Praleista',
     players_header:'Žaidėjai',sort_by:'Rikiuoti pagal',position_label:'Pozicija',team_label:'Komanda',
@@ -1320,7 +1320,7 @@ const I18N={
     btn_close:'Uždaryti',btn_logout:'Atsijungti',btn_ok_thanks:'Gerai, ačiū →',
     pmfix_lbl:'Šio turo rungtynės',pm_locked:'Komanda užfiksuota',pm_remove:'Pašalinti ✕',
     pm_team_taken:'Komanda jau atstovaujama',pm_add_price:price=>`Pridėti (${price}M)`,
-    phist_current_suffix:'(einamasis)',phist_total_label:n=>`Iš viso (${n} turai)`,
+    phist_current_suffix:'(einamasis)',phist_total_label:n=>`Iš viso (${n} ${ltForm(n,'turas','turai','turų')})`,
     match_vs:(i,opp)=>`${i} rungtynės — vs ${opp}`,no_data:'Nėra duomenų',
     mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarūs vartai',mstat_one:'Praleistas tik 1 įvartis',
     mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
@@ -1333,7 +1333,7 @@ const I18N={
     own_round_label:n=>`Populiarumas (${n} turas)`,round_pts_label:'Turo taškai',season_pts_label:'Sezono taškai',
     no_finished_rounds:'Dar nėra pasibaigusių turų',whole_season:'visas sezonas',fallback_player:'Žaidėjas',
     lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas!`,
-    lb_sub_count:n=>`${n} dalyvių`,you_suffix:'(Tu)',rounds_count:n=>`${n} turų`,no_participants:'Dar nėra dalyvių',
+    lb_sub_count:n=>`${n} ${ltForm(n,'dalyvis','dalyviai','dalyvių')}`,you_suffix:'(Tu)',rounds_count:n=>`${n} ${ltForm(n,'turas','turai','turų')}`,no_participants:'Dar nėra dalyvių',
   },
   en:{
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
@@ -1440,6 +1440,17 @@ const I18N={
 function t(key,...args){
   const entry=(I18N[LANG]&&I18N[LANG][key])!==undefined?I18N[LANG][key]:I18N.lt[key];
   return typeof entry==='function'?entry(...args):entry;
+}
+// Lithuanian counting-form agreement for a bare "N <noun>" phrase (no
+// preceding preposition — those govern a different case entirely, e.g.
+// "po" + genitive, not handled here): ends in 1 but not 11 -> nominative
+// singular; ends in 2-9 but not 12-19 -> nominative plural; everything
+// else (0, 10, 11-19, and every multiple of ten) -> genitive plural.
+function ltForm(n,one,few,many){
+  const m10=n%10,m100=n%100;
+  if(m10===1&&m100!==11)return one;
+  if(m10>=2&&m10<=9&&!(m100>=11&&m100<=19))return few;
+  return many;
 }
 // Position-label lookups used all over the app (pitch, filters, player
 // list, modals, history) — mutated in place on language switch so every
@@ -2996,6 +3007,7 @@ async function renderDash(){
   const rank=scores.indexOf(totalPts)+1;
   document.getElementById('d-rank').textContent=rank>0?'#'+rank:'#1';
   document.getElementById('d-teams').textContent=allUsers.length;
+  document.getElementById('stat-teams-lbl').textContent=t('stat_teams',allUsers.length);
   const live=computeCurrentRound();
   document.getElementById('d-rounds').innerHTML=FR.map((r,i)=>{
     const done=STATE.mySquads[i]!==undefined;
