@@ -655,18 +655,13 @@ a{color:var(--or)}
 
   .pm,.prof-modal{width:290px}
 
-  /* Foreign-squad viewer: same compact pitch treatment as the squad
-     picker's own mobile pitch (no row labels, smaller avatars) so the
-     whole card — header, round-nav, all 7 slots — realistically fits one
-     screen instead of relying on the fallback internal scroll above. */
-  #usq-pitch .rlbl{display:none}
-  #usq-pitch .prow{margin-bottom:8px;margin-top:4px;gap:16px}
-  #usq-pitch .slot{width:58px}
-  #usq-pitch .sc2{width:44px;height:44px}
-  #usq-pitch .sn{font-size:9px;max-width:58px}
-  #usq-pitch .sp{font-size:10px}
-  /* Tighter round-nav chips — used both here and on the squad page's own
-     history strip, so this benefits both. */
+  /* Tighter round-nav chips — used both by the squad page's own history
+     strip and the foreign-squad viewer below. Position labels/icon sizing
+     on #usq-pitch are deliberately left at their normal size (same as
+     Sezono rinktinė's #ts-pitch, which also reuses the plain, untouched
+     .pitch/.rlbl/.slot/.sc2 styling on mobile) — the max-height + internal
+     scroll on #usq-bg .pw (above) is what keeps the close button reachable
+     without needing to shrink or hide anything on the pitch itself. */
   .rnav-chip{min-width:25px;height:24px;padding:0 4px;font-size:11px}
   .squad-rnav{padding:8px 12px 10px}
 }
