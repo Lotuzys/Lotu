@@ -3231,7 +3231,15 @@ function openPlayerModal(id){
 // Separate sub-page (not the card itself) — this player's points broken
 // down round by round, same spirit as the Istorija tab but for any player
 // you're browsing in the picker, not just your own picks.
-function openPlayerHistoryModal(idArg){
+// idArg's player isn't necessarily in the viewer's own division — Sezono
+// rinktinė/Statistika/the Lyderiai squad viewer can all be browsing a
+// division other than the one the viewer plays in, and this is reachable
+// from every one of their player cards. Bug fixed: this used to read
+// STATE.DB (the viewer's own division's results) and the globally-active
+// FR/division unconditionally, so a cross-division player's round history
+// silently came out wrong (usually every round showing 0pts, since the
+// wrong division's fixtures never actually matched their real team).
+async function openPlayerHistoryModal(idArg){
   const id=idArg!==undefined&&idArg!==null?idArg:PM_CURRENT_ID;
   const p=PLAYERS.find(x=>x.id===id);if(!p)return;
   // Whichever card launched this (live picker or read-only historical
@@ -3244,11 +3252,12 @@ function openPlayerHistoryModal(idArg){
   document.getElementById('phist-name').textContent=p.name;
   document.getElementById('phist-team').innerHTML=`${teamLogoImg(p.team,16)}${p.team}`;
   const listEl=document.getElementById('phist-list');
+  const db=await getDivisionDB(p.division);
   let total=0,roundsWithData=0;
   const withDataRounds=[];
   const rowsHtml=FR.map((r,ri)=>{
-    if(!STATE.DB[ri])return `<div class="phist-row em"><span>${roundName(ri)}</span><span>—</span></div>`;
-    const pts=computeAllPlayerRoundPts(ri)[id]||0;
+    if(!db[ri])return `<div class="phist-row em"><span>${roundName(ri)}</span><span>—</span></div>`;
+    const pts=computeAllPlayerRoundPts(ri,db,p.division)[id]||0;
     total+=pts;roundsWithData++;withDataRounds.push(ri);
     const ownId=`phist-ownmini-${id}-${ri}`;
     // Expandable — chevron reveals this round's 2 matches individually,
@@ -3279,10 +3288,22 @@ function openPlayerHistoryModal(idArg){
 // computeScoring()/computeAllPlayerRoundPts(), just scoped to a single
 // player+round instead of a whole squad, for the history sub-page's
 // expand-to-2-matches toggle.
-function computePlayerMatchBreakdown(playerId,ri){
+// db is the RESULTS doc for the player's OWN division, not necessarily the
+// viewer's (fetched by the caller via getDivisionDB(p.division), since a
+// foreign-division player is reachable here too — Sezono rinktinė/
+// Statistika/the Lyderiai squad viewer can all be browsing a division
+// other than the one the viewer plays in). Falls back to STATE.DB only for
+// the one call site (togglePhistRound) that might somehow call this before
+// its own fetch resolves; bug fixed: this used to hardcode STATE.DB and
+// the globally-active FR/division regardless of whose player it was,
+// silently showing wrong (usually 0, or someone else's) round history for
+// any cross-division player.
+function computePlayerMatchBreakdown(playerId,ri,db){
   const p=PLAYERS.find(x=>x.id===playerId);if(!p)return[];
-  const r=FR[ri];const round=STATE.DB[ri];if(!r||!round)return[];
-  const motmMap=computeMatchMotm(ri,STATE.DB,STATE.division);
+  const div=p.division;
+  db=db||STATE.DB;
+  const r=(DIVISIONS[div]||DIVISIONS.A).fr[ri];const round=db[ri];if(!r||!round)return[];
+  const motmMap=computeMatchMotm(ri,db,div);
   const results=[];
   r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
     if(m[0]!==p.team&&m[1]!==p.team)return;
@@ -3309,13 +3330,14 @@ function computePlayerMatchBreakdown(playerId,ri){
   return results;
 }
 
-function togglePhistRound(rowEl,playerId,ri){
+async function togglePhistRound(rowEl,playerId,ri){
   const wrap=rowEl.closest('.phist-rw');
   const sub=wrap.querySelector('.phist-sub');
   const opening=!wrap.classList.contains('open');
   if(opening&&!sub.dataset.loaded){
     const p=PLAYERS.find(x=>x.id===playerId);
-    const matches=computePlayerMatchBreakdown(playerId,ri);
+    const db=await getDivisionDB(p.division);
+    const matches=computePlayerMatchBreakdown(playerId,ri,db);
     const matchesHtml=matches.length?matches.map((m,i)=>`
       <div class="phist-mrw">
         <div class="phist-subrow" onclick="togglePhistMatch(this)">
