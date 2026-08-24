@@ -3574,6 +3574,32 @@ function toggleCaptainForPlayer(playerId){
   }
 }
 
+// Pitch avatars only have room for the surname. When two players in the
+// same division share one, add just enough of the first name — an
+// initial, or two letters if even the initials collide too — to keep
+// every picked player told apart at a glance (e.g. div. B's Tomas
+// Gulbicki / Daniel Gulbicki become "T. Gulbicki" / "D. Gulbicki").
+function pitchSurname(p,div){
+  div=div||p.division||STATE.division;
+  const parts=(p.name||'').trim().split(/\s+/);
+  const surname=parts[parts.length-1];
+  const firstName=parts.slice(0,-1).join(' ');
+  if(!firstName)return surname;
+  const group=PLAYERS.filter(pl=>pl.division===div&&pl.name.trim().split(/\s+/).slice(-1)[0].toLowerCase()===surname.toLowerCase());
+  if(group.length<=1)return surname;
+  const firstNames=group.map(pl=>pl.name.trim().split(/\s+/).slice(0,-1).join(' '));
+  const maxLen=Math.max(...firstNames.map(f=>f.length));
+  let len=1;
+  while(len<maxLen){
+    const mine=firstName.slice(0,len).toLowerCase();
+    if(firstNames.filter(f=>f.slice(0,len).toLowerCase()===mine).length<=1)break;
+    len++;
+  }
+  const prefix=firstName.slice(0,len);
+  const initials=prefix.charAt(0).toUpperCase()+prefix.slice(1).toLowerCase();
+  return `${initials}. ${surname}`;
+}
+
 function renderSlot(pos,idx){
   const el=document.getElementById(`s-${pos}-${idx}`);if(!el)return;
   const p=STATE.slots[pos][idx];const circle=el.querySelector('.sc2');
@@ -3594,7 +3620,7 @@ function renderSlot(pos,idx){
     // the round breakdown instead of the live add/remove picker.
     const historical=isLocked()&&STATE.mySquads[STATE.curRound]!==undefined;
     if(!isLocked()){const rb=document.createElement('button');rb.className='srm';rb.innerHTML='✕';rb.onclick=ev=>{ev.stopPropagation();removePlayerFromSlot(pos,idx);};circle.appendChild(rb);}
-    el.querySelector('.sn').textContent=p.name.split(' ').slice(-1)[0];
+    el.querySelector('.sn').textContent=pitchSurname(p,STATE.division);
     const sp=el.querySelector('.sp');
     const sfx=el.querySelector('.sfx');
     if(historical){
@@ -4000,7 +4026,7 @@ function tsSlotHtml(entry,pos){
       ${kitSvg(p.team,50,p.division)}
       <span class="spb pos-${pos}">${POS_LT[pos]}</span>${badge}
     </div>
-    <div class="sn">${p.name.split(' ').slice(-1)[0]}</div>
+    <div class="sn">${pitchSurname(p,p.division)}</div>
     <div class="sp">${entry.pts}pts</div>
   </div>`;
 }
@@ -4331,7 +4357,7 @@ async function renderUserSquadViewer(u){
         <div class="sc2" style="background:rgba(255,255,255,.12);border-color:${isC?'#fff':'rgba(255,255,255,.4)'};border-style:solid">
           ${kitSvg(p.team,50,div)}${badge}
         </div>
-        <div class="sn">${isC?'⭐ ':''}${escHtml(p.name.split(' ').slice(-1)[0])}</div>
+        <div class="sn">${isC?'⭐ ':''}${escHtml(pitchSurname(p,div))}</div>
         <div class="sp">${det?det.pts:0}pts</div>
       </div>`;
     }).join('')+'</div>';
