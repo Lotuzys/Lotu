@@ -962,7 +962,7 @@ a{color:var(--or)}
         <th class="stats-sortable" onclick="setStatsSort('name')"><span data-i18n="th_player">Žaidėjas</span><span class="stats-arrow" id="arr-name"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('team')"><span data-i18n="th_team">Komanda</span><span class="stats-arrow" id="arr-team"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('price')"><span data-i18n="sort_price">Kaina</span><span class="stats-arrow" id="arr-price"></span></th>
-        <th class="stats-sortable" onclick="setStatsSort('ownership')"><span data-i18n="sort_own">Nuosavybė</span><span class="stats-arrow" id="arr-ownership"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('ownership')"><span data-i18n="sort_own">Populiarumas</span><span class="stats-arrow" id="arr-ownership"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('form')"><span data-i18n="stats_form">Forma</span><span class="stats-arrow" id="arr-form"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('total')"><span data-i18n="sort_total">Taškai</span><span class="stats-arrow" id="arr-total"></span></th>
       </tr></thead><tbody id="stats-tbody"></tbody></table>
@@ -994,7 +994,7 @@ a{color:var(--or)}
       <div class="pmst"><div class="pmstv" id="pm-goals"></div><div class="pmstl" data-i18n="stat_goals">Įvarčiai</div></div>
       <div class="pmst"><div class="pmstv" id="pm-szpts"></div><div class="pmstl" data-i18n="pts_label">Taškai</div></div>
       <div class="pmst"><div class="pmstv" id="pm-price"></div><div class="pmstl" data-i18n="stat_price">Kaina</div></div>
-      <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl" data-i18n="sort_own">Nuosavybė</div></div>
+      <div class="pmst"><div class="pmstv" id="pm-owner"></div><div class="pmstl" data-i18n="sort_own">Populiarumas</div></div>
     </div>
     <div class="pmfix" id="pm-fixtures"></div>
     <button class="pmhistlink" id="pm-hist-link" onclick="openPlayerHistoryModal()" data-i18n="hist_link">📊 Turų taškų istorija</button>
@@ -1192,7 +1192,7 @@ const I18N={
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
     prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
     group_a_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupė`,
-    sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Nuosavybė',sort_goals:'Įmušti įvarčiai',
+    sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Populiarumas',sort_goals:'Įmušti įvarčiai',
     msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
     msg_open_badge:'Atviras',
     msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
@@ -1239,7 +1239,7 @@ const I18N={
     toast_new_round:r=>`${r} — rinkis naują komandą!`,
     hist_sub_count:n=>`${n} turų sužaista`,hist_empty:'Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!',
     hist_no_squad:'Komanda nepasirinkta',round_tab:n=>`${n} turas`,
-    own_round_label:n=>`Nuosavybė (${n} turas)`,round_pts_label:'Turo taškai',season_pts_label:'Sezono taškai',
+    own_round_label:n=>`Populiarumas (${n} turas)`,round_pts_label:'Turo taškai',season_pts_label:'Sezono taškai',
     no_finished_rounds:'Dar nėra pasibaigusių turų',whole_season:'visas sezonas',fallback_player:'Žaidėjas',
     lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas!`,
     lb_sub_count:n=>`${n} dalyvių`,you_suffix:'(Tu)',rounds_count:n=>`${n} turų`,no_participants:'Dar nėra dalyvių',
@@ -2577,7 +2577,7 @@ async function refreshOwnership(){
     PLAYERS.forEach(p=>{pct[p.id]=Math.round(((counts[p.id]||0)/total)*1000)/10;});
     OWNERSHIP=pct;
     renderList();
-  }catch(e){console.error('Nepavyko paskaičiuoti nuosavybės procento',e);}
+  }catch(e){console.error('Nepavyko paskaičiuoti populiarumo procento',e);}
 }
 
 function saveLeagueState(){
