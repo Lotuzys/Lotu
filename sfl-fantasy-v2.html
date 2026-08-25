@@ -2209,6 +2209,11 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('admbtn').style.display='none';
     document.getElementById('pts-chip').style.display='none';
     document.getElementById('user-chip').style.display='none';
+    // .bbar2 is position:fixed and lives outside the .page containers below
+    // (shown via showPage() whenever the squad page is open) — clearing
+    // .page's "on" class alone leaves it hanging over the login screen if
+    // the account was on the squad page at the moment it signed out.
+    document.getElementById('bbar').style.display='none';
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
     document.getElementById('page-login').classList.add('on');
   }
