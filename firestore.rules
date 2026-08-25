@@ -49,7 +49,7 @@ service cloud.firestore {
 
     // ── Post-deadline pick freeze ───────────────────────────────────────
     // Once a round's deadline passes, squad-picking stays closed for the
-    // NEXT round too, for 36h — the window the admin uses to update player
+    // NEXT round too, for 30h — the window the admin uses to update player
     // prices/goals before picking reopens. Mirrors PICK_FREEZE_MS /
     // isPickingFrozen() in sfl-fantasy-v2.html exactly (keep both in sync
     // if the duration ever changes) so the freeze can't be bypassed by
@@ -58,7 +58,7 @@ service cloud.firestore {
     // season starts, same as before this existed.
     function pickWindowOpen(round) {
       return int(round) == 0
-        || request.time >= DEADLINES()[string(int(round) - 1)] + duration.value(2160, 'm');
+        || request.time >= DEADLINES()[string(int(round) - 1)] + duration.value(1800, 'm');
     }
 
     // ── Trusted player data ─────────────────────────────────────────────
@@ -235,7 +235,7 @@ service cloud.firestore {
 
       // A round's submitted squad. Writable (create or overwrite) only by
       // its owner, only before that round's own deadline, only once its
-      // 36h post-previous-deadline pick freeze has lifted (pickWindowOpen()
+      // 30h post-previous-deadline pick freeze has lifted (pickWindowOpen()
       // above), and only if legal. Once the deadline passes, neither create
       // nor update is granted by any rule below — the round is frozen. No
       // delete rule exists either, so deleting a submitted squad is always

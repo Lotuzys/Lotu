@@ -82,8 +82,8 @@ something that special-cases specific player names or a specific season:
   from an approved commit after being accidentally altered once. Leave it
   alone; if the same mobile treatment needs to appear elsewhere, duplicate
   it under the other selector instead of touching this block.
-- **36h post-deadline pick freeze.** Once a round's deadline passes,
-  squad-picking for the next round stays closed league-wide for 36h
+- **30h post-deadline pick freeze.** Once a round's deadline passes,
+  squad-picking for the next round stays closed league-wide for 30h
   (`PICK_FREEZE_MS` / `isPickingFrozen()` / `pickFreezeUntil()` in
   `sfl-fantasy-v2.html`, mirrored server-side by `pickWindowOpen()` in
   `firestore.rules` — keep both durations in sync) — this is the window
