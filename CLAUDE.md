@@ -174,15 +174,23 @@ owner asks to change it, not as something to "improve":
   The owner has not asked for the standings table itself to distinguish
   a technical result from a genuine one.
 - **Must be visibly labeled everywhere the match/points appear** — not
-  just computed silently: the player points-history breakdown
-  (`matchStatRowsHtml()`, shared by every per-match points display) shows
-  a single line item — "Tech. pergalė +5" / "Tech. pralaimėjimas -2" (i18n
-  keys `mstat_tech_win`/`mstat_tech_loss`) — instead of the normal
-  goal/CS/win/loss rows, and that match's header row gets a trailing ⚡
-  marker. The Fixtures score chip and the Admin round panel's match header
-  both also show a ⚡/`tech_result_label` badge next to that match once a
-  saved result matches the pattern, so the admin can immediately tell a
-  3:0 entry will be scored as a walkover.
+  just computed silently, using two distinct icon vocabularies (owner's
+  explicit choice — do not swap them):
+  - **Per-player win/loss line** (`matchStatRowsHtml()`, shared by every
+    per-match points display): a single line item — green "+" circle +
+    "Tech. pergalė +5" for the winning side, red "×" circle + "Tech.
+    pralaimėjimas -2" for the forfeiting side (CSS `.tech-ico.win`/
+    `.tech-ico.loss`, i18n keys `mstat_tech_win`/`mstat_tech_loss`) —
+    instead of the normal goal/CS/win/loss rows. Deliberately NOT the
+    same icon for both sides — the color/glyph itself has to say who won
+    without reading the text.
+  - **Match-level marker** (doesn't belong to one side — shown once per
+    match, not per player): a small black "!" badge (`techMarkHtml()`,
+    CSS `.tech-mark`) — used on that match's header row in the points-
+    history breakdown, next to the Fixtures score chip, and in the Admin
+    round panel's match header, so the admin can immediately tell a 3:0
+    entry will be scored as a walkover. Neutral on purpose since a single
+    match-level flag can't itself say who won.
 - **Implemented identically in all three scoring engines** so they can
   never disagree: `computeScoring()` (per-user squad, round + season
   totals), `computePlayerMatchBreakdown()` (single player's per-match

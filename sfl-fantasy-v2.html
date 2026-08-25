@@ -225,7 +225,10 @@ a{color:var(--or)}
 .fix-away{text-align:left;font-weight:600;color:var(--ink2);flex:1}
 .fix-vs{font-size:10px;color:var(--mu);padding:0 8px;font-weight:700}
 .fix-score{font-size:11px;font-weight:800;color:var(--or);padding:0 6px}
-.fix-tech{font-size:10px;color:var(--red);font-weight:800}
+.tech-mark{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#000;color:#fff;font-size:10px;font-weight:900;line-height:1;margin-left:6px;flex:none}
+.tech-ico{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;font-size:11px;font-weight:900;color:#fff;margin-right:5px;flex:none}
+.tech-ico.win{background:var(--gr)}
+.tech-ico.loss{background:var(--red)}
 
 /* PLAYER LIST */
 .pl-search{padding:10px 12px;border-bottom:1px solid var(--bor);background:var(--sur)}
@@ -342,7 +345,8 @@ a{color:var(--or)}
 .mh{background:var(--sur);padding:10px 14px;border-bottom:1px solid var(--bor);display:flex;justify-content:space-between;align-items:center}
 .mh-teams{font-size:11px;font-weight:700;color:var(--ink)}
 .mh-saved{font-size:10px;color:var(--or);font-weight:700;display:none}.mh-saved.on{display:block}
-.mh-tech{font-size:10px;color:#fff;font-weight:800;background:var(--red);padding:1px 6px;border-radius:6px;margin-left:6px}
+.mh-tech{font-size:10px;color:var(--ink2);font-weight:700;display:inline-flex;align-items:center;margin-left:6px}
+.mh-tech .tech-mark{margin-left:0;margin-right:4px}
 .mbody{padding:14px}
 .score-row{display:grid;grid-template-columns:1fr 40px 12px 40px 1fr;align-items:center;gap:6px;margin-bottom:13px}
 .tlbl{font-size:11px;font-weight:600;color:var(--ink2)}.tlbl.r{text-align:right}
@@ -2598,6 +2602,15 @@ function isTechResult(saved){
   if((saved.scorers||[]).length)return false;
   return (saved.hg===3&&saved.ag===0)||(saved.hg===0&&saved.ag===3);
 }
+// Small black "!" badge used everywhere a technical (walkover) result needs
+// a compact visual flag — match headers, Fixtures score chip, Admin round
+// panel. Deliberately neutral/colorless (unlike the green +/red × win-loss
+// icons in matchStatRowsHtml) since one match-level marker covers both
+// sides — it doesn't itself say who won or lost, just that the match was
+// a walkover.
+function techMarkHtml(){
+  return `<span class="tech-mark" title="${t('tech_result_label')}">!</span>`;
+}
 
 // ═══════════════════════════════════════════════
 // MAN OF THE MATCH — +2 bonus for whoever the admin picks as that specific
@@ -3213,7 +3226,7 @@ function renderFixtures(){
     html+=`<div class="fix-day"><div class="fix-day-lbl">${dayLabel(STATE.curRound,di)}</div>`;
     day.m.forEach((m,mi)=>{
       const saved=STATE.DB[STATE.curRound]?.[di]?.[mi];
-      const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>${isTechResult(saved)?`<span class="fix-tech" title="${t('tech_result_label')}">⚡</span>`:''}`:`<span class="fix-vs">${t('fix_vs')}</span>`;
+      const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>${isTechResult(saved)?techMarkHtml():''}`:`<span class="fix-vs">${t('fix_vs')}</span>`;
       html+=`<div class="fix-match"><span class="fix-home">${teamLogoImg(m[0],20)}${m[0]}</span>${mid}<span class="fix-away">${m[1]}${teamLogoImg(m[1],20)}</span></div>`;
     });
     html+=`</div>`;
@@ -3500,7 +3513,7 @@ async function togglePhistRound(rowEl,playerId,ri){
     const matchesHtml=matches.length?matches.map((m,i)=>`
       <div class="phist-mrw">
         <div class="phist-subrow" onclick="togglePhistMatch(this)">
-          <span>${t('match_vs',i+1,m.opponent)}${m.tech?' ⚡':''}</span>
+          <span>${t('match_vs',i+1,m.opponent)}${m.tech?techMarkHtml():''}</span>
           <span class="phist-row-r"><span class="${m.pts<0?'neg':''}">${m.pts}pts</span><span class="phist-chev">▾</span></span>
         </div>
         <div class="phist-mdetail">${matchStatRowsHtml(m,p.pos)}</div>
@@ -3551,8 +3564,10 @@ function openStatModal(p,pos,tiles,breakdownHtml,div){
 // per-match expand.
 function matchStatRowsHtml(m,pos){
   if(m.tech){
-    const lbl=m.result==='W'?t('mstat_tech_win'):t('mstat_tech_loss');
-    return `<div class="rrow"><span>⚡ ${lbl}</span><span class="rp ${m.pts<0?'neg':''}">${m.pts>0?'+':''}${m.pts}</span></div>`;
+    const isWin=m.result==='W';
+    const lbl=isWin?t('mstat_tech_win'):t('mstat_tech_loss');
+    const ico=`<span class="tech-ico ${isWin?'win':'loss'}">${isWin?'+':'×'}</span>`;
+    return `<div class="rrow"><span>${ico}${lbl}</span><span class="rp ${m.pts<0?'neg':''}">${m.pts>0?'+':''}${m.pts}</span></div>`;
   }
   const rows=[];
   if(m.goals>0)rows.push([t('mstat_goals',m.goals,CONFIG.PTS_POS[pos]),m.goals*CONFIG.PTS_POS[pos]]);
@@ -3575,7 +3590,7 @@ function scoringBreakdownHtml(det,pos){
     return `<div class="rrow-empty">${t('zero_pts_round')}</div>`;
   }
   let html=det.matches.map((m,i)=>
-    `<div class="rrow-match-lbl">${t('match_vs',i+1,m.opponent)}${m.tech?' ⚡':''}</div>${matchStatRowsHtml(m,pos)}`
+    `<div class="rrow-match-lbl">${t('match_vs',i+1,m.opponent)}${m.tech?techMarkHtml():''}</div>${matchStatRowsHtml(m,pos)}`
   ).join('');
   if(det.isC)html+=`<div class="rrow cap-row"><span>${t('captain_label')}</span><span class="rp cap">×2</span></div>`;
   return html;
@@ -4697,7 +4712,7 @@ function renderAdminRound(){
       if(saved?.reds?.length){redRowCount[key]=saved.reds.length;saved.reds.forEach((pid,ri)=>{rrows+=rcRow(key,ri,opts);});}
       else{rrows=rcRow(key,0,opts);}
       html+=`<div class="mblock">
-        <div class="mh"><span class="mh-teams">${teamLogoImg(m[0],16)} ${m[0]} vs ${m[1]} ${teamLogoImg(m[1],16)}</span>${saved&&isTechResult(saved)?`<span class="mh-tech">⚡ ${t('tech_result_label')}</span>`:''}<span class="mh-saved ${saved?'on':''}" id="sv-${key}">Išsaugota ✓</span></div>
+        <div class="mh"><span class="mh-teams">${teamLogoImg(m[0],16)} ${m[0]} vs ${m[1]} ${teamLogoImg(m[1],16)}</span>${saved&&isTechResult(saved)?`<span class="mh-tech">${techMarkHtml()} ${t('tech_result_label')}</span>`:''}<span class="mh-saved ${saved?'on':''}" id="sv-${key}">Išsaugota ✓</span></div>
         <div class="mbody">
           <div class="score-row">
             <div class="tlbl r">${m[0]}${teamLogoImg(m[0],16)}</div>
