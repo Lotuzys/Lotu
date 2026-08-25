@@ -4170,7 +4170,7 @@ async function computeOwnershipMapForRound(div,round){
 // fully entered (see recalcPricesForRound()). Rules fixed by the league
 // owner:
 //   RISE — both can apply, summed: ownership 30-49.99% → +0.5M, 50%+ →
-//   +1M; round points 15-24 → +0.5M, 25+ → +1M.
+//   +1M; round points 15-24 → +0.5M, 25-34 → +1M, 35+ → +1.5M.
 //   FALL — one tier per ownership bracket, the stricter points cutoff
 //   always wins over the milder one (never both): ownership 20%+ and
 //   points <5 → -1M, else points <10 → -0.5M; ownership 5-19.99% and
@@ -4184,7 +4184,7 @@ async function computeOwnershipMapForRound(div,round){
 const PRICE_FLOOR=3;
 function priceDeltaFor(ownershipPct,roundPts){
   const ownRise=ownershipPct>=50?1:ownershipPct>=30?0.5:0;
-  const ptsRise=roundPts>=25?1:roundPts>=15?0.5:0;
+  const ptsRise=roundPts>=35?1.5:roundPts>=25?1:roundPts>=15?0.5:0;
   let fall=0;
   if(ownershipPct>=20)fall=roundPts<5?1:roundPts<10?0.5:0;
   else if(ownershipPct>=5)fall=roundPts<1?1:roundPts<5?0.5:0;

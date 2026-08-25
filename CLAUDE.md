@@ -103,7 +103,8 @@ them as fixed unless the owner asks to change them, not as something to
 "improve":
 
 - **Rise** — both can apply, summed onto the price: ownership 30-49.99% →
-  +0.5M, 50%+ → +1M; round points 15-24 → +0.5M, 25+ → +1M.
+  +0.5M, 50%+ → +1M; round points 15-24 → +0.5M, 25-34 → +1M, 35+ →
+  +1.5M.
 - **Fall** — one tier per ownership bracket; the stricter points cutoff
   always wins over the milder one (never both, never stacked): ownership
   20%+ and points <5 → -1M, else points <10 → -0.5M; ownership 5-19.99%
