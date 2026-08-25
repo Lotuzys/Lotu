@@ -166,38 +166,71 @@ Confirmed facts, so this doesn't need re-discovering:
   numbers don't do anything here); one fetch (any comp_id) returns all
   660 rows, and division comes from each row's own `Turnyras` cell text
   (`"7x7 Lyga A grupė"` etc.) — group by that instead. Table columns
-  `Nr. | Data | Laikas | Turas | Turnyras | Rungtynės | Stadionas`,
-  score embedded in the `Rungtynės` cell as `"TeamA X-Y TeamB"` — which
-  side is listed first is presumed to be the home team (matches this
-  app's own `m[0]`/`m[1]` fixture-pair convention) but this is inferred
-  from old archived rows only, not yet confirmed against a real new-
-  season row — verify explicitly once one exists. `Turas` gives the
-  site's own round number per match — NOT yet confirmed whether it
-  lines up 1:1 with this app's "Fantasy Turas" (2 real match-days per
-  fantasy round) grouping; verify once the new season's first real
-  rounds are scraped.
+  `Nr. | Data | Laikas | Turas | Turnyras | Rungtynės | Stadionas` — the
+  `Rungtynės` cell does NOT contain the score as plain text (an earlier
+  note here was wrong): it's a single `<a>` to the HOME team's own
+  `/komanda/` page, home-team text only. The match's own detail-page link
+  (`/varzybos/...`) is a DIFFERENT anchor elsewhere in the same `<tr>` —
+  select it explicitly (`tr a[href*="/varzybos/"]`), don't assume the
+  first `<a>` in the row. `Turas` gives the site's own round number per
+  match — confirmed NOT 1:1 with this app's "Fantasy Turas": a division's
+  132 archived rows split into exactly 11 `Turas` values × 12 matches
+  each (i.e. one site `Turas` already IS one fantasy round's worth, 2
+  real match-days bundled together) — but a fresh season's round-1
+  fixtures are NOT guaranteed to land under `Turas=1`; match by team-pair
+  instead of trusting `Turas`, at least until proven otherwise on a real
+  new-season scrape.
 - **As of 2026-08-25 ~14:30 EEST (shortly after round 1's own 13:30
   deadline), zero round-1 matches were posted yet** — the results list's
-  newest rows were still last season's finale (2026-03-01). Re-check
-  later before assuming there's nothing to scrape; this was a point-in-
-  time check, not a site limitation.
+  newest rows were still last season's finale (2026-03-01). The owner
+  then deliberately re-tested round 1 with fixture pairings that reuse
+  real historical (winter 2025) results, purely to exercise the deadline/
+  freeze mechanics without waiting for real matches — see "Round 1 test
+  data" below. Re-check the live site before assuming there's nothing to
+  scrape for a genuinely new round; the "nothing posted yet" state above
+  was a point-in-time check, not a site limitation.
 - **Each match has its own detail page**:
-  `http://www.vilniausfutbolas.lt/varzybos/{TeamA}-{TeamB}/{matchId}`,
-  linked from the results-list `Nr.` column. Contains a scorer-by-goal
-  list (name, team, minute) plus a standings table and head-to-head
-  history for the two teams.
-- **Scorer names on the match page link to the player's profile with the
-  SAME id format the roster scraper already extracts** —
-  `/zaidejas/{Name}/{extId}/3/35`. This means scraped scorers resolve to
-  internal player docs via `extId` matching (already stored on every
-  `players/{extId}` doc), never fragile name-string matching — critical
-  given same-surname collisions are common (see `pitchSurname` above).
+  `http://www.vilniausfutbolas.lt/varzybos/{TeamA}-{TeamB}/{matchId}` —
+  team names in this URL slug can differ from both the roster-scraper's
+  `/komanda/` slug AND the canon name used elsewhere in this app (e.g.
+  canon `Ketera`/`Grija`/`Navigatoriai` appear here as `FK-Ketera-`/
+  `FK-Grija`/`FK-Navigatoriai`; canon `Del. Euforija` as
+  `Delamode-Euforija-`; canon `Gladiatoriai` as `Gladiatoriu-Imperija`;
+  canon `FM Vytis` as `FM-Vilniaus-Vytis`) — don't reconstruct this slug
+  from canon names, resolve matches by team-pair search instead (see
+  "Round 1 test data" below for the working normalize+substring approach
+  that handled every one of these).
+  - **Score**: reliably in `#match-info h1` as `"HG - AG"` — this is the
+    ONLY safe place to read it; a whole-page regex for `" N - N "` risks
+    matching the standings table or head-to-head history sections
+    instead. `#match-info` also has the two team names/crests either
+    side, in home-away order matching the URL slug.
+  - **Goal scorers**: each goal is one `.statistic-event` row INSIDE
+    `.goals` specifically — `.statistic-event` is also reused, confusingly,
+    by an unrelated lineup/roster section further down the same page
+    (player headshot thumbnails, not a `goal.png` icon), so scope the
+    selector to `.goals .statistic-event` or that section's players get
+    miscounted as scorers. Each row has two possible `.goalscorer` divs
+    (only one is ever populated) containing the scorer's
+    `/zaidejas/{Name}/{extId}/3/35` link plus a sibling `<p>` with a team
+    label. That team label is occasionally wrong/typo'd on the site's own
+    data for a given match (seen once: "FK Tera" instead of the real team
+    name) — don't rely on it for correctness. What DOES always check out:
+    summing every scorer's goal count across the whole match equals
+    `hg + ag` exactly (verified on 57/60 real matches). A handful of
+    matches (3/60 in the same verification) have a score but NO `.goals`
+    section at all — the site simply has no per-goal breakdown for them;
+    treat that as an accepted gap (score still correct, scorers empty),
+    not a bug to chase.
+  - **Red cards**: still not confirmed — 0 occurred across the 60 real
+    matches checked. The scraper's event loop already inspects every
+    `.goals .statistic-event`'s icon filename generically (not hardcoded
+    to `goal.png`), so a card icon will surface distinctly once a real
+    example exists — check what filename it uses then, don't guess now.
 - **MOTM is not marked on the site yet** (checked one real finished match,
   found nothing) — the owner confirmed it isn't in use yet either; expect
   it to start appearing once real matches are actually played and design
   the scraper to read it once an example exists, not before.
-- **Red cards**: not yet located/confirmed on the match detail page —
-  still needs checking once a match with one exists to look at.
 
 Decisions the owner has already made for when this gets built:
 - Once every match in a round is scraped, `recalcPricesForRound` must
@@ -210,12 +243,32 @@ Decisions the owner has already made for when this gets built:
   re-trigger** the price recalculation again (safe already, since
   `priceBase` makes it idempotent) — not wait for a manual re-click.
 
-Immediate next step (not a redesign): once round 1's deadline passes
-(2026-08-25 13:30 EEST), manually scrape that round's actual results
-(2 matches per team) from the results-list pages above and enter them
-into the Admin panel/`league/state_{div}`, since the automated version
-doesn't exist yet — this is expected to happen by hand for round 1 while
-the real scraper is designed against real (not synthetic) match data.
+### Round 1 test data — deliberately real historical results, not live scraping
+
+Round 1's actual deadline (2026-08-25 13:30 EEST) passed with nothing new
+posted on the results site yet, so the owner deliberately built round 1's
+fixture pairings (`FR`/`FR_B..E` round index 0 in `sfl-fantasy-v2.html`)
+to reuse real historical (winter 2025 season) team match-ups purely to
+exercise the deadline/freeze mechanics end-to-end without waiting for
+real matches. All 60 of those matches (12 per division × 5) were then
+found in the results archive by team-pair (ignoring date/`Turas`, per the
+owner's instruction), their real historical score/scorers scraped from
+each match's detail page as described above, and written directly into
+`league/state{,_B,_C,_D,_E}` — both `DB.0` (scores + scorers, matching
+`saveM()`'s exact schema `{hg,ag,scorers:[{pid,cnt}],reds:[],motm:null}`)
+and `teams` (the standings table, updated with the exact same win/draw/
+loss/goals-for/against/clean-sheet accounting `saveM()` itself applies)
+were kept in sync, plus `savedMatches` populated with all 12 `"0-{day}-
+{match}"` keys per division — this is a REAL admin-panel-equivalent
+write, not a placeholder. Two goals (one each in division A and E) came
+from scorers no longer in the current roster (transferred out since
+winter 2025) and were left off the scorer list — the goal still counts
+in `hg`/`ag`, it just doesn't credit fantasy points to anyone. No red
+cards occurred in any of the 60 matches. This is a one-time, deliberate
+substitution for round 1 only — round 2 onward should get real scraped
+(or admin-entered) results once actual new-season matches are played;
+don't repeat the "reuse old results" approach for later rounds without
+being asked.
 
 ## Operating conventions for this repo
 
