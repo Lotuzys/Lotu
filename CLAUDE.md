@@ -157,14 +157,30 @@ Firestore and Cloud Scheduler — reuse that same probing technique if
 investigating this site again from a similarly-restricted session).
 Confirmed facts, so this doesn't need re-discovering:
 
-- **Results-list page, one per division, shows every match at once**:
-  `http://www.vilniausfutbolas.lt/rezultatai/3?comp_id={id}` — table
-  columns `Nr. | Data | Laikas | Turas | Turnyras | Rungtynės | Stadionas`,
-  score embedded in the `Rungtynės` cell as `"TeamA X-Y TeamB"`. Confirmed
-  `comp_id`s: A=5, B=6, C=7, D=35, E=40. `Turas` gives the site's own round
-  number per match — NOT yet confirmed whether it lines up 1:1 with this
-  app's "Fantasy Turas" (2 real match-days per fantasy round) grouping;
-  verify once the new season's first real rounds are scraped.
+- **Results-list page shows EVERY division's matches together on one
+  page, regardless of `comp_id`**: `http://www.vilniausfutbolas.lt/
+  rezultatai/3?comp_id={id}` — confirmed by re-fetching with comp_id
+  5/6/7/35/40 and getting byte-identical output every time. `comp_id`
+  does NOT filter by division the way it was first assumed to (ignore
+  the earlier "A=5, B=6, C=7, D=35, E=40" mapping as a filter — those
+  numbers don't do anything here); one fetch (any comp_id) returns all
+  660 rows, and division comes from each row's own `Turnyras` cell text
+  (`"7x7 Lyga A grupė"` etc.) — group by that instead. Table columns
+  `Nr. | Data | Laikas | Turas | Turnyras | Rungtynės | Stadionas`,
+  score embedded in the `Rungtynės` cell as `"TeamA X-Y TeamB"` — which
+  side is listed first is presumed to be the home team (matches this
+  app's own `m[0]`/`m[1]` fixture-pair convention) but this is inferred
+  from old archived rows only, not yet confirmed against a real new-
+  season row — verify explicitly once one exists. `Turas` gives the
+  site's own round number per match — NOT yet confirmed whether it
+  lines up 1:1 with this app's "Fantasy Turas" (2 real match-days per
+  fantasy round) grouping; verify once the new season's first real
+  rounds are scraped.
+- **As of 2026-08-25 ~14:30 EEST (shortly after round 1's own 13:30
+  deadline), zero round-1 matches were posted yet** — the results list's
+  newest rows were still last season's finale (2026-03-01). Re-check
+  later before assuming there's nothing to scrape; this was a point-in-
+  time check, not a site limitation.
 - **Each match has its own detail page**:
   `http://www.vilniausfutbolas.lt/varzybos/{TeamA}-{TeamB}/{matchId}`,
   linked from the results-list `Nr.` column. Contains a scorer-by-goal
