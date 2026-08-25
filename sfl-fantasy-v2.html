@@ -4220,10 +4220,18 @@ async function renderTeamOfSeason(){
     pitch.innerHTML=`<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.75);font-size:13px">${t('no_finished_rounds')}</div>`;
     return;
   }
-  sub.textContent=TS_MODE==='round'?roundName(TS_ROUND):t('whole_season');
   const tsDB=await getDivisionDB(TS_DIVISION);
-  const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND,tsDB,TS_DIVISION):computeSeasonPlayerPts(tsDB,TS_DIVISION);
   const hasData=TS_MODE==='round'?!!tsDB[TS_ROUND]:pastRoundIndices().some(ri=>!!tsDB[ri]);
+  // Before round 1 has finished, season mode has nothing to rank players
+  // by yet either — same single message as round mode above, instead of
+  // 7 individually-empty position slots.
+  if(TS_MODE==='season'&&!hasData){
+    sub.textContent='';
+    pitch.innerHTML=`<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.75);font-size:13px">${t('no_finished_rounds')}</div>`;
+    return;
+  }
+  sub.textContent=TS_MODE==='round'?roundName(TS_ROUND):t('whole_season');
+  const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND,tsDB,TS_DIVISION):computeSeasonPlayerPts(tsDB,TS_DIVISION);
   const xi=bestXI(ptsMap,hasData,TS_DIVISION);
   pitch.innerHTML=`
     <div class="rlbl">${t('rlbl_gk')}</div>
