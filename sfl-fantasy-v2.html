@@ -225,6 +225,7 @@ a{color:var(--or)}
 .fix-away{text-align:left;font-weight:600;color:var(--ink2);flex:1}
 .fix-vs{font-size:10px;color:var(--mu);padding:0 8px;font-weight:700}
 .fix-score{font-size:11px;font-weight:800;color:var(--or);padding:0 6px}
+.fix-tech{font-size:10px;color:var(--red);font-weight:800}
 
 /* PLAYER LIST */
 .pl-search{padding:10px 12px;border-bottom:1px solid var(--bor);background:var(--sur)}
@@ -341,6 +342,7 @@ a{color:var(--or)}
 .mh{background:var(--sur);padding:10px 14px;border-bottom:1px solid var(--bor);display:flex;justify-content:space-between;align-items:center}
 .mh-teams{font-size:11px;font-weight:700;color:var(--ink)}
 .mh-saved{font-size:10px;color:var(--or);font-weight:700;display:none}.mh-saved.on{display:block}
+.mh-tech{font-size:10px;color:#fff;font-weight:800;background:var(--red);padding:1px 6px;border-radius:6px;margin-left:6px}
 .mbody{padding:14px}
 .score-row{display:grid;grid-template-columns:1fr 40px 12px 40px 1fr;align-items:center;gap:6px;margin-bottom:13px}
 .tlbl{font-size:11px;font-weight:600;color:var(--ink2)}.tlbl.r{text-align:right}
@@ -1228,7 +1230,7 @@ const fbFunctions=firebase.app().functions('europe-west1');
 // CS_PTS/ONE_GOAL_AGAINST_PTS are per-position (only G and D ever qualify —
 // M/F have no entry and are never looked up for these). Defenders earn less
 // than goalkeepers for the same clean sheet / 1-conceded outcome.
-const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:{G:10,D:8},ONE_GOAL_AGAINST_PTS:{G:5,D:4},WIN_PTS:2,LOSS_PTS:-1,RED_CARD_PTS:-3,CAPTAIN_MULT:2,MOTM_PTS:2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
+const CONFIG={BUDGET:50,PTS_POS:{G:10,D:6,M:5,F:4},CS_PTS:{G:10,D:8},ONE_GOAL_AGAINST_PTS:{G:5,D:4},WIN_PTS:2,LOSS_PTS:-1,RED_CARD_PTS:-3,CAPTAIN_MULT:2,MOTM_PTS:2,TECH_WIN_PTS:5,TECH_LOSS_PTS:-2,ADMIN_EMAIL:'eima.lotuzys@gmail.com'};
 const POS_C={G:'#eab308',D:'#3b82f6',M:'#22c55e',F:'#ef4444'};
 const POS_LT={G:'V',D:'G',M:'S',F:'P'};
 const POS_FL={G:'Vartininkas',D:'Gynėjas',M:'Saugas',F:'Puolėjas'};
@@ -1351,6 +1353,7 @@ const I18N={
     mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarūs vartai',mstat_one:'Praleistas tik 1 įvartis',
     mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
     mstat_motm:'⭐ Geriausias rungtynių žaidėjas',
+    mstat_tech_win:'Tech. pergalė',mstat_tech_loss:'Tech. pralaimėjimas',tech_result_label:'Techninis rezultatas',
     zero_pts:'0 taškų',no_result_yet:'Šiam turui dar nėra rezultato',zero_pts_round:'0 taškų šį turą',
     captain_label:'Kapitonas',
     toast_new_round:r=>`${r} — rinkis naują komandą!`,
@@ -1461,6 +1464,7 @@ const I18N={
     mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
     mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
     mstat_motm:'⭐ Man of the match',
+    mstat_tech_win:'Technical win',mstat_tech_loss:'Technical loss',tech_result_label:'Technical result',
     zero_pts:'0 points',no_result_yet:'No result for this gameweek yet',zero_pts_round:'0 points this gameweek',
     captain_label:'Captain',
     toast_new_round:r=>`${r} — pick a new team!`,
@@ -2581,6 +2585,21 @@ function subscribeLeagueState(){
 function unsubscribeLeagueState(){if(leagueUnsub){leagueUnsub();leagueUnsub=null;}}
 
 // ═══════════════════════════════════════════════
+// TECHNICAL RESULT (walkover) — SFL convention, rule fixed by the league
+// owner (see CLAUDE.md): a saved match with a 3:0/0:3 scoreline and NO
+// goal scorers entered means the match never actually happened — one team
+// no-showed/forfeited, so it's a technical win for the other side rather
+// than a genuinely-played 3-0. Purely derived from already-stored hg/ag/
+// scorers, never a stored flag, so it recomputes correctly for any match
+// (past or future) that fits the pattern with no migration needed.
+// ═══════════════════════════════════════════════
+function isTechResult(saved){
+  if(!saved)return false;
+  if((saved.scorers||[]).length)return false;
+  return (saved.hg===3&&saved.ag===0)||(saved.hg===0&&saved.ag===3);
+}
+
+// ═══════════════════════════════════════════════
 // MAN OF THE MATCH — +2 bonus for whoever the admin picks as that specific
 // match's best player, entered alongside the score/scorers/red cards in the
 // results panel (renderAdminRound()/saveM()) — a real judgment call, not a
@@ -2632,8 +2651,9 @@ function computeScoring(mySquads,db,div){
       const hg=saved.hg,ag=saved.ag;
       let res0,res1;
       if(hg>ag){res0='W';res1='L';}else if(ag>hg){res1='W';res0='L';}else{res0='D';res1='D';}
-      (teamDay[m[0]]=teamDay[m[0]]||{})[di]={mi,opponent:m[1],ga:ag,result:res0,scorers:saved.scorers,reds:saved.reds||[]};
-      (teamDay[m[1]]=teamDay[m[1]]||{})[di]={mi,opponent:m[0],ga:hg,result:res1,scorers:saved.scorers,reds:saved.reds||[]};
+      const tech=isTechResult(saved);
+      (teamDay[m[0]]=teamDay[m[0]]||{})[di]={mi,opponent:m[1],ga:ag,result:res0,scorers:saved.scorers,reds:saved.reds||[],tech};
+      (teamDay[m[1]]=teamDay[m[1]]||{})[di]={mi,opponent:m[0],ga:hg,result:res1,scorers:saved.scorers,reds:saved.reds||[],tech};
     }));
     const motmMap=computeMatchMotm(ri,db,div);
     let total=0;const detail=[];
@@ -2647,6 +2667,17 @@ function computeScoring(mySquads,db,div){
       const matches=[];
       [0,1].forEach(di=>{
         const info=days[di];if(!info)return;
+        if(info.result==='W')wins++;else if(info.result==='L')losses++;
+        // Technical result (walkover) — see isTechResult()/CLAUDE.md. Flat
+        // points only, replacing the whole normal formula for this match —
+        // there are no real goals/clean-sheet/red-card/MOTM to score since
+        // the match never actually happened.
+        if(info.tech){
+          const mPts=info.result==='W'?CONFIG.TECH_WIN_PTS:CONFIG.TECH_LOSS_PTS;
+          pts+=mPts;
+          matches.push({di,opponent:info.opponent,goals:0,result:info.result,cs:false,one:false,redCount:0,motm:false,pts:mPts,tech:true});
+          return;
+        }
         const mGoals=(info.scorers||[]).filter(sc=>sc.pid===p.id).reduce((s,sc)=>s+sc.cnt,0);
         const mRed=(info.reds||[]).filter(pid=>pid===p.id).length;
         let mPts=mGoals*CONFIG.PTS_POS[pos];
@@ -2657,8 +2688,8 @@ function computeScoring(mySquads,db,div){
           if(info.ga===0){mCS=true;mPts+=CONFIG.CS_PTS[pos];}
           else if(info.ga===1){mOne=true;mPts+=CONFIG.ONE_GOAL_AGAINST_PTS[pos];}
         }
-        if(info.result==='W'){mPts+=CONFIG.WIN_PTS;wins++;}
-        else if(info.result==='L'){mPts+=CONFIG.LOSS_PTS;losses++;}
+        if(info.result==='W')mPts+=CONFIG.WIN_PTS;
+        else if(info.result==='L')mPts+=CONFIG.LOSS_PTS;
         mPts+=mRed*CONFIG.RED_CARD_PTS;
         const mMotm=motmMap[di]?.[info.mi]===p.id;
         if(mMotm){mPts+=CONFIG.MOTM_PTS;motmCount++;}
@@ -3182,7 +3213,7 @@ function renderFixtures(){
     html+=`<div class="fix-day"><div class="fix-day-lbl">${dayLabel(STATE.curRound,di)}</div>`;
     day.m.forEach((m,mi)=>{
       const saved=STATE.DB[STATE.curRound]?.[di]?.[mi];
-      const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>`:`<span class="fix-vs">${t('fix_vs')}</span>`;
+      const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>${isTechResult(saved)?`<span class="fix-tech" title="${t('tech_result_label')}">⚡</span>`:''}`:`<span class="fix-vs">${t('fix_vs')}</span>`;
       html+=`<div class="fix-match"><span class="fix-home">${teamLogoImg(m[0],20)}${m[0]}</span>${mid}<span class="fix-away">${m[1]}${teamLogoImg(m[1],20)}</span></div>`;
     });
     html+=`</div>`;
@@ -3436,6 +3467,11 @@ function computePlayerMatchBreakdown(playerId,ri,db){
     const ga=isHome?saved.ag:saved.hg;
     let result;
     if(saved.hg===saved.ag)result='D';else result=((saved.hg>saved.ag)===isHome)?'W':'L';
+    if(isTechResult(saved)){
+      const pts=result==='W'?CONFIG.TECH_WIN_PTS:CONFIG.TECH_LOSS_PTS;
+      results.push({di,opponent,goals:0,result,cs:false,one:false,redCount:0,motm:false,pts,tech:true});
+      return;
+    }
     const goals=(saved.scorers||[]).filter(sc=>sc.pid===playerId).reduce((s,sc)=>s+sc.cnt,0);
     const redCount=(saved.reds||[]).filter(pid=>pid===playerId).length;
     let pts=goals*CONFIG.PTS_POS[p.pos];
@@ -3464,7 +3500,7 @@ async function togglePhistRound(rowEl,playerId,ri){
     const matchesHtml=matches.length?matches.map((m,i)=>`
       <div class="phist-mrw">
         <div class="phist-subrow" onclick="togglePhistMatch(this)">
-          <span>${t('match_vs',i+1,m.opponent)}</span>
+          <span>${t('match_vs',i+1,m.opponent)}${m.tech?' ⚡':''}</span>
           <span class="phist-row-r"><span class="${m.pts<0?'neg':''}">${m.pts}pts</span><span class="phist-chev">▾</span></span>
         </div>
         <div class="phist-mdetail">${matchStatRowsHtml(m,p.pos)}</div>
@@ -3514,6 +3550,10 @@ function openStatModal(p,pos,tiles,breakdownHtml,div){
 // squad-history breakdown below and the player-history sub-page's
 // per-match expand.
 function matchStatRowsHtml(m,pos){
+  if(m.tech){
+    const lbl=m.result==='W'?t('mstat_tech_win'):t('mstat_tech_loss');
+    return `<div class="rrow"><span>⚡ ${lbl}</span><span class="rp ${m.pts<0?'neg':''}">${m.pts>0?'+':''}${m.pts}</span></div>`;
+  }
   const rows=[];
   if(m.goals>0)rows.push([t('mstat_goals',m.goals,CONFIG.PTS_POS[pos]),m.goals*CONFIG.PTS_POS[pos]]);
   if(pos==='G'||pos==='D'){
@@ -3535,7 +3575,7 @@ function scoringBreakdownHtml(det,pos){
     return `<div class="rrow-empty">${t('zero_pts_round')}</div>`;
   }
   let html=det.matches.map((m,i)=>
-    `<div class="rrow-match-lbl">${t('match_vs',i+1,m.opponent)}</div>${matchStatRowsHtml(m,pos)}`
+    `<div class="rrow-match-lbl">${t('match_vs',i+1,m.opponent)}${m.tech?' ⚡':''}</div>${matchStatRowsHtml(m,pos)}`
   ).join('');
   if(det.isC)html+=`<div class="rrow cap-row"><span>${t('captain_label')}</span><span class="rp cap">×2</span></div>`;
   return html;
@@ -3951,17 +3991,26 @@ function computeAllPlayerRoundPts(ri,db,div){
   players.forEach(p=>pts[p.id]=0);
   const r=(DIVISIONS[div]||DIVISIONS.A).fr[ri];const round=db[ri];
   if(!r||!round)return pts;
-  const scorerGoals={},teamMatchGA={},teamResults={},teamPlayed={},reds={};
+  const scorerGoals={},teamMatchGA={},teamResults={},teamPlayed={},reds={},techBonus={};
   r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
     const saved=round?.[di]?.[mi];if(!saved)return;
+    teamPlayed[m[0]]=true;teamPlayed[m[1]]=true;
+    const hg=saved.hg,ag=saved.ag;
+    if(isTechResult(saved)){
+      // Technical result (walkover) — see isTechResult()/CLAUDE.md. Flat
+      // points only, applied uniformly to every player on each side, so
+      // this match is deliberately kept OUT of the normal goal/clean-
+      // sheet/win-loss/red/MOTM aggregates below.
+      if(hg>ag){techBonus[m[0]]=(techBonus[m[0]]||0)+CONFIG.TECH_WIN_PTS;techBonus[m[1]]=(techBonus[m[1]]||0)+CONFIG.TECH_LOSS_PTS;}
+      else{techBonus[m[1]]=(techBonus[m[1]]||0)+CONFIG.TECH_WIN_PTS;techBonus[m[0]]=(techBonus[m[0]]||0)+CONFIG.TECH_LOSS_PTS;}
+      return;
+    }
     saved.scorers.forEach(sc=>{scorerGoals[sc.pid]=(scorerGoals[sc.pid]||0)+sc.cnt;});
     (saved.reds||[]).forEach(pid=>{reds[pid]=(reds[pid]||0)+1;});
-    const hg=saved.hg,ag=saved.ag;
     // Same per-match (not per-round-aggregate) clean-sheet judging as
     // computeScoring().
     (teamMatchGA[m[0]]=teamMatchGA[m[0]]||[]).push(ag);
     (teamMatchGA[m[1]]=teamMatchGA[m[1]]||[]).push(hg);
-    teamPlayed[m[0]]=true;teamPlayed[m[1]]=true;
     if(!teamResults[m[0]])teamResults[m[0]]=[];if(!teamResults[m[1]])teamResults[m[1]]=[];
     if(hg>ag){teamResults[m[0]].push('W');teamResults[m[1]].push('L');}
     else if(ag>hg){teamResults[m[1]].push('W');teamResults[m[0]].push('L');}
@@ -3980,6 +4029,7 @@ function computeAllPlayerRoundPts(ri,db,div){
     val+=wins*CONFIG.WIN_PTS+losses*CONFIG.LOSS_PTS;
     val+=(reds[p.id]||0)*CONFIG.RED_CARD_PTS;
     val+=(motmCounts[p.id]||0)*CONFIG.MOTM_PTS;
+    val+=techBonus[p.team]||0;
     pts[p.id]=val;
   });
   return pts;
@@ -4647,7 +4697,7 @@ function renderAdminRound(){
       if(saved?.reds?.length){redRowCount[key]=saved.reds.length;saved.reds.forEach((pid,ri)=>{rrows+=rcRow(key,ri,opts);});}
       else{rrows=rcRow(key,0,opts);}
       html+=`<div class="mblock">
-        <div class="mh"><span class="mh-teams">${teamLogoImg(m[0],16)} ${m[0]} vs ${m[1]} ${teamLogoImg(m[1],16)}</span><span class="mh-saved ${saved?'on':''}" id="sv-${key}">Išsaugota ✓</span></div>
+        <div class="mh"><span class="mh-teams">${teamLogoImg(m[0],16)} ${m[0]} vs ${m[1]} ${teamLogoImg(m[1],16)}</span>${saved&&isTechResult(saved)?`<span class="mh-tech">⚡ ${t('tech_result_label')}</span>`:''}<span class="mh-saved ${saved?'on':''}" id="sv-${key}">Išsaugota ✓</span></div>
         <div class="mbody">
           <div class="score-row">
             <div class="tlbl r">${m[0]}${teamLogoImg(m[0],16)}</div>

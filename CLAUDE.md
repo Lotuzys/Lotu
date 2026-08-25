@@ -142,6 +142,54 @@ them as fixed unless the owner asks to change them, not as something to
   matches this app's existing pattern of explicit, reviewable admin
   actions (`saveM()` for match results) rather than a silent write.
 
+## Technical results (walkover matches) — rule fixed by the league owner, do not alter
+
+SFL allows a match to not actually be played because one team is at fault
+(no-show/forfeit). The site records this the same way it records a real
+3-0 win: a saved match result with **hg/ag of 3:0 or 0:3 and zero listed
+goal scorers**. That exact pattern — nothing else — is SFL's own signal
+for a technical win/loss, not a genuinely-played 3-0 blowout. This is a
+business rule the owner set explicitly; treat it as fixed unless the
+owner asks to change it, not as something to "improve":
+
+- **Detection is fully derived, never a stored flag.** `isTechResult(saved)`
+  in `sfl-fantasy-v2.html` — `(hg===3&&ag===0 || hg===0&&ag===3) &&
+  scorers.length===0` — computed fresh from the same `hg`/`ag`/`scorers`
+  every match result already has. No migration was needed for the 3
+  already-recorded round-1 matches that fit this pattern (see "Round 1
+  test data" below) — they were picked up automatically once this rule
+  shipped.
+- **Scoring is flat and REPLACES the normal formula for that one match**,
+  not additive on top of it: every player on the winning-by-forfeit team
+  gets a flat `CONFIG.TECH_WIN_PTS` (+5), every player on the forfeiting
+  team gets a flat `CONFIG.TECH_LOSS_PTS` (-2), for that specific match —
+  no goals/clean-sheet/1-conceded/win-bonus/red-card/MOTM line items on
+  top, since none of those genuinely happened. Only that one matchday is
+  replaced — if a team's OTHER matchday in the same round was a normal
+  result, that other match still scores normally and both contributions
+  sum into the round total as usual.
+- **Team standings (W/D/L/goals/points/clean-sheets) are NOT touched by
+  this rule** — `saveM()` still records the 3:0/0:3 as a normal result in
+  the standings table; only the FANTASY POINTS layer treats it specially.
+  The owner has not asked for the standings table itself to distinguish
+  a technical result from a genuine one.
+- **Must be visibly labeled everywhere the match/points appear** — not
+  just computed silently: the player points-history breakdown
+  (`matchStatRowsHtml()`, shared by every per-match points display) shows
+  a single line item — "Tech. pergalė +5" / "Tech. pralaimėjimas -2" (i18n
+  keys `mstat_tech_win`/`mstat_tech_loss`) — instead of the normal
+  goal/CS/win/loss rows, and that match's header row gets a trailing ⚡
+  marker. The Fixtures score chip and the Admin round panel's match header
+  both also show a ⚡/`tech_result_label` badge next to that match once a
+  saved result matches the pattern, so the admin can immediately tell a
+  3:0 entry will be scored as a walkover.
+- **Implemented identically in all three scoring engines** so they can
+  never disagree: `computeScoring()` (per-user squad, round + season
+  totals), `computePlayerMatchBreakdown()` (single player's per-match
+  expand), `computeAllPlayerRoundPts()` (Statistika/Leaders/price-recalc's
+  all-players-in-division pass). All three call the same `isTechResult()`
+  helper — never duplicate the 3:0/0:3-and-no-scorers check inline.
+
 ## Real match-results scraping — confirmed site facts, not yet built
 
 The owner's plan (not yet implemented): stop hand-entering match results
@@ -219,9 +267,11 @@ Confirmed facts, so this doesn't need re-discovering:
     summing every scorer's goal count across the whole match equals
     `hg + ag` exactly (verified on 57/60 real matches). A handful of
     matches (3/60 in the same verification) have a score but NO `.goals`
-    section at all — the site simply has no per-goal breakdown for them;
-    treat that as an accepted gap (score still correct, scorers empty),
-    not a bug to chase.
+    section at all — **this is NOT a scraper gap or a missing-data bug.**
+    All 3 were a 3:0/0:3 scoreline with zero scorers, which is the real
+    SFL walkover/technical-result convention — see "Technical results
+    (walkover matches)" below. Detect it the same way live: 3:0 or 0:3 +
+    empty scorers list = technical result, not "no breakdown available".
   - **Red cards**: still not confirmed — 0 occurred across the 60 real
     matches checked. The scraper's event loop already inspects every
     `.goals .statistic-event`'s icon filename generically (not hardcoded
@@ -264,11 +314,19 @@ write, not a placeholder. Two goals (one each in division A and E) came
 from scorers no longer in the current roster (transferred out since
 winter 2025) and were left off the scorer list — the goal still counts
 in `hg`/`ag`, it just doesn't credit fantasy points to anyone. No red
-cards occurred in any of the 60 matches. This is a one-time, deliberate
-substitution for round 1 only — round 2 onward should get real scraped
-(or admin-entered) results once actual new-season matches are played;
-don't repeat the "reuse old results" approach for later rounds without
-being asked.
+cards occurred in any of the 60 matches. **3 of the 60 matches — B
+division day 1 Mostiškės-Tonitra 3:0 Riešė, B division day 2 Riešė 0:3
+Insola, D division day 2 Olandai 3:0 Vėtra — have a 3:0/0:3 score with
+zero scorers on the source site.** These are real SFL technical results
+(walkover matches, see "Technical results" above), not a scraping gap —
+`isTechResult()` picks them up automatically (+5 flat to every
+Mostiškės-Tonitra/Insola/Olandai player, -2 flat to every Riešė/Riešė/
+Vėtra player, in place of normal per-goal scoring for that matchday), no
+data migration was needed. This is a one-time, deliberate substitution
+for round 1 only — round 2 onward should get real scraped (or
+admin-entered) results once actual new-season matches are played; don't
+repeat the "reuse old results" approach for later rounds without being
+asked.
 
 ## Operating conventions for this repo
 
