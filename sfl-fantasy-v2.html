@@ -617,8 +617,8 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 .stats-row{cursor:pointer;transition:background .15s var(--ease)}
 .stats-row:hover{background:var(--sur)}
 .stats-pname{display:flex;align-items:center;gap:8px;white-space:nowrap}
-.stats-pname span:first-of-type{font-weight:700}
-.stats-pos{font-size:9px;font-weight:800;color:#fff;padding:2px 6px;border-radius:5px;text-transform:uppercase}
+.stats-pname-name{font-weight:700}
+.stats-pos{font-size:9px;font-weight:800;color:#fff;padding:2px 6px;border-radius:5px;text-transform:uppercase;flex-shrink:0;text-align:center}
 /* Komanda column — team crest + name, same one-line treatment as
    .stats-pname above (plain inline img+text otherwise wraps the name onto
    its own line the moment the column gets squeezed). */
@@ -631,7 +631,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
      the small handful of genuinely long ones (e.g. "Žygimantas
      Kavaliauskas", 23 chars) wrap onto a 2nd. */
   .stats-table th:nth-child(2),.stats-table td:nth-child(2){max-width:210px}
-  .stats-pname span:first-of-type{white-space:normal;overflow-wrap:break-word}
+  .stats-pname-name{white-space:normal;overflow-wrap:break-word}
 }
 
 /* SCORING SYSTEM PANEL — position-dependent points as a small table */
@@ -5063,7 +5063,7 @@ async function renderStats(){
   document.getElementById('stats-sub').textContent=sorted.length+' '+t('players_count_suffix');
   document.getElementById('stats-tbody').innerHTML=sorted.map((p,i)=>`
     <tr class="stats-row" onclick="openStatsPlayerModal(${p.id})"><td>${i+1}</td>
-      <td><div class="stats-pname">${kitSvg(p.team,22,p.division)}<span>${p.name}</span><span class="stats-pos" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div></td>
+      <td><div class="stats-pname"><span class="stats-pos" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span>${kitSvg(p.team,22,p.division)}<span class="stats-pname-name">${p.name}</span></div></td>
       <td><div class="stats-teamname">${teamLogoImg(p.team,16,p.division)}<span>${p.team}</span></div></td>
       <td>${p.price.toFixed(1)}M</td>
       <td style="color:${priceChangeFor(p)>0?'var(--gr)':priceChangeFor(p)<0?'var(--red)':'inherit'}">${priceChangeFor(p)>0?'+':''}${priceChangeFor(p)}M</td>
