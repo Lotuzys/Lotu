@@ -207,7 +207,7 @@ a{color:var(--or)}
 .ti-badge{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
 .ti-badge.open{background:rgba(255,255,255,.92);color:var(--or2)}
 .ti-badge.locked{background:rgba(0,0,0,.22);color:#fff}
-.locked-msg{background:#fff5eb;border:1.5px solid var(--orbor);border-radius:var(--r);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:11px}
+.locked-msg{background:#fff5eb;border:1.5px solid var(--orbor);border-radius:var(--r);padding:13px 16px;margin-top:10px;margin-bottom:14px;display:flex;align-items:center;gap:11px}
 .lm-icon{font-size:20px}.lm-txt{font-size:12.5px;color:var(--or2);flex:1;line-height:1.45;font-weight:600}
 .lm-btn{background:var(--or-grad);color:#fff;border:none;border-radius:9px;font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;box-shadow:var(--sh-or)}
 .lm-btn:hover{filter:brightness(1.05)}
@@ -923,6 +923,12 @@ a{color:var(--or)}
               <div class="pf-ov-box">
                 <div class="pf-ov-icon">🔒</div>
                 <div class="pf-ov-txt" id="squad-freeze-ov-txt"></div>
+              </div>
+            </div>
+            <div class="pf-ov" id="squad-nosquad-ov" style="display:none">
+              <div class="pf-ov-box">
+                <div class="pf-ov-icon">❌</div>
+                <div class="pf-ov-txt" id="squad-nosquad-ov-txt"></div>
               </div>
             </div>
             <div class="rlbl" data-i18n="rlbl_gk">Vartininkas</div>
@@ -3340,14 +3346,25 @@ function renderSquadMsg(){
   }
   // The message box above explains WHY, but sits apart from the pitch
   // itself — without this, the pitch still looks like a normal, tappable
-  // "build your squad" grid during the freeze. Dim it and drop a lock card
-  // on top so it reads as inert at a glance, not just empty.
+  // "build your squad" grid during the freeze (or, for a past round no
+  // squad was ever submitted for, an equally misleading grid of empty
+  // "Pasirink" position slots someone could mistake for still-pickable).
+  // Dim it and drop a card on top so both states read as inert/settled at
+  // a glance, not just empty.
   const pitchEl=document.getElementById('squad-pitch');
-  const ovEl=document.getElementById('squad-freeze-ov');
-  if(pitchEl&&ovEl){
-    pitchEl.classList.toggle('frozen',frozen);
-    ovEl.style.display=frozen?'flex':'none';
-    if(frozen)document.getElementById('squad-freeze-ov-txt').textContent=t('pitch_frozen_overlay');
+  const freezeOvEl=document.getElementById('squad-freeze-ov');
+  const noSquadOvEl=document.getElementById('squad-nosquad-ov');
+  const noSquadPast=!isLive&&!frozen&&!hasSquad;
+  if(pitchEl){
+    pitchEl.classList.toggle('frozen',frozen||noSquadPast);
+    if(freezeOvEl){
+      freezeOvEl.style.display=frozen?'flex':'none';
+      if(frozen)document.getElementById('squad-freeze-ov-txt').textContent=t('pitch_frozen_overlay');
+    }
+    if(noSquadOvEl){
+      noSquadOvEl.style.display=noSquadPast?'flex':'none';
+      if(noSquadPast)document.getElementById('squad-nosquad-ov-txt').textContent=t('hist_no_squad');
+    }
   }
 }
 
