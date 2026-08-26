@@ -400,6 +400,8 @@ a{color:var(--or)}
 .rnav-chip.played{border-color:rgba(255,122,0,.4)}
 .rnav-chip.on{background:var(--or);border-color:var(--or);color:#fff}
 .rnav-chip:disabled{opacity:.35;cursor:not-allowed}
+.rnav-help-btn{min-width:30px;height:28px;padding:0 10px;border-radius:8px;border:1px solid var(--orbor);background:var(--ordim);color:var(--or);font-size:12px;font-weight:800;cursor:pointer;transition:all .15s var(--ease);display:inline-flex;align-items:center;gap:4px;margin-left:6px}
+.rnav-help-btn:hover{background:var(--or);color:#fff}
 .pmclose:hover{background:var(--sur2);color:var(--ink)}
 .pmstats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bor);border-top:1px solid var(--bor);border-bottom:1px solid var(--bor)}
 .pmst{background:var(--sur);padding:12px 5px;text-align:center}
@@ -475,6 +477,27 @@ a{color:var(--or)}
 .tut-skip:hover{color:var(--ink2)}
 .tut-next{flex:1;padding:11px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s var(--ease);box-shadow:var(--sh-or)}
 .tut-next:hover{transform:translateY(-1px)}
+
+/* HELP / FAQ — opened via the "Pagalba" button next to the round tabs */
+.help-modal{background:var(--card);border:1px solid var(--bor);border-radius:24px;width:480px;max-width:92vw;max-height:86vh;overflow:hidden;box-shadow:var(--sh-lg);animation:popin .25s var(--ease);display:flex;flex-direction:column}
+.help-head{background:var(--or-grad);padding:20px 46px 18px 20px;display:flex;align-items:center;gap:10px;color:#fff;position:relative;flex:none;overflow:hidden}
+.help-head::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 25% 25%,rgba(255,255,255,.18),transparent 45%)}
+.help-head-icon{font-size:24px;position:relative}
+.help-head-title{font-size:17px;font-weight:800;letter-spacing:-.01em;position:relative}
+.help-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
+.help-close:hover{background:rgba(255,255,255,.32)}
+.help-body{padding:18px 20px 24px;overflow-y:auto;flex:1}
+.help-sec{margin-bottom:22px}
+.help-sec:last-child{margin-bottom:0}
+.help-sec-h{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.help-sec-p{font-size:12.5px;line-height:1.65;color:var(--ink2);margin-bottom:8px}
+.help-sec-p:last-child{margin-bottom:0}
+.help-list{margin:6px 0 0;padding-left:19px}
+.help-list li{font-size:12.5px;line-height:1.65;color:var(--ink2);margin-bottom:5px}
+.help-list li:last-child{margin-bottom:0}
+.help-faq-q{font-size:12.5px;font-weight:700;color:var(--ink);margin-top:12px;margin-bottom:3px;display:flex;gap:6px}
+.help-faq-q:first-child{margin-top:0}
+.help-faq-a{font-size:12.5px;line-height:1.6;color:var(--ink2)}
 
 /* PROFILE MODAL */
 .prof-modal{background:var(--card);border:1px solid var(--bor);border-radius:24px;width:360px;max-width:92vw;overflow:hidden;box-shadow:var(--sh-lg);animation:popin .25s var(--ease)}
@@ -1185,6 +1208,22 @@ a{color:var(--or)}
   </div>
 </div>
 
+<!-- HELP / FAQ — opened via the "Pagalba" button next to the round tabs on
+     the squad page. Content is rebuilt by renderHelpModal() (not static
+     data-i18n markup) since applyStaticI18n() sets textContent, not
+     innerHTML, and several rows here need inline structure (the reused
+     scoring table, FAQ q/a pairs) that plain text can't carry. -->
+<div class="mbg" id="help-bg" onclick="if(event.target===this)closeHelpModal()">
+  <div class="help-modal">
+    <div class="help-head">
+      <div class="help-head-icon">❓</div>
+      <div class="help-head-title" data-i18n="help_title">Pagalba</div>
+      <button class="help-close" onclick="closeHelpModal()">✕</button>
+    </div>
+    <div class="help-body" id="help-body"></div>
+  </div>
+</div>
+
 <!-- SQUAD SAVED CONFIRMATION -->
 <div class="rp2" id="res-panel">
   <div class="ri">
@@ -1302,6 +1341,41 @@ const I18N={
     tut_s3_body:'Vienas žaidėjas — tavo kapitonas — gauna DVIGUBAI taškų. Rinkis tą, kuris, tavo manymu, sužais geriausiai.',
     tut_s4_title:'Terminas',
     tut_s4_body:'Kiekvieną turą gali keisti komandą kiek nori kartų — iki termino. Kai jis praeina, komanda užsirakina ir gauni taškus už tą turą. Kitą turą renkiesi iš naujo.',
+    // "Pagalba" popup — always-available reference (not just a one-time
+    // walkthrough) opened from the squad page's round-nav row. Simple,
+    // beginner-first language throughout, same tone as the tut_ steps above.
+    help_title:'Pagalba',
+    help_s1_h:'Kas yra Fantasy 7x7?',
+    help_s1_p:'Betsson 7x7 Fantasy — žaidimas, kuriame sudarai savo svajonių komandą iš tikrų SFL 7x7 lygos žaidėjų. Kiekvieną turą jie žaidžia realias rungtynes, o tu už jų tikrus pasiekimus aikštėje (įvarčius, pergales, švarius vartus ir kt.) gauni fantasy taškus. Varžaisi su kitais savo diviziono vadybininkais dėl vietos lyderių lentelėje ir prizų.',
+    help_s2_h:'Kaip sudaryti komandą?',
+    help_s2_li1:'Turi 50M biudžetą — tiek gali išleisti visai komandai.',
+    help_s2_li2:'Komandą sudaro 7 žaidėjai: 1 vartininkas, 2 gynėjai, 2 saugai, 2 puolėjai.',
+    help_s2_li3:'Iš kiekvieno realaus klubo gali rinktis tik 1 žaidėją.',
+    help_s2_li4:'Iki turo termino (13:30) gali keisti komandą kiek tik nori kartų — visiškai laisvai.',
+    help_s2_li5:'Nepasirinkus komandos iki termino, tą turą taškų negausi, bet visada gali rinktis kitą turą iš naujo.',
+    help_s3_h:'Kapitonas',
+    help_s3_p:'Kiekvienam turui privalai paskirti vieną kapitoną (spausk „C" ženkliuką ties žaidėju). Kapitono surinkti taškai tą turą DVIGUBINAMI — įskaitant ir neigiamus, jei žaidėjas suveikė prastai ar gavo raudoną kortelę, todėl kapitoną verta rinktis atsargiai.',
+    help_s4_h:'Kaip skaičiuojami taškai?',
+    help_s5_h:'Kas yra techninis rezultatas?',
+    help_s5_p:'Kartais rungtynės realiai neįvyksta dėl vienos komandos kaltės (pvz. neatvyko). Toks atvejis fiksuojamas kaip 3:0 (arba 0:3) rezultatas be jokių įvarčių autorių — tai vadinama techniniu rezultatu. Tada, vietoj įprasto skaičiavimo, laimėjusios komandos visi žaidėjai gauna po +5 taškus, o pralaimėjusios — po −2.',
+    help_s6_h:'Kaip keičiasi žaidėjų kainos?',
+    help_s6_p1:'Kiekvieno žaidėjo pradinė kaina apskaičiuojama pagal jo praėjusio sezono rezultatus ir poziciją.',
+    help_s6_p2:'Po kiekvieno sužaisto turo administratorius gali perskaičiuoti kainas: populiarūs (daug kam priklausantys) ir gerai sužaidę žaidėjai brangsta, o retai renkami bei prastai sužaidę — atpinga.',
+    help_s6_p3:'Kaina niekada nenukris žemiau 3.0M, kad ir kaip prastai žaidėjas sužaistų.',
+    help_s7_h:'Terminai ir komandos keitimas',
+    help_s7_p1:'Kiekvienas turas turi savo terminą (13:30) — po jo komanda tam turui užsifiksuoja ir keisti jos nebegalima.',
+    help_s7_p2:'Praėjus terminui, kito turo komandų pasirinkimas būna uždarytas 30 valandų — per šį laiką administratorius atnaujina kainas ir įrašo rezultatus. Visą tą laiką gali laisvai naršyti visus kitus puslapius (rezultatus, lentelę, statistiką) — tik naujos komandos rinktis tuo metu negali.',
+    help_faq_h:'Dažniausiai užduodami klausimai',
+    help_faq_q1:'Ar galiu keisti komandą prieš terminą?',
+    help_faq_a1:'Taip, tiek kartų, kiek nori — kol dar neprasidėjo turo terminas.',
+    help_faq_q2:'Kiek žaidėjų galiu turėti iš vieno klubo?',
+    help_faq_a2:'Tik vieną.',
+    help_faq_q3:'Kodėl žaidėjo kaina pasikeitė?',
+    help_faq_a3:'Administratorius po turo perskaičiavo kainas pagal populiarumą ir surinktus taškus — žr. skyrių apie kainas aukščiau.',
+    help_faq_q4:'Kas atsitinka, jei nepaskiriu kapitono?',
+    help_faq_a4:'Komandos pateikti nepavyks — kapitoną pasirinkti privaloma.',
+    help_faq_q5:'Ar galiu žiūrėti kitų vadybininkų komandas?',
+    help_faq_a5:'Taip, „Lyderiai" puslapyje gali paspausti ant bet kurio dalyvio ir peržiūrėti jo pasirinktą komandą.',
     scoring_title:'Taškų sistema',
     sc_th_pos:'Pozicija',sc_th_goal:'Įvartis',sc_th_cs:'Švarūs vartai',sc_th_one:'Praleistas tik 1',
     sc_pos_gk:'🧤 Vartininkas',sc_pos_def:'🛡 Gynėjas',sc_pos_mid:'⚙ Saugas',sc_pos_fwd:'⚡ Puolėjas',
@@ -1415,6 +1489,38 @@ const I18N={
     tut_s3_body:'One player — your Captain — scores DOUBLE points. Choose whoever you think will play best.',
     tut_s4_title:'Deadline',
     tut_s4_body:"You can change your team as many times as you like before the deadline. Once it passes, your team locks in and you earn points for that gameweek. Next gameweek, you pick again.",
+    help_title:'Help',
+    help_s1_h:'What is Fantasy 7x7?',
+    help_s1_p:"Betsson 7x7 Fantasy is a game where you build your dream squad from real SFL 7x7 league players. Every gameweek they play real matches, and you earn fantasy points for what they actually do on the pitch (goals, wins, clean sheets, and more). You compete against other managers in your own division for a spot on the leaderboard and prizes.",
+    help_s2_h:'How do I build a squad?',
+    help_s2_li1:"You have a 50M budget — that's the total you can spend on your whole squad.",
+    help_s2_li2:'A squad has 7 players: 1 goalkeeper, 2 defenders, 2 midfielders, 2 forwards.',
+    help_s2_li3:'You can only pick 1 player from each real club.',
+    help_s2_li4:"You can change your squad as many times as you like — completely free — until that gameweek's deadline (13:30).",
+    help_s2_li5:"If you don't pick a squad before the deadline, you simply won't score points that gameweek — you can always pick again next time.",
+    help_s3_h:'Captain',
+    help_s3_p:'You must set exactly one captain each gameweek (tap the "C" badge on a player). Your captain’s points for that gameweek are DOUBLED — including negative ones, if they have a bad game or get a red card — so pick carefully.',
+    help_s4_h:'How are points calculated?',
+    help_s5_h:'What is a technical result?',
+    help_s5_p:"Sometimes a match doesn't actually get played because one team is at fault (e.g. a no-show). That's recorded as a 3:0 (or 0:3) score with no goal scorers at all — this is called a technical result. In that case, instead of the usual scoring, every player on the winning side gets a flat +5 points, and every player on the losing side gets −2.",
+    help_s6_h:'How do player prices change?',
+    help_s6_p1:"Each player's starting price is calculated from their performance last season and their position.",
+    help_s6_p2:'After every gameweek is played, the admin can recalculate prices: popular (widely-owned) players who performed well get more expensive, while rarely-picked, poorly-performing players get cheaper.',
+    help_s6_p3:'A price never drops below 3.0M, no matter how badly a player performs.',
+    help_s7_h:'Deadlines and squad changes',
+    help_s7_p1:"Every gameweek has its own deadline (13:30) — after it passes, your squad for that gameweek is locked in and can no longer be changed.",
+    help_s7_p2:"Once the deadline passes, picking for the NEXT gameweek stays closed for 30 hours while the admin updates prices and enters results. You can still freely browse everything else (results, standings, stats) during that time — you just can't pick a new squad yet.",
+    help_faq_h:'Frequently asked questions',
+    help_faq_q1:'Can I change my squad before the deadline?',
+    help_faq_a1:'Yes, as many times as you like — right up until that gameweek’s deadline.',
+    help_faq_q2:'How many players can I have from one club?',
+    help_faq_a2:'Just one.',
+    help_faq_q3:"Why did a player's price change?",
+    help_faq_a3:'The admin recalculated prices after a gameweek based on ownership and points scored — see the pricing section above.',
+    help_faq_q4:"What happens if I don't set a captain?",
+    help_faq_a4:"You won't be able to submit your squad — setting a captain is required.",
+    help_faq_q5:"Can I see other managers' squads?",
+    help_faq_a5:'Yes — on the Leaders page, tap any participant to view the squad they picked.',
     scoring_title:'Scoring System',
     sc_th_pos:'Position',sc_th_goal:'Goal',sc_th_cs:'Clean sheet',sc_th_one:'Conceded 1',
     sc_pos_gk:'🧤 Goalkeeper',sc_pos_def:'🛡 Defender',sc_pos_mid:'⚙ Midfielder',sc_pos_fwd:'⚡ Forward',
@@ -3840,7 +3946,61 @@ function renderSquadRoundNav(){
       const played=STATE.mySquads[i]!==undefined;
       const future=i>live;
       return `<button class="rnav-chip ${i===STATE.curRound?'on':''} ${played?'played':''}" ${future?'disabled':''} onclick="goRound(${i})" title="${roundName(i)}">${i+1}</button>`;
-    }).join('')+'</div>';
+    }).join('')+`<button class="rnav-help-btn" onclick="openHelpModal()">❓ ${t('help_title')}</button></div>`;
+}
+
+// ═══════════════════════════════════════════════
+// HELP / FAQ — plain-language explainer for total newcomers: what the game
+// is, how a squad is built, how points/prices/deadlines work, and a short
+// FAQ. Content lives here (built with t(), not static data-i18n markup)
+// so it can freely mix in the same reused scoring-table structure as the
+// "Taškų sistema" panel and FAQ q/a pairs — applyStaticI18n() only ever
+// sets textContent, which can't carry that structure. Numbers quoted here
+// (budget, position points, price floor, freeze window, technical-result
+// bonus) must stay in lockstep with CONFIG/PRICE_FLOOR/PICK_FREEZE_MS/
+// CONFIG.TECH_WIN_PTS,TECH_LOSS_PTS — this is an explainer, not a second
+// source of truth, so if any of those ever change, update the wording here
+// too rather than leaving it to quietly go stale.
+function openHelpModal(){
+  renderHelpModal();
+  document.getElementById('help-bg').classList.add('open');
+}
+function closeHelpModal(){document.getElementById('help-bg').classList.remove('open');}
+function renderHelpModal(){
+  const el=document.getElementById('help-body');if(!el)return;
+  const sec=(icon,hKey,bodyHtml)=>`<div class="help-sec"><div class="help-sec-h">${icon} ${t(hKey)}</div>${bodyHtml}</div>`;
+  const scoringTableHtml=`
+    <div class="sc-table-wrap">
+      <table class="sc-table"><thead><tr>
+        <th>${t('sc_th_pos')}</th><th>${t('sc_th_goal')}</th><th>${t('sc_th_cs')}</th><th>${t('sc_th_one')}</th>
+      </tr></thead><tbody>
+        <tr><td>${t('sc_pos_gk')}</td><td><span class="rp">+10</span></td><td><span class="rp">+10</span></td><td><span class="rp">+5</span></td></tr>
+        <tr><td>${t('sc_pos_def')}</td><td><span class="rp">+6</span></td><td><span class="rp">+8</span></td><td><span class="rp">+4</span></td></tr>
+        <tr><td>${t('sc_pos_mid')}</td><td><span class="rp">+5</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
+        <tr><td>${t('sc_pos_fwd')}</td><td><span class="rp">+4</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
+      </tbody></table>
+    </div>
+    <div class="rrow"><span>${t('sc_win')}</span><span class="rp">+2</span></div>
+    <div class="rrow"><span>${t('sc_loss')}</span><span class="rp neg">−1</span></div>
+    <div class="rrow"><span>${t('sc_red')}</span><span class="rp neg">−3</span></div>
+    <div class="rrow"><span>${t('sc_motm')}</span><span class="rp">+2</span></div>
+    <div class="rrow cap-row"><span>${t('sc_cap')}</span><span class="rp cap">×2</span></div>
+    <div class="rrow note-row"><span>${t('sc_note')}</span></div>`;
+  const faq=(qKey,aKey)=>`<div class="help-faq-q">🔸 ${t(qKey)}</div><div class="help-faq-a">${t(aKey)}</div>`;
+  el.innerHTML=
+    sec('🎯','help_s1_h',`<div class="help-sec-p">${t('help_s1_p')}</div>`)+
+    sec('🧩','help_s2_h',`<ul class="help-list">${['help_s2_li1','help_s2_li2','help_s2_li3','help_s2_li4','help_s2_li5'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
+    sec('⭐','help_s3_h',`<div class="help-sec-p">${t('help_s3_p')}</div>`)+
+    sec('🧮','help_s4_h',scoringTableHtml)+
+    sec('⚡','help_s5_h',`<div class="help-sec-p">${t('help_s5_p')}</div>`)+
+    sec('💰','help_s6_h',`<div class="help-sec-p">${t('help_s6_p1')}</div><div class="help-sec-p">${t('help_s6_p2')}</div><div class="help-sec-p">${t('help_s6_p3')}</div>`)+
+    sec('🔒','help_s7_h',`<div class="help-sec-p">${t('help_s7_p1')}</div><div class="help-sec-p">${t('help_s7_p2')}</div>`)+
+    sec('❓','help_faq_h',
+      faq('help_faq_q1','help_faq_a1')+
+      faq('help_faq_q2','help_faq_a2')+
+      faq('help_faq_q3','help_faq_a3')+
+      faq('help_faq_q4','help_faq_a4')+
+      faq('help_faq_q5','help_faq_a5'));
 }
 
 // Called by setLang() after a language switch — re-renders whatever
@@ -3858,6 +4018,7 @@ function refreshDynamicI18n(){
   if(document.getElementById('page-teamseason')?.classList.contains('on')){renderTSRoundTabs();renderTeamOfSeason();}
   if(document.getElementById('page-stats')?.classList.contains('on'))renderStats();
   if(document.getElementById('tut-bg')?.classList.contains('open'))renderTutStep();
+  if(document.getElementById('help-bg')?.classList.contains('open'))renderHelpModal();
   // A custom fantasy team name overrides the localized placeholder title
   // that applyStaticI18n() just reset it to — put it back.
   if(STATE.fantasyTeamName){
