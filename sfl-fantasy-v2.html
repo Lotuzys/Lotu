@@ -624,14 +624,13 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
    its own line the moment the column gets squeezed). */
 .stats-teamname{display:flex;align-items:center;gap:6px;white-space:nowrap}
 @media (max-width:680px){
-  /* The sticky Žaidėjas column was forcing itself as wide as the longest
-     name (white-space:nowrap), eating most of a narrow phone screen and
-     leaving barely anything for the actual scrolling stat columns. Cap it
-     and let the surname wrap onto a 2nd line instead — kit icon and
-     position badge (already flex-shrink:0) stay put on the first line. */
-  .stats-table th:nth-child(2),.stats-table td:nth-child(2){max-width:92px}
-  .stats-pname{white-space:normal;align-items:flex-start}
-  .stats-pname span:first-of-type{white-space:normal;overflow-wrap:break-word;flex:1;min-width:0;line-height:1.25}
+  /* Modest cap on the sticky Žaidėjas column so it doesn't eat the whole
+     phone screen — everything else (layout, centering) stays exactly as
+     before. A normal two-word vardas+pavardė still fits on one line;
+     letting the name span itself wrap (rather than forcing nowrap) only
+     kicks in for the rare unusually long (3-word) name. */
+  .stats-table th:nth-child(2),.stats-table td:nth-child(2){max-width:140px}
+  .stats-pname span:first-of-type{white-space:normal;overflow-wrap:break-word}
 }
 
 /* SCORING SYSTEM PANEL — position-dependent points as a small table */
