@@ -1053,6 +1053,7 @@ a{color:var(--or)}
         <th class="stats-sortable" onclick="setStatsSort('name')"><span data-i18n="th_player">Žaidėjas</span><span class="stats-arrow" id="arr-name"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('team')"><span data-i18n="th_team">Komanda</span><span class="stats-arrow" id="arr-team"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('price')"><span data-i18n="sort_price">Kaina</span><span class="stats-arrow" id="arr-price"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('pricechange')"><span data-i18n="sort_pricechange">Kainos pokytis</span><span class="stats-arrow" id="arr-pricechange"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('ownership')"><span data-i18n="sort_own">Populiarumas</span><span class="stats-arrow" id="arr-ownership"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('form')"><span data-i18n="stats_form">Forma</span><span class="stats-arrow" id="arr-form"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('total')"><span data-i18n="sort_total">Taškai</span><span class="stats-arrow" id="arr-total"></span></th>
@@ -1308,7 +1309,7 @@ const I18N={
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
     prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
     group_a_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupė`,
-    sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Populiarumas',sort_goals:'Įmušti įvarčiai',
+    sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Populiarumas',sort_goals:'Įmušti įvarčiai',sort_pricechange:'Kainos pokytis',
     msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
     msg_open_badge:'Atviras',
     msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
@@ -1421,7 +1422,7 @@ const I18N={
     prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
     prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',
     group_a_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()}`,
-    sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',
+    sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',sort_pricechange:'Price change',
     msg_saved:(r,d)=>`<strong>${r}</strong> team saved — change it as many times as you like until <strong>${d}</strong>.`,
     msg_open_badge:'Open',
     msg_open_sub:(d1,d2,dl)=>`${d1} and ${d2} · deadline ${dl}`,
@@ -2745,6 +2746,19 @@ function currentSeasonGoals(id){
   return total;
 }
 
+// Price delta from the LATEST recalcPricesForRound() run for this player —
+// price minus priceBase at the highest round key present in priceBase
+// (never a season-cumulative sum: priceBase.{round} only ever freezes the
+// price immediately before THAT round's own adjustment, per the automatic
+// price-update rules). 0 for a player never yet recalculated.
+function priceChangeFor(p){
+  if(!p.priceBase)return 0;
+  const rounds=Object.keys(p.priceBase).map(Number);
+  if(!rounds.length)return 0;
+  const latest=Math.max(...rounds);
+  return Math.round((p.price-p.priceBase[latest])*2)/2;
+}
+
 // ═══════════════════════════════════════════════
 // OWNERSHIP — % of the managers who actually submitted a squad FOR THIS
 // ROUND that have this player in it. Recomputed on demand (entering the
@@ -2837,7 +2851,7 @@ async function loadPlayersFromFirestore(){
     const loaded=snap.docs.map(d=>d.data())
       .filter(p=>p.id&&p.pos&&p.team&&p.division)
       .sort((a,b)=>a.id-b.id)
-      .map(p=>({id:p.id,pos:p.pos,name:p.name,team:p.team,goals:p.goals||0,price:p.price,active:p.active!==false,division:p.division}));
+      .map(p=>({id:p.id,pos:p.pos,name:p.name,team:p.team,goals:p.goals||0,price:p.price,active:p.active!==false,division:p.division,priceBase:p.priceBase||{}}));
     if(!loaded.length)return false;
     PLAYERS=loaded;
     return true;
@@ -3278,7 +3292,7 @@ function renderSortOptions(){
   const roundDefault=STATE.curRound===0?'price':'total';
   const cur=roundChanged?roundDefault:(sel.value||roundDefault);
   const lastOpt=lastRoundWithData()!==null?`<option value="last">${t('sort_last')}</option>`:'';
-  sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>${lastOpt}<option value="ownership">${t('sort_own')}</option><option value="goals">${t('sort_goals')}</option>`;
+  sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>${lastOpt}<option value="ownership">${t('sort_own')}</option><option value="goals">${t('sort_goals')}</option><option value="pricechange">${t('sort_pricechange')}</option>`;
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:roundDefault;
 }
 
@@ -3319,6 +3333,15 @@ function renderList(){
     // — that field is last season's tally, used only for initial pricing.
     list.sort((a,b)=>currentSeasonGoals(b.id)-currentSeasonGoals(a.id)||b.price-a.price);
     headlineFor=p=>`⚽ ${currentSeasonGoals(p.id)}`;
+  }else if(sortMode==='pricechange'){
+    // Biggest risers first, biggest fallers last — same latest-recalc delta
+    // as priceChangeFor() everywhere else.
+    list.sort((a,b)=>priceChangeFor(b)-priceChangeFor(a)||b.price-a.price);
+    headlineFor=p=>{
+      const d=priceChangeFor(p);
+      const color=d>0?'var(--gr)':d<0?'var(--red)':'inherit';
+      return `<span style="color:${color}">${d>0?'+':''}${d}M</span>`;
+    };
   }else{
     list.sort((a,b)=>b.price-a.price);
   }
@@ -4398,7 +4421,7 @@ function setStatsSort(key){
   renderStats();
 }
 function updateStatsArrows(){
-  ['name','team','price','ownership','form','total'].forEach(k=>{
+  ['name','team','price','pricechange','ownership','form','total'].forEach(k=>{
     const el=document.getElementById('arr-'+k);
     if(el)el.textContent=STATS_SORT===k?(STATS_DIR==='desc'?'▼':'▲'):'';
   });
@@ -4440,6 +4463,7 @@ async function renderStats(){
     team:p=>p.team,
     total:p=>totals[p.id]||0,
     price:p=>p.price,
+    pricechange:p=>priceChangeFor(p),
     ownership:p=>ownership[p.id]||0,
     form:p=>form[p.id]||0,
   }[STATS_SORT]||(p=>totals[p.id]||0);
@@ -4456,10 +4480,11 @@ async function renderStats(){
       <td><div class="stats-pname">${kitSvg(p.team,22,p.division)}<span>${p.name}</span><span class="stats-pos" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div></td>
       <td>${teamLogoImg(p.team,16,p.division)}${p.team}</td>
       <td>${p.price.toFixed(1)}M</td>
+      <td style="color:${priceChangeFor(p)>0?'var(--gr)':priceChangeFor(p)<0?'var(--red)':'inherit'}">${priceChangeFor(p)>0?'+':''}${priceChangeFor(p)}M</td>
       <td>${ownership[p.id]??0}%</td>
       <td>${form[p.id]??0}</td>
       <td style="font-weight:800;color:var(--or)">${totals[p.id]||0}</td>
-    </tr>`).join('')||`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--mu)">${t('not_found')}</td></tr>`;
+    </tr>`).join('')||`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--mu)">${t('not_found')}</td></tr>`;
 }
 
 // Clicking a Statistika row — the exact same 4 figures that row already
