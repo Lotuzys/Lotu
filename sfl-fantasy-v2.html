@@ -909,7 +909,7 @@ a{color:var(--or)}
       <div class="pan">
         <div class="ph">
           <h3 id="squad-panel-title" data-i18n="your_team">Tavo komanda</h3>
-          <span class="sub" id="slot-cnt">0/7</span>
+          <button class="rnav-help-btn" style="margin-left:auto" onclick="openHelpModal()">📖 <span data-i18n="help_title">Pagalba</span></button>
         </div>
         <div class="pw">
           <div class="pitch-top">
@@ -3962,7 +3962,7 @@ function renderSquadRoundNav(){
       const played=STATE.mySquads[i]!==undefined;
       const future=i>live;
       return `<button class="rnav-chip ${i===STATE.curRound?'on':''} ${played?'played':''}" ${future?'disabled':''} onclick="goRound(${i})" title="${roundName(i)}">${i+1}</button>`;
-    }).join('')+`<button class="rnav-help-btn" onclick="openHelpModal()">❓ ${t('help_title')}</button></div>`;
+    }).join('')+'</div>';
 }
 
 // ═══════════════════════════════════════════════
@@ -4048,7 +4048,6 @@ function updateBottomBar(){
   document.getElementById('bud-left').textContent=left.toFixed(1)+'M';
   document.getElementById('bud-left').className='bv'+(left<8?' low':'');
   document.getElementById('bud-used').textContent=`${t('budget_used')} ${u.toFixed(1)}M`;
-  document.getElementById('slot-cnt').textContent=`${f}/7`;
   document.getElementById('bb-n').textContent=f;
   document.getElementById('bb-b').textContent=`${t('budget_label')} ${left.toFixed(1)}M`;
   const hdrTotalPts=computeScoring(STATE.mySquads,STATE.DB).totalPts;
