@@ -927,7 +927,6 @@ a{color:var(--or)}
             </div>
             <div class="pf-ov" id="squad-nosquad-ov" style="display:none">
               <div class="pf-ov-box">
-                <div class="pf-ov-icon">❌</div>
                 <div class="pf-ov-txt" id="squad-nosquad-ov-txt"></div>
               </div>
             </div>
@@ -4809,7 +4808,10 @@ async function renderUserSquadViewer(u){
   const pitchEl=document.getElementById('usq-pitch');
   const snap=USQ_ROUND!==null?(u.mySquads||{})[USQ_ROUND]:null;
   if(!snap){
-    pitchEl.innerHTML=`<div style="padding:40px 10px;text-align:center;color:#fff;font-size:15px;font-weight:700">${t('hist_no_squad')}</div>`;
+    // Same overlay-card look as the squad page's own no-squad/frozen states
+    // (squad-nosquad-ov) — .pf-ov's position:absolute;inset:0 fills the
+    // pitch cleanly since there's nothing else in it to overlay here.
+    pitchEl.innerHTML=`<div class="pf-ov"><div class="pf-ov-box"><div class="pf-ov-txt">${t('hist_no_squad')}</div></div></div>`;
     renderUserRoundNav(u);
     return;
   }
