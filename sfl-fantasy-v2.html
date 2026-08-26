@@ -589,6 +589,20 @@ a{color:var(--or)}
 .stats-table{min-width:640px}
 .stats-table th.stats-sortable{cursor:pointer;user-select:none;transition:opacity .15s var(--ease)}
 .stats-table th.stats-sortable:hover{opacity:.85}
+/* Freeze the # and Žaidėjas columns while everything else (Komanda, Kaina,
+   Kainos pokytis, Populiarumas, Forma, Taškai) scrolls sideways — the table
+   is wider than the viewport on mobile (min-width above), so without this
+   the player's own identity scrolls out of view along with every stat
+   column, leaving a mid-scroll row unreadable. The two need an explicit
+   opaque background (not just inherited from the table) or content from
+   the scrolling columns would show through underneath them while sticky;
+   the hover override keeps stats-row's hover tint working across the
+   frozen cells too, since they'd otherwise paint over it. */
+.stats-table th:nth-child(1),.stats-table td:nth-child(1){position:sticky;left:0;width:36px;z-index:2}
+.stats-table th:nth-child(2),.stats-table td:nth-child(2){position:sticky;left:36px;z-index:2;box-shadow:2px 0 4px -2px rgba(23,21,18,.15)}
+.stats-table td:nth-child(1),.stats-table td:nth-child(2){background:var(--card)}
+.stats-table th:nth-child(1),.stats-table th:nth-child(2){background:var(--or-grad)}
+.stats-table .stats-row:hover td:nth-child(1),.stats-table .stats-row:hover td:nth-child(2){background:var(--sur)}
 .stats-arrow{display:inline-block;margin-left:3px;font-size:9px}
 .stats-row{cursor:pointer;transition:background .15s var(--ease)}
 .stats-row:hover{background:var(--sur)}
