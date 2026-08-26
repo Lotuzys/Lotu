@@ -337,6 +337,44 @@ admin-entered) results once actual new-season matches are played; don't
 repeat the "reuse old results" approach for later rounds without being
 asked.
 
+## Onboarding consent checkboxes — GDPR-driven, do not pre-check
+
+At onboarding (`#page-onboard`, `finishOnboard()`/`showOnboarding()`/
+`renderObConsent()` in `sfl-fantasy-v2.html`), every new user (any signup
+method — email/password, Google, Facebook — since `loginUser()` routes
+every brand-new account through this same screen) sees two **separate**
+checkboxes, **neither ever pre-checked**:
+
+1. **Privacy Policy + Rules acceptance — required.** Blocks onboarding
+   (`finishOnboard()` toasts `toast_need_consent` and returns) until
+   checked. Timestamped once into `STATE.consentPolicyAt` via
+   `firebase.firestore.FieldValue.serverTimestamp()` and never
+   overwritten/re-prompted afterward.
+2. **Betsson marketing offers — optional, unchecked by default,
+   independent of #1.** If checked, `STATE.consentMarketing=true` and
+   `STATE.consentMarketingAt` gets its own server timestamp; the user's
+   email is then shared with Betsson for their own direct marketing
+   (newsletters/offers) — disclosed in the Privacy Policy's
+   `privacy_s2b_h`/`privacy_s2b_p` section.
+
+This design exists because the owner's original idea — both boxes
+pre-selected/pre-checked — is invalid under GDPR (Recital 32; CJEU
+*Planet49*, C-673/17: pre-ticked consent isn't valid consent) and
+bundling third-party marketing consent with privacy-policy acceptance
+isn't allowed either — they must be separate and granular. **Do not
+reintroduce pre-checked boxes or re-merge the two consents** if asked to
+"simplify" this later without the owner explicitly re-confirming they
+understand the compliance trade-off (as they did when picking this
+design).
+
+Both fields persist via the normal `stateToObj()`/`loadStateFromObj()`
+round-trip alongside the rest of `STATE`, so no separate save path exists
+for them. `renderObConsent()` builds the Privacy Policy/Rules sentence
+with real `<a>` links (`openPrivacyModal()`/`openRulesModal()`) — it's
+JS-rendered rather than plain `data-i18n` specifically so those links
+survive translation, and is re-invoked by `refreshDynamicI18n()` when the
+onboarding page is on-screen during a language switch.
+
 ## Operating conventions for this repo
 
 - Single source file: `sfl-fantasy-v2.html`. Verify JS syntax (extract

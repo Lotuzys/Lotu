@@ -148,6 +148,10 @@ a{color:var(--or)}
 .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:22px}
 .ob-div-group{margin-bottom:20px}
 .ob-div-label{font-size:12px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;margin-bottom:9px}
+.ob-consent{margin-bottom:18px;display:flex;flex-direction:column;gap:10px}
+.ob-check{display:flex;align-items:flex-start;gap:9px;cursor:pointer;font-size:12px;line-height:1.5;color:var(--ink2)}
+.ob-check input[type="checkbox"]{flex:none;width:17px;height:17px;margin-top:1px;accent-color:var(--or);cursor:pointer}
+.ob-check a{color:var(--or);text-decoration:underline;cursor:pointer}
 .ob-div-teams{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .team-tile{border:1.5px solid var(--bor);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s var(--ease);font-size:12px;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:7px}
 .team-tile .team-logo{width:28px;height:28px}
@@ -867,6 +871,20 @@ a{color:var(--or)}
       <div class="form-group">
         <input class="form-input" id="ob-teamname" type="text" placeholder="Įrašyk savo komandos pavadinimą" data-i18n-ph="ph_teamname" maxlength="30">
       </div>
+      <!-- Neither box is ever pre-checked — see STATE.consentPolicyAt's
+           comment and CLAUDE.md. The policy sentence is built by
+           renderObConsent() (not plain data-i18n) since it needs the
+           Privatumo politika/Taisyklės words to stay clickable links. -->
+      <div class="ob-consent">
+        <label class="ob-check">
+          <input type="checkbox" id="ob-consent-policy">
+          <span id="ob-consent-policy-txt"></span>
+        </label>
+        <label class="ob-check">
+          <input type="checkbox" id="ob-consent-marketing">
+          <span data-i18n="ob_consent_marketing">Noriu gauti „Betsson" pasiūlymus ir naujienas el. paštu (neprivaloma) — sutinku, kad mano el. paštas būtų perduotas „Betsson" tiesioginei rinkodarai.</span>
+        </label>
+      </div>
       <button class="form-btn" id="ob-start-btn" onclick="finishOnboard()">
         <span class="btn-spin" id="ob-start-spin" style="display:none"></span>
         <span id="ob-start-label" data-i18n="btn_start">Pradėti žaisti →</span>
@@ -1369,6 +1387,9 @@ const I18N={
     err_fb_account_exists:'Šis el. paštas jau užregistruotas su slaptažodžiu — prisijunk įprastu būdu.',
     err_fb_popup_blocked:'Naršyklė užblokavo prisijungimo langą — leisk iššokančius langus ir bandyk dar kartą.',
     err_fb_generic:'Nepavyko prisijungti per Facebook — pabandyk dar kartą.',
+    ob_consent_policy_pre:'Sutinku su ',ob_consent_and:' ir ',ob_consent_rules_link:'Taisyklėmis',
+    ob_consent_marketing:'Noriu gauti „Betsson" pasiūlymus ir naujienas el. paštu (neprivaloma) — sutinku, kad mano el. paštas būtų perduotas „Betsson" tiesioginei rinkodarai.',
+    toast_need_consent:'Turi sutikti su Privatumo politika ir Taisyklėmis, kad galėtum tęsti',
     ob_step1:'1 žingsnis iš 2',ob_step2:'2 žingsnis iš 2',ob_title1:'Pasirink mėgstamiausią komandą',division_label:'Divizionas',
     ob_sub1:'Pasirinkus komandą būsi nukreiptas žaisti būtent jos divizione — ne rodomas prie jos lentelėje',ob_title2:'Fantasy komandos pavadinimas',
     ph_teamname:'Įrašyk savo komandos pavadinimą',btn_start:'Pradėti žaisti →',ob_loading:'Kraunama...',
@@ -1439,6 +1460,8 @@ const I18N={
     privacy_s1_p:'Registruojantis per el. paštą/slaptažodį, „Google" arba „Facebook" paskyrą, prisijungimą tvarko „Firebase Authentication". Programoje papildomai saugome: tavo pasirinktą vardą, mėgstamą komandą, fantasy komandos pavadinimą, diviziono priskyrimą bei kiekvieno turo pasirinktus žaidėjus ir kapitoną.',
     privacy_s2_h:'Kas mato tavo informaciją?',
     privacy_s2_p:'Fantasy komandos pavadinimas, mėgstama komanda, pasirinkti žaidėjai ir surinkti taškai matomi visiems to paties diviziono dalyviams — tai reikalinga lyderių lentelei, populiarumo statistikai ir komandų peržiūrai veikti. Tavo el. paštas niekada nesaugomas bendrai matomoje duomenų bazėje ir kitiems dalyviams nerodomas — jis žinomas tik tavo pačios prisijungimo sistemai.',
+    privacy_s2b_h:'„Betsson" pasiūlymai (neprivaloma)',
+    privacy_s2b_p:'Registruojantis gali papildomai, savo noru, pažymėti varnelę sutinkant gauti „Betsson" pasiūlymus ir naujienas el. paštu. Ši varnelė niekada nėra pažymėta iš anksto — pasirenki pats. Jei ją pažymi, tavo el. pašto adresas bus perduotas „Betsson" tam, kad jie galėtų tiesiogiai siųsti tau savo pasiūlymus/naujienlaiškius. Šis sutikimas visiškai atskiras nuo Privatumo politikos ir Taisyklių priėmimo — jo nepažymėjus, žaisti gali normaliai, o el. paštas niekam trečiajam neperduodamas. Sutikimą bet kada gali atšaukti parašęs žemiau nurodytu el. paštu.',
     privacy_s3_h:'Kur saugomi duomenys?',
     privacy_s3_p:'Visi duomenys saugomi „Google Firebase" (Firestore duomenų bazė ir Authentication) infrastruktūroje. Jokie tretieji analitikos ar reklamos įrankiai programoje nenaudojami.',
     privacy_s4_h:'Slapukai ir vietinė talpykla',
@@ -1554,6 +1577,9 @@ const I18N={
     err_fb_account_exists:'This email is already registered with a password — log in the usual way instead.',
     err_fb_popup_blocked:'Your browser blocked the login popup — allow popups and try again.',
     err_fb_generic:'Facebook sign-in failed — please try again.',
+    ob_consent_policy_pre:'I agree to the ',ob_consent_and:' and ',ob_consent_rules_link:'Rules',
+    ob_consent_marketing:'I want to receive Betsson offers and news by email (optional) — I consent to my email being shared with Betsson for their direct marketing.',
+    toast_need_consent:'You must agree to the Privacy Policy and Rules to continue',
     ob_step1:'Step 1 of 2',ob_step2:'Step 2 of 2',ob_title1:'Pick your favorite team',division_label:'Division',
     ob_sub1:"Picking a team places you in that team's own division — it isn't just shown next to it on a table",ob_title2:'Fantasy team name',
     ph_teamname:'Enter your team name',btn_start:'Start Playing →',ob_loading:'Loading...',
@@ -1615,6 +1641,8 @@ const I18N={
     privacy_s1_p:"When you register via email/password, Google, or Facebook, sign-in itself is handled by Firebase Authentication. The app additionally stores: your chosen display name, favorite club, fantasy team name, division assignment, and the players/captain you pick each gameweek.",
     privacy_s2_h:'Who can see your info?',
     privacy_s2_p:"Your fantasy team name, favorite club, picked players and points scored are visible to every other manager in your own division — this is what makes the leaderboard, ownership stats and squad-viewing pages work. Your email address is never stored in that shared database and is never shown to other managers — it's known only to your own sign-in.",
+    privacy_s2b_h:'Betsson offers (optional)',
+    privacy_s2b_p:"At registration you can optionally, and entirely of your own choosing, tick a box to receive Betsson offers and news by email. That box is never pre-checked — you choose it yourself. If you tick it, your email address is shared with Betsson so they can send you their own direct offers/newsletters. This consent is fully separate from accepting the Privacy Policy and Rules — leaving it unchecked, you can still play normally and your email is not shared with any third party. You can withdraw this consent at any time by writing to the email address below.",
     privacy_s3_h:'Where is data stored?',
     privacy_s3_p:'All data is stored on Google Firebase (Firestore database and Authentication) infrastructure. No third-party analytics or advertising tools are used anywhere in the app.',
     privacy_s4_h:'Cookies and local storage',
@@ -2592,6 +2620,17 @@ function showOnboarding(){
       ).join('')}</div>
     </div>`
   ).join('');
+  renderObConsent();
+}
+
+// Builds the required-consent sentence with embedded, clickable Privacy
+// Policy / Rules links (can't be plain data-i18n — see the HTML comment
+// above .ob-consent). Re-called from refreshDynamicI18n() so a language
+// switch mid-onboarding rebuilds the links in the new language too.
+function renderObConsent(){
+  const el=document.getElementById('ob-consent-policy-txt');
+  if(!el)return;
+  el.innerHTML=`${t('ob_consent_policy_pre')}<a href="#" onclick="openPrivacyModal();return false;">${t('footer_privacy')}</a>${t('ob_consent_and')}<a href="#" onclick="openRulesModal();return false;">${t('ob_consent_rules_link')}</a>.`;
 }
 
 let selectedFavTeam='';
@@ -2606,6 +2645,10 @@ function selectFavTeam(tm,div){
 async function finishOnboard(){
   const teamname=document.getElementById('ob-teamname').value.trim()||CURRENT_USER.name+"'s FC";
   if(!selectedFavTeam){toast('Pasirink mėgstamiausią komandą!');return;}
+  // Required, unchecked-by-default consent — never pre-ticked, see
+  // CLAUDE.md and STATE.consentPolicyAt's own comment. The marketing
+  // checkbox is separate and optional, checked independently below.
+  if(!document.getElementById('ob-consent-policy').checked){toast(t('toast_need_consent'));return;}
   const btn=document.getElementById('ob-start-btn');
   // Guards against a second click landing mid-flight (e.g. an impatient
   // double-tap on a slow connection) re-entering this whole function while
@@ -2615,6 +2658,12 @@ async function finishOnboard(){
   try{
     STATE.favTeam=selectedFavTeam;
     STATE.fantasyTeamName=teamname;
+    // Recorded once, here, and never re-prompted — see STATE.consentPolicyAt's
+    // own comment. consentPolicyAt was already validated non-empty above;
+    // consentMarketing is optional and only gets its own timestamp if checked.
+    if(!STATE.consentPolicyAt)STATE.consentPolicyAt=firebase.firestore.FieldValue.serverTimestamp();
+    STATE.consentMarketing=document.getElementById('ob-consent-marketing').checked;
+    if(STATE.consentMarketing)STATE.consentMarketingAt=firebase.firestore.FieldValue.serverTimestamp();
     STATE.division=selectedDivision||divisionForTeam(selectedFavTeam);
     setActiveDivision(STATE.division);
     applyStaticI18n();
@@ -2669,6 +2718,12 @@ const STATE={
   mySquads:{},
   DB:{},teams:null,savedMatches:new Set(),
   favTeam:'',fantasyTeamName:'',division:'A',
+  // Recorded once at onboarding (finishOnboard()) and never re-prompted —
+  // consentPolicyAt is required (blocks onboarding until checked);
+  // consentMarketing is the separate, optional, unchecked-by-default
+  // Betsson-offers opt-in. Neither is ever pre-checked in the UI — see
+  // CLAUDE.md.
+  consentPolicyAt:null,consentMarketing:false,consentMarketingAt:null,
 };
 STATE.teams=freshTeams();
 
@@ -2680,6 +2735,7 @@ function resetStateData(){
   STATE.mySquads={};
   STATE.DB={};STATE.teams=freshTeams();STATE.savedMatches=new Set();
   STATE.favTeam='';STATE.fantasyTeamName='';STATE.division='A';
+  STATE.consentPolicyAt=null;STATE.consentMarketing=false;STATE.consentMarketingAt=null;
 }
 
 // Per-user document (profile + in-progress pitch builder only — NOT
@@ -2701,6 +2757,11 @@ function stateToObj(){
     captain:STATE.captain,
     slots:Object.fromEntries(Object.entries(STATE.slots).map(([k,v])=>[k,v.map(p=>p?p.id:null)])),
     taken:[...STATE.taken],takenTeams:[...STATE.takenTeams],
+    // Recorded once at onboarding, then just carried forward unchanged on
+    // every later save — see finishOnboard() for where these are actually
+    // set, and the STATE literal's comment for why neither is ever
+    // pre-checked in the UI.
+    consentPolicyAt:STATE.consentPolicyAt,consentMarketing:STATE.consentMarketing,consentMarketingAt:STATE.consentMarketingAt,
   };
 }
 
@@ -2716,6 +2777,9 @@ function loadStateFromObj(s){
   STATE.captain=s.captain??null;
   if(s.slots)Object.entries(s.slots).forEach(([pos,ids])=>{STATE.slots[pos]=ids.map(id=>id?PLAYERS.find(p=>p.id===id)||null:null);});
   STATE.taken=new Set(s.taken??[]);STATE.takenTeams=new Set(s.takenTeams??[]);
+  STATE.consentPolicyAt=s.consentPolicyAt??null;
+  STATE.consentMarketing=s.consentMarketing??false;
+  STATE.consentMarketingAt=s.consentMarketingAt??null;
 }
 
 // ═══════════════════════════════════════════════
@@ -4154,6 +4218,7 @@ function renderPrivacyModal(){
   el.innerHTML=
     infoSec('','privacy_s1_h',`<div class="help-sec-p">${t('privacy_s1_p')}</div>`)+
     infoSec('','privacy_s2_h',`<div class="help-sec-p">${t('privacy_s2_p')}</div>`)+
+    infoSec('','privacy_s2b_h',`<div class="help-sec-p">${t('privacy_s2b_p')}</div>`)+
     infoSec('','privacy_s3_h',`<div class="help-sec-p">${t('privacy_s3_p')}</div>`)+
     infoSec('','privacy_s4_h',`<div class="help-sec-p">${t('privacy_s4_p')}</div>`)+
     infoSec('','privacy_s5_h',`<div class="help-sec-p">${t('privacy_s5_p')}</div>`)+
@@ -4202,6 +4267,7 @@ function refreshDynamicI18n(){
   if(document.getElementById('help-bg')?.classList.contains('open'))renderHelpModal();
   if(document.getElementById('privacy-bg')?.classList.contains('open'))renderPrivacyModal();
   if(document.getElementById('rules-bg')?.classList.contains('open'))renderRulesModal();
+  if(document.getElementById('page-onboard')?.classList.contains('on'))renderObConsent();
   // A custom fantasy team name overrides the localized placeholder title
   // that applyStaticI18n() just reset it to — put it back.
   if(STATE.fantasyTeamName){
