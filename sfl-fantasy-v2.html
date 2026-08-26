@@ -3044,7 +3044,13 @@ function showPage(name,btn,opts){
   if(name==='standings')renderStFull();
   if(name==='leaders')  renderLB();
   if(name==='teamseason')renderTeamOfSeason();
-  if(name==='stats')    renderStats();
+  // Reset to the default (Taškai, descending) every time the page is
+  // actually navigated to — a sort picked earlier in the session (e.g.
+  // clicking "Kaina") must not silently stick the NEXT time you open the
+  // tab. setStatsDivision()/setStatsPosF()/setStatsTeamF() call
+  // renderStats() directly (not through here) precisely so switching
+  // divisions/filters WHILE already on the page keeps your current sort.
+  if(name==='stats')    {STATS_SORT='total';STATS_DIR='desc';renderStats();}
   if(name==='admin')    renderAdmin();
   saveCurrentState();
   if(!opts.skipHistory)history.pushState({page:name},'','#'+name);
@@ -4154,7 +4160,13 @@ function computeFormPts(db,div,n){
 // through the current one, inclusive), not just a single round's snapshot.
 // e.g. 0% in rounds 1-4 and 100% in round 5 averages to 20%, not 100%.
 async function computeOwnershipForDivision(div){
-  const allUsersAll=await fetchAllUsers();
+  // Force a fresh fetch, bypassing fetchAllUsers()'s 20s cache — Statistika
+  // is the one place ownership needs to be right THE MOMENT you switch
+  // divisions/filters, not up to 20s stale from whatever the last squad-
+  // picker read happened to cache (which could easily be from before a
+  // squad was even submitted, i.e. 0% for everyone, and then silently keep
+  // being served as "the" answer within that window).
+  const allUsersAll=await fetchAllUsers(true);
   const allUsers=allUsersAll.filter(u=>(u.division||'A')===div);
   const players=PLAYERS.filter(p=>p.division===div);
   const rounds=Array.from({length:computeCurrentRound()+1},(_,i)=>i);
