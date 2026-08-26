@@ -375,6 +375,22 @@ JS-rendered rather than plain `data-i18n` specifically so those links
 survive translation, and is re-invoked by `refreshDynamicI18n()` when the
 onboarding page is on-screen during a language switch.
 
+**Marketing consent can be withdrawn (or re-given) self-service from the
+Profile modal** (`openProfile()`/`toggleProfileMarketingConsent()`), not
+just by emailing the owner — reuses the exact same `ob_consent_marketing`
+i18n label and `.ob-check` styling as the onboarding checkbox for
+consistency. Withdrawing only flips `STATE.consentMarketing` back to
+`false`; it deliberately does NOT clear `STATE.consentMarketingAt`, which
+stays as the historical record of when consent was originally given. A
+fresh timestamp is only stamped when the box transitions back to checked
+(re-consenting), mirroring `finishOnboard()`'s own logic.
+
+**Data retention**: the Privacy Policy's `privacy_s5_p` states data is
+kept for 2 months after the season ends before it may be deleted (owner-
+set figure — change only if the owner asks). This is a stated policy in
+the text only; nothing in the code currently enforces or automates
+deletion after that window.
+
 ## Operating conventions for this repo
 
 - Single source file: `sfl-fantasy-v2.html`. Verify JS syntax (extract

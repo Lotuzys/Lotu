@@ -1278,6 +1278,14 @@ a{color:var(--or)}
       <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_favteam">Mėgstama komanda</span><span class="prof-row-val" id="prof-favteam">—</span></div>
       <div class="prof-row"><span class="prof-row-lbl" id="prof-totalpts-lbl">Iš viso taškų</span><span class="prof-row-val" id="prof-pts">0</span></div>
       <div class="prof-row"><span class="prof-row-lbl" id="prof-roundsplayed-lbl">Turų sužaista</span><span class="prof-row-val" id="prof-rounds">0</span></div>
+      <!-- Self-service withdraw/re-give of the optional marketing consent —
+           the Privacy Policy's own text (privacy_s2b_p) already says this
+           can be withdrawn by email; this is the same choice made directly
+           in-app, one click, instead of requiring an email round-trip. -->
+      <label class="ob-check" style="margin-top:12px">
+        <input type="checkbox" id="prof-consent-marketing" onchange="toggleProfileMarketingConsent(this.checked)">
+        <span data-i18n="ob_consent_marketing">Sutinku gauti partnerių pasiūlymus ir naujienas el. paštu (neprivaloma).</span>
+      </label>
       <button class="prof-close" onclick="document.getElementById('prof-bg').classList.remove('open')" data-i18n="btn_close">Uždaryti</button>
       <button class="prof-logout" onclick="doLogout()" data-i18n="btn_logout">Atsijungti</button>
     </div>
@@ -1414,6 +1422,7 @@ const I18N={
     toast_need_consent:'Turi sutikti su Privatumo politika ir Taisyklėmis, kad galėtum tęsti',
     ob_no_team_label:'Nepalaikau jokios komandos',ob_pick_division_label:'Kurio diviziono fantasy norėtumėte žaisti?',
     toast_need_division:'Pasirink divizioną!',
+    toast_marketing_consent_on:'Sutikimas gauti pasiūlymus įjungtas',toast_marketing_consent_off:'Sutikimas gauti pasiūlymus atšauktas',
     ob_step1:'1 žingsnis iš 2',ob_step2:'2 žingsnis iš 2',ob_title1:'Pasirink mėgstamiausią komandą',division_label:'Divizionas',
     ob_sub1:'Pasirinkus komandą būsi nukreiptas žaisti būtent jos divizione',ob_title2:'Fantasy komandos pavadinimas',
     ph_teamname:'Įrašyk savo komandos pavadinimą',btn_start:'Pradėti žaisti →',ob_loading:'Kraunama...',
@@ -1490,8 +1499,8 @@ const I18N={
     privacy_s3_p:'Visi duomenys saugomi „Google Firebase" (Firestore duomenų bazė ir Authentication) infrastruktūroje. Jokie tretieji analitikos ar reklamos įrankiai programoje nenaudojami.',
     privacy_s4_h:'Slapukai ir vietinė talpykla',
     privacy_s4_p:'Programa naudoja tik naršyklės vietinę atmintį (localStorage), kad įsimintų tavo pasirinktą kalbą (LT/EN). Jokie stebėjimo slapukai nenaudojami.',
-    privacy_s5_h:'Duomenų ištrynimas',
-    privacy_s5_p:'Norėdamas, kad tavo paskyra ir duomenys būtų ištrinti, susisiek el. paštu žemiau — paskyra bus pašalinta per protingą terminą.',
+    privacy_s5_h:'Duomenų ištrynimas ir saugojimo trukmė',
+    privacy_s5_p:'Tavo duomenys saugomi tol, kol naudojiesi paskyra. Sezonui pasibaigus, duomenys saugomi dar 2 mėnesius po sezono pabaigos, po to gali būti ištrinami. Norėdamas, kad tavo paskyra ir duomenys būtų ištrinti anksčiau, susisiek el. paštu žemiau — paskyra bus pašalinta per protingą terminą.',
     privacy_s6_h:'Kontaktai',
     privacy_s6_p:'Klausimais dėl privatumo rašyk: eima.lotuzys@gmail.com',
     rules_title:'Taisyklės',
@@ -1607,6 +1616,7 @@ const I18N={
     toast_need_consent:'You must agree to the Privacy Policy and Rules to continue',
     ob_no_team_label:"I don't support any team",ob_pick_division_label:'Which division\'s fantasy would you like to play?',
     toast_need_division:'Pick a division!',
+    toast_marketing_consent_on:'Marketing consent enabled',toast_marketing_consent_off:'Marketing consent withdrawn',
     ob_step1:'Step 1 of 2',ob_step2:'Step 2 of 2',ob_title1:'Pick your favorite team',division_label:'Division',
     ob_sub1:"Picking a team places you in that team's own division",ob_title2:'Fantasy team name',
     ph_teamname:'Enter your team name',btn_start:'Start Playing →',ob_loading:'Loading...',
@@ -1674,8 +1684,8 @@ const I18N={
     privacy_s3_p:'All data is stored on Google Firebase (Firestore database and Authentication) infrastructure. No third-party analytics or advertising tools are used anywhere in the app.',
     privacy_s4_h:'Cookies and local storage',
     privacy_s4_p:'The app only uses your browser\'s local storage (localStorage) to remember your chosen language (LT/EN). No tracking cookies are used.',
-    privacy_s5_h:'Data deletion',
-    privacy_s5_p:'To have your account and data deleted, contact the email below — your account will be removed within a reasonable time.',
+    privacy_s5_h:'Data deletion and retention',
+    privacy_s5_p:"Your data is kept for as long as you use your account. Once a season ends, data is kept for a further 2 months, after which it may be deleted. If you'd like your account and data deleted sooner, contact the email below — your account will be removed within a reasonable time.",
     privacy_s6_h:'Contact',
     privacy_s6_p:'For privacy questions, write to: eima.lotuzys@gmail.com',
     rules_title:'Rules',
@@ -5269,7 +5279,19 @@ function openProfile(){
   document.getElementById('prof-rounds').textContent=roundsPlayed;
   document.getElementById('prof-totalpts-lbl').textContent=t('prof_totalpts',totalPts);
   document.getElementById('prof-roundsplayed-lbl').textContent=t('prof_roundsplayed',roundsPlayed);
+  document.getElementById('prof-consent-marketing').checked=!!STATE.consentMarketing;
   document.getElementById('prof-bg').classList.add('open');
+}
+
+// Self-service withdraw/re-give for the optional marketing consent —
+// mirrors finishOnboard()'s own logic (only stamps a fresh consentMarketingAt
+// when actually (re)consenting; withdrawing just flips the flag, keeping the
+// original consent timestamp as history rather than erasing it).
+function toggleProfileMarketingConsent(checked){
+  STATE.consentMarketing=checked;
+  if(checked)STATE.consentMarketingAt=firebase.firestore.FieldValue.serverTimestamp();
+  saveCurrentState();
+  toast(checked?t('toast_marketing_consent_on'):t('toast_marketing_consent_off'));
 }
 
 // ═══════════════════════════════════════════════
