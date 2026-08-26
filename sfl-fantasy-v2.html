@@ -1071,6 +1071,15 @@ a{color:var(--or)}
     </div>
     <div class="lb-prize" id="lb-prize" style="display:none"></div>
     <div id="lb-list"></div>
+    <!-- Fan-club mini league: always the VIEWER's own favTeam, independent of
+         whichever division the lb-divsel filter above is browsing — a
+         personal "your team's fans" board, not another division switcher.
+         Hidden entirely if the viewer has no favTeam (shouldn't happen for
+         a normal onboarded user, but admins can lack one). -->
+    <div id="lb-fanleague" style="display:none">
+      <div class="ph" style="margin-top:24px"><h3 id="lb-fanleague-title"></h3><span class="sub" id="lb-fanleague-sub"></span></div>
+      <div id="lb-fanleague-list"></div>
+    </div>
   </div></div>
 </div>
 
@@ -1556,6 +1565,7 @@ const I18N={
     no_finished_rounds:'Dar nėra pasibaigusių turų',whole_season:'visas sezonas',fallback_player:'Žaidėjas',
     lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas!`,
     lb_sub_count:n=>`${n} ${ltForm(n,'dalyvis','dalyviai','dalyvių')}`,you_suffix:'(Tu)',rounds_count:n=>`${n} ${ltForm(n,'turas','turai','turų')}`,no_participants:'Dar nėra dalyvių',
+    lb_fanleague_title:team=>`${team} lyga`,
   },
   en:{
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
@@ -1733,6 +1743,7 @@ const I18N={
     no_finished_rounds:'No finished gameweeks yet',whole_season:'whole season',fallback_player:'Player',
     lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} winner!`,
     lb_sub_count:n=>`${n} participants`,you_suffix:'(You)',rounds_count:n=>`${n} gameweeks`,no_participants:'No participants yet',
+    lb_fanleague_title:team=>`${team} League`,
   },
 };
 function t(key,...args){
@@ -5000,6 +5011,57 @@ async function renderLB(){
       <div>
         <div class="lbname">${escHtml(r.teamName)}${r.isMe?' '+t('you_suffix'):''}</div>
         <div class="lbteamname">${r.favTeam?escHtml(r.favTeam):''}</div>
+      </div>
+      <span class="lbr">${LB_MODE==='round'?'':t('rounds_count',r.rounds)}</span>
+      <span class="lbpts" style="color:${r.pts<0?'var(--red)':'inherit'}">${r.pts}</span>
+    </div>`).join('')||`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_participants')}</div>`;
+  renderLBFanLeague();
+}
+
+// Fan-club mini league — every manager who picked the SAME real-world
+// favorite team as the viewer (STATE.favTeam), e.g. "El Dorado lyga" for
+// anyone who supports El Dorado. Deliberately anchored to the VIEWER's own
+// favTeam/division, not to LB_DIVISION above (that dropdown browses other
+// divisions' full boards; this is always "my team's fans", wherever you're
+// currently looking) — reuses whichever LB_MODE/LB_ROUND the main table is
+// already in so it never needs its own season/round toggle.
+async function renderLBFanLeague(){
+  const sec=document.getElementById('lb-fanleague');
+  if(!sec)return;
+  const fanTeam=STATE.favTeam;
+  if(!CURRENT_USER||!fanTeam){sec.style.display='none';return;}
+  sec.style.display='';
+  const fanDiv=STATE.division;
+  document.getElementById('lb-fanleague-title').textContent=t('lb_fanleague_title',fanTeam);
+  const allUsersAll=await fetchAllUsers();
+  const fans=allUsersAll.filter(u=>(u.division||'A')===fanDiv&&(u.favTeam||'')===fanTeam);
+  const fanDB=await getDivisionDB(fanDiv);
+  let entries;
+  if(LB_MODE==='round'){
+    if(LB_ROUND===null){
+      document.getElementById('lb-fanleague-sub').textContent='';
+      document.getElementById('lb-fanleague-list').innerHTML=`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_finished_rounds')}</div>`;
+      return;
+    }
+    const ri=LB_ROUND;
+    entries=fans.map(u=>{
+      const {roundPts}=computeScoring(u.mySquads||{},fanDB,fanDiv);
+      return {uid:u.id,pts:roundPts[ri]||0,teamName:u.fantasyTeamName||t('fallback_player')+"'s FC",isMe:CURRENT_USER&&u.id===CURRENT_USER.uid};
+    }).sort((a,b)=>b.pts-a.pts);
+    document.getElementById('lb-fanleague-sub').textContent=roundName(ri);
+  }else{
+    entries=fans.map(u=>{
+      const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},fanDB,fanDiv);
+      return {uid:u.id,pts:totalPts,rounds:roundsPlayed,teamName:u.fantasyTeamName||t('fallback_player')+"'s FC",isMe:CURRENT_USER&&u.id===CURRENT_USER.uid};
+    }).sort((a,b)=>b.pts-a.pts);
+    document.getElementById('lb-fanleague-sub').textContent=t('lb_sub_count',entries.length);
+  }
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('lb-fanleague-list').innerHTML=entries.map((r,i)=>`
+    <div class="lbrow ${r.isMe?'me':''}" onclick="openUserSquadViewer('${r.uid}')">
+      <span class="lbpos ${i<2?'g':''}">${medals[i]||i+1}</span>
+      <div>
+        <div class="lbname">${escHtml(r.teamName)}${r.isMe?' '+t('you_suffix'):''}</div>
       </div>
       <span class="lbr">${LB_MODE==='round'?'':t('rounds_count',r.rounds)}</span>
       <span class="lbpts" style="color:${r.pts<0?'var(--red)':'inherit'}">${r.pts}</span>
