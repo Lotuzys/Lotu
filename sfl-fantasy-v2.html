@@ -284,7 +284,7 @@ a{color:var(--or)}
 .slot.filled .sc2{border-style:solid;border-color:var(--or);background:var(--or-grad);box-shadow:0 4px 14px -2px rgba(0,0,0,.35)}
 .slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(249,115,22,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.92);line-height:1.25;max-width:74px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}
+.sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
 .sfx{font-size:8.5px;color:rgba(255,255,255,.75);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
 .captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:600;color:rgba(255,255,255,.7);background:rgba(156,163,175,.55);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
 .captoggle:hover{background:rgba(107,114,128,.8);color:#fff;transform:scale(1.15)}
@@ -320,7 +320,7 @@ a{color:var(--or)}
 .hcard.cur{border-color:var(--or);border-width:1.5px}
 .hcard-head{background:var(--sur);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bor)}
 .hcard-title{font-size:12px;font-weight:700;color:var(--ink)}
-.hcard-pts{font-size:19px;font-weight:900;color:var(--or)}.hcard-pts.em{color:var(--mu);font-size:12px;font-weight:400}
+.hcard-pts{font-size:19px;font-weight:900;color:var(--or)}.hcard-pts.em{color:var(--mu);font-size:12px;font-weight:400}.hcard-pts.neg{color:var(--red)}
 .hcard-body{padding:13px 16px}
 .hcp{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bor);font-size:11px}
 .hcp:last-child{border-bottom:none}
@@ -328,6 +328,7 @@ a{color:var(--or)}
 .hcp-name{flex:1;font-weight:600;color:var(--ink2)}.hcp-pts{font-weight:800;color:var(--or);font-size:12px}
 .hcp-pos{font-size:9px;font-weight:700;color:var(--mu);background:var(--sur2);padding:1px 5px;border-radius:8px;margin-left:2px}
 .hcp-pts.cap{color:var(--cap)}
+.hcp-pts.neg{color:var(--red)}
 .empty-hist{text-align:center;padding:44px 20px;color:var(--mu);font-size:13px}
 
 /* ADMIN */
@@ -3113,8 +3114,8 @@ async function fetchAllUsers(forceRefresh){
 
 async function renderDash(){
   const {roundPts,totalPts}=computeScoring(STATE.mySquads,STATE.DB);
-  document.getElementById('d-mypts').textContent=totalPts;
-  document.getElementById('hdr-pts').textContent=totalPts;
+  const mypEl=document.getElementById('d-mypts');mypEl.textContent=totalPts;mypEl.style.color=totalPts<0?'var(--red)':'';
+  const hdrEl=document.getElementById('hdr-pts');hdrEl.textContent=totalPts;hdrEl.style.color=totalPts<0?'var(--red)':'';
   document.getElementById('stat-mypts-lbl').textContent=t('stat_mypts',totalPts);
   document.getElementById('hdr-pts-lbl').textContent=t('ptsWord',totalPts);
   if(STATE.fantasyTeamName)document.getElementById('dash-title').textContent=STATE.fantasyTeamName;
@@ -3318,12 +3319,12 @@ function renderList(){
     // Tied on points (most commonly everyone at 0, before any results are
     // in) falls back to price, instead of leaving the order arbitrary.
     list.sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0)||b.price-a.price);
-    headlineFor=p=>`${totals[p.id]||0}pts`;
+    headlineFor=p=>{const v=totals[p.id]||0;return v<0?`<span style="color:var(--red)">${v}pts</span>`:`${v}pts`;};
   }else if(sortMode==='last'){
     const ri=lastRoundWithData();
     const roundPts=ri!==null?computeAllPlayerRoundPts(ri):{};
     list.sort((a,b)=>(roundPts[b.id]||0)-(roundPts[a.id]||0)||b.price-a.price);
-    headlineFor=p=>`${roundPts[p.id]||0}pts`;
+    headlineFor=p=>{const v=roundPts[p.id]||0;return v<0?`<span style="color:var(--red)">${v}pts</span>`:`${v}pts`;};
   }else if(sortMode==='ownership'){
     list.sort((a,b)=>ownershipPct(b.id)-ownershipPct(a.id)||b.price-a.price);
     headlineFor=p=>`${ownershipPct(p.id)}%`;
@@ -3388,7 +3389,9 @@ function openPlayerModal(id){
   // Real fantasy points actually earned in matches played this season — not
   // the old pre-season estimate, and not last season's data.
   const pmSzPts=computeSeasonPlayerPts()[p.id]||0;
-  document.getElementById('pm-szpts').textContent=pmSzPts+'pts';
+  const pmSzPtsEl=document.getElementById('pm-szpts');
+  pmSzPtsEl.textContent=pmSzPts+'pts';
+  pmSzPtsEl.style.color=pmSzPts<0?'var(--red)':'';
   document.getElementById('pm-szpts-lbl').textContent=t('ptsWord',pmSzPts);
   document.getElementById('pm-price').textContent=p.price.toFixed(1)+'M';
   document.getElementById('pm-owner').textContent=ownershipPct(p.id)+'%';
@@ -3467,7 +3470,7 @@ async function openPlayerHistoryModal(idArg){
       <div class="phist-sub"></div>
     </div>`;
   }).join('');
-  listEl.innerHTML=`<div class="phist-total"><span>${t('phist_total_label',roundsWithData)}</span><span>${total}pts</span></div>${rowsHtml}`;
+  listEl.innerHTML=`<div class="phist-total"><span>${t('phist_total_label',roundsWithData)}</span><span style="color:${total<0?'var(--red)':'inherit'}">${total}pts</span></div>${rowsHtml}`;
   document.getElementById('phist-bg').classList.add('open');
   // One real fetchAllUsers() read (the rest hit its short client-side
   // cache) fills in every round's ownership without waiting for each row
@@ -3578,7 +3581,13 @@ function openStatModal(p,pos,tiles,breakdownHtml,div){
   const ch=document.getElementById('rpm-chip');ch.textContent=POS_FL[pos];ch.style.background=POS_C[pos];
   const statsEl=document.getElementById('rpm-stats');
   statsEl.style.gridTemplateColumns=`repeat(${tiles.length},1fr)`;
-  statsEl.innerHTML=tiles.map(t=>`<div class="pmst"><div class="pmstv" id="${t.id||''}">${t.val}</div><div class="pmstl">${t.label}</div></div>`).join('');
+  // A negative tile value (points or form going into the minus) always
+  // reads red — price/ownership/goals never go negative, so this generic
+  // check never misfires on those.
+  statsEl.innerHTML=tiles.map(t=>{
+    const neg=typeof t.val==='number'?t.val<0:(typeof t.val==='string'&&/^-/.test(t.val.trim()));
+    return `<div class="pmst"><div class="pmstv"${neg?' style="color:var(--red)"':''} id="${t.id||''}">${t.val}</div><div class="pmstl">${t.label}</div></div>`;
+  }).join('');
   document.getElementById('rpm-breakdown').innerHTML=breakdownHtml;
   document.getElementById('rpm-bg').classList.add('open');
 }
@@ -3786,7 +3795,8 @@ function renderSlot(pos,idx){
     if(historical){
       const {roundDetail}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
       const det=roundDetail[STATE.curRound]?.find(d=>d.id===p.id);
-      sp.textContent=cap?`${det?det.pts:0}pts ⭐`:`${det?det.pts:0}pts`;sp.className=cap?'sp c':'sp';
+      const dpts=det?det.pts:0;
+      sp.textContent=cap?`${dpts}pts ⭐`:`${dpts}pts`;sp.className=`sp${cap?' c':''}${dpts<0?' neg':''}`;
       if(sfx)sfx.textContent='';
       el.onclick=()=>openHistoricalPlayerModal(pos,idx);
     }else{
@@ -3859,7 +3869,7 @@ function updateBottomBar(){
   document.getElementById('bb-n').textContent=f;
   document.getElementById('bb-b').textContent=`${t('budget_label')} ${left.toFixed(1)}M`;
   const hdrTotalPts=computeScoring(STATE.mySquads,STATE.DB).totalPts;
-  document.getElementById('hdr-pts').textContent=hdrTotalPts;
+  const hdrEl2=document.getElementById('hdr-pts');hdrEl2.textContent=hdrTotalPts;hdrEl2.style.color=hdrTotalPts<0?'var(--red)':'';
   document.getElementById('hdr-pts-lbl').textContent=t('ptsWord',hdrTotalPts);
   const btn=document.getElementById('bb-btn');
   const hasSquad=STATE.mySquads[STATE.curRound]!==undefined;
@@ -3944,14 +3954,14 @@ function renderHistory(){
     const clickable=!!snap;
     html+=`<div class="hcard ${i===STATE.curRound?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
       <div class="hcard-head"><div class="hcard-title">${roundName(i)}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
-      <div class="hcard-pts ${pts===undefined?'em':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
+      <div class="hcard-pts ${pts===undefined?'em':pts<0?'neg':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
       <div class="hcard-body">`;
     if(snap){['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
       if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
       const det=detail?.find(d=>d.id===p.id);
       html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
         <div class="hcp-name">${isC?'⭐ ':''}${p.name} <span class="hcp-pos">${POS_LT[pos]}</span></div>
-        <div class="hcp-pts ${isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
+        <div class="hcp-pts ${det&&det.pts<0?'neg':isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
     }));}else{html+=`<div style="font-size:11px;color:var(--mu);padding:8px 0">${t('hist_no_squad')}</div>`;}
     html+=`</div></div>`;
   });
@@ -4288,7 +4298,7 @@ function tsSlotHtml(entry,pos){
       <span class="spb pos-${pos}">${POS_LT[pos]}</span>${badge}
     </div>
     <div class="sn">${pitchSurname(p,p.division)}</div>
-    <div class="sp">${entry.pts}pts</div>
+    <div class="sp${entry.pts<0?' neg':''}">${entry.pts}pts</div>
   </div>`;
 }
 
@@ -4482,8 +4492,8 @@ async function renderStats(){
       <td>${p.price.toFixed(1)}M</td>
       <td style="color:${priceChangeFor(p)>0?'var(--gr)':priceChangeFor(p)<0?'var(--red)':'inherit'}">${priceChangeFor(p)>0?'+':''}${priceChangeFor(p)}M</td>
       <td>${ownership[p.id]??0}%</td>
-      <td>${form[p.id]??0}</td>
-      <td style="font-weight:800;color:var(--or)">${totals[p.id]||0}</td>
+      <td style="color:${(form[p.id]??0)<0?'var(--red)':'inherit'}">${form[p.id]??0}</td>
+      <td style="font-weight:800;color:${(totals[p.id]||0)<0?'var(--red)':'var(--or)'}">${totals[p.id]||0}</td>
     </tr>`).join('')||`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--mu)">${t('not_found')}</td></tr>`;
 }
 
@@ -4571,7 +4581,7 @@ async function renderLB(){
         <div class="lbteamname">${r.favTeam?escHtml(r.favTeam):''}</div>
       </div>
       <span class="lbr">${LB_MODE==='round'?'':t('rounds_count',r.rounds)}</span>
-      <span class="lbpts">${r.pts}</span>
+      <span class="lbpts" style="color:${r.pts<0?'var(--red)':'inherit'}">${r.pts}</span>
     </div>`).join('')||`<div style="padding:20px;text-align:center;color:var(--mu);font-size:13px">${t('no_participants')}</div>`;
 }
 
@@ -4629,7 +4639,7 @@ async function renderUserSquadViewer(u){
           ${kitSvg(p.team,50,div)}${badge}
         </div>
         <div class="sn">${isC?'⭐ ':''}${escHtml(pitchSurname(p,div))}</div>
-        <div class="sp">${det?det.pts:0}pts</div>
+        <div class="sp${(det?det.pts:0)<0?' neg':''}">${det?det.pts:0}pts</div>
       </div>`;
     }).join('')+'</div>';
   }).join('');
