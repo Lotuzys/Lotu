@@ -4129,7 +4129,7 @@ function renderHistory(){
       html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
         <div class="hcp-name">${isC?'⭐ ':''}${p.name} <span class="hcp-pos">${POS_LT[pos]}</span></div>
         <div class="hcp-pts ${det&&det.pts<0?'neg':isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
-    }));}else{html+=`<div style="font-size:11px;color:var(--mu);padding:8px 0">${t('hist_no_squad')}</div>`;}
+    }));}else{html+=`<div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('hist_no_squad')}</div>`;}
     html+=`</div></div>`;
   });
   el.innerHTML=html+'</div>';
@@ -4792,7 +4792,7 @@ async function renderUserSquadViewer(u){
   const pitchEl=document.getElementById('usq-pitch');
   const snap=USQ_ROUND!==null?(u.mySquads||{})[USQ_ROUND]:null;
   if(!snap){
-    pitchEl.innerHTML=`<div style="padding:40px 10px;text-align:center;color:var(--mu);font-size:13px">${t('hist_no_squad')}</div>`;
+    pitchEl.innerHTML=`<div style="padding:40px 10px;text-align:center;color:#fff;font-size:15px;font-weight:700">${t('hist_no_squad')}</div>`;
     renderUserRoundNav(u);
     return;
   }
