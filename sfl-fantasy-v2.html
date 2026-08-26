@@ -2489,8 +2489,15 @@ function hideBootGate(){
 // Safety valve: never trap a visitor behind the spinner forever if
 // onAuthStateChanged is unusually slow, or never fires at all (offline,
 // a blocked script, etc.) — falls back to the pre-gate behavior of just
-// showing the login page.
-setTimeout(hideBootGate,10000);
+// showing the login page. Bug fixed: this used to fire at 10s, but the
+// comment above already says a real persisted-session restore on a bad
+// mobile connection can take "closer to a minute" — at 10s the valve was
+// firing WHILE that restore was still legitimately in progress, revealing
+// the login page to an already-signed-in visitor, who then watched it get
+// silently swapped out from under them the moment the restore actually
+// finished seconds/tens-of-seconds later. 60s actually covers the case the
+// comment itself describes instead of contradicting it.
+setTimeout(hideBootGate,60000);
 
 // Single source of truth for post-auth UI: fires on login, register, and page reload (persisted session)
 // ═══════════════════════════════════════════════
