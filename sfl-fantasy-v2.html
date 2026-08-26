@@ -1059,28 +1059,33 @@ a{color:var(--or)}
 
 <!-- LEADERS -->
 <div class="page" id="page-leaders">
-  <div class="lbwrap"><div class="pan">
-    <div class="ph"><h3 data-i18n="leaders_title">Fantasy lyderiai</h3><span class="sub" id="lb-sub">0 turų</span></div>
-    <div class="lb-filters">
-      <div class="lb-mode">
-        <button class="lb-mb on" id="lbm-season" onclick="setLBMode('season')" data-i18n="lb_mode_season">Sezono lyderiai</button>
-        <button class="lb-mb" id="lbm-round" onclick="setLBMode('round')" data-i18n="lb_mode_round">Turo lyderiai</button>
+  <div class="lbwrap">
+    <div class="pan">
+      <div class="ph"><h3 data-i18n="leaders_title">Fantasy lyderiai</h3><span class="sub" id="lb-sub">0 turų</span></div>
+      <div class="lb-filters">
+        <div class="lb-mode">
+          <button class="lb-mb on" id="lbm-season" onclick="setLBMode('season')" data-i18n="lb_mode_season">Sezono lyderiai</button>
+          <button class="lb-mb" id="lbm-round" onclick="setLBMode('round')" data-i18n="lb_mode_round">Turo lyderiai</button>
+        </div>
+        <select class="lb-divsel" id="lb-divsel" onchange="setLBDivision(this.value)"></select>
+        <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
       </div>
-      <select class="lb-divsel" id="lb-divsel" onchange="setLBDivision(this.value)"></select>
-      <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
+      <div class="lb-prize" id="lb-prize" style="display:none"></div>
+      <div id="lb-list"></div>
     </div>
-    <div class="lb-prize" id="lb-prize" style="display:none"></div>
-    <div id="lb-list"></div>
     <!-- Fan-club mini league: always the VIEWER's own favTeam, independent of
          whichever division the lb-divsel filter above is browsing — a
          personal "your team's fans" board, not another division switcher.
-         Hidden entirely if the viewer has no favTeam (shouldn't happen for
-         a normal onboarded user, but admins can lack one). -->
-    <div id="lb-fanleague" style="display:none">
-      <div class="ph" style="margin-top:24px"><h3 id="lb-fanleague-title"></h3><span class="sub" id="lb-fanleague-sub"></span></div>
+         Its own separate .pan card (not nested inside the main board's)
+         so the two boards read as visually distinct sections, not one
+         continuous list. Hidden entirely if the viewer has no favTeam
+         (shouldn't happen for a normal onboarded user, but admins can
+         lack one). -->
+    <div class="pan" id="lb-fanleague" style="display:none">
+      <div class="ph"><h3 id="lb-fanleague-title"></h3><span class="sub" id="lb-fanleague-sub"></span></div>
       <div id="lb-fanleague-list"></div>
     </div>
-  </div></div>
+  </div>
 </div>
 
 <!-- TEAM OF THE SEASON — best real 1-2-2-2 XI by actual match points, not
