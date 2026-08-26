@@ -626,10 +626,11 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 @media (max-width:680px){
   /* Modest cap on the sticky Žaidėjas column so it doesn't eat the whole
      phone screen — everything else (layout, centering) stays exactly as
-     before. A normal two-word vardas+pavardė still fits on one line;
-     letting the name span itself wrap (rather than forcing nowrap) only
-     kicks in for the rare unusually long (3-word) name. */
-  .stats-table th:nth-child(2),.stats-table td:nth-child(2){max-width:140px}
+     before. Sized against the real roster (checked: names run 11-23
+     chars, median 16) so the vast majority still fit on one line; only
+     the small handful of genuinely long ones (e.g. "Žygimantas
+     Kavaliauskas", 23 chars) wrap onto a 2nd. */
+  .stats-table th:nth-child(2),.stats-table td:nth-child(2){max-width:210px}
   .stats-pname span:first-of-type{white-space:normal;overflow-wrap:break-word}
 }
 
