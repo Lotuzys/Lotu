@@ -155,11 +155,6 @@ a{color:var(--or)}
 .ob-div-teams{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .team-tile{border:1.5px solid var(--bor);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s var(--ease);font-size:12px;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:7px}
 .team-tile .team-logo{width:28px;height:28px}
-/* SFL_MARK is a wide wordmark (~4.4:1), not square like the team crests —
-   forcing it into the same 28x28 box badly squashed it. Height-constrained
-   with auto width keeps its real proportions; the tile itself spans the
-   full grid row (inline style) so there's room for it. */
-.ob-sfl-logo{height:34px;width:auto;display:block}
 .team-tile:hover{border-color:var(--or);color:var(--or);background:var(--ordim);transform:translateY(-2px);box-shadow:var(--sh)}
 .team-tile.sel{border-color:transparent;background:var(--or-grad);color:#fff;box-shadow:var(--sh-or)}
 
@@ -895,7 +890,7 @@ a{color:var(--or)}
         </label>
         <label class="ob-check">
           <input type="checkbox" id="ob-consent-marketing">
-          <span data-i18n="ob_consent_marketing">Noriu gauti „Betsson" pasiūlymus ir naujienas el. paštu (neprivaloma) — sutinku, kad mano el. paštas būtų perduotas „Betsson" tiesioginei rinkodarai.</span>
+          <span data-i18n="ob_consent_marketing">Sutinku gauti partnerių pasiūlymus ir naujienas el. paštu (neprivaloma).</span>
         </label>
       </div>
       <button class="form-btn" id="ob-start-btn" onclick="finishOnboard()">
@@ -1415,7 +1410,7 @@ const I18N={
     err_fb_popup_blocked:'Naršyklė užblokavo prisijungimo langą — leisk iššokančius langus ir bandyk dar kartą.',
     err_fb_generic:'Nepavyko prisijungti per Facebook — pabandyk dar kartą.',
     ob_consent_policy_pre:'Sutinku su ',ob_consent_and:' ir ',ob_consent_rules_link:'Taisyklėmis',
-    ob_consent_marketing:'Noriu gauti „Betsson" pasiūlymus ir naujienas el. paštu (neprivaloma) — sutinku, kad mano el. paštas būtų perduotas „Betsson" tiesioginei rinkodarai.',
+    ob_consent_marketing:'Sutinku gauti partnerių pasiūlymus ir naujienas el. paštu (neprivaloma).',
     toast_need_consent:'Turi sutikti su Privatumo politika ir Taisyklėmis, kad galėtum tęsti',
     ob_no_team_label:'Nepalaikau jokios komandos',ob_pick_division_label:'Kurio diviziono fantasy norėtumėte žaisti?',
     toast_need_division:'Pasirink divizioną!',
@@ -1608,7 +1603,7 @@ const I18N={
     err_fb_popup_blocked:'Your browser blocked the login popup — allow popups and try again.',
     err_fb_generic:'Facebook sign-in failed — please try again.',
     ob_consent_policy_pre:'I agree to the ',ob_consent_and:' and ',ob_consent_rules_link:'Rules',
-    ob_consent_marketing:'I want to receive Betsson offers and news by email (optional) — I consent to my email being shared with Betsson for their direct marketing.',
+    ob_consent_marketing:'I agree to receive partner offers and news by email (optional).',
     toast_need_consent:'You must agree to the Privacy Policy and Rules to continue',
     ob_no_team_label:"I don't support any team",ob_pick_division_label:'Which division\'s fantasy would you like to play?',
     toast_need_division:'Pick a division!',
@@ -2677,7 +2672,7 @@ function showOnboarding(){
     <div class="ob-div-group">
       <div class="ob-div-label">${t('ob_no_team_label')}</div>
       <div class="ob-div-teams">
-        <div class="team-tile" id="ot-sflfan" style="grid-column:1/-1" onclick="selectFavTeam('${SFL_FAN_TEAM}',null)"><img class="ob-sfl-logo" src="${SFL_MARK}" alt="SFL"><span>${SFL_FAN_TEAM}</span></div>
+        <div class="team-tile" id="ot-sflfan" onclick="selectFavTeam('${SFL_FAN_TEAM}',null)"><img class="team-logo" src="${SFL_MARK}" alt="SFL" style="width:24px;height:24px"><span>${SFL_FAN_TEAM}</span></div>
       </div>
     </div>` + DIVISION_KEYS.map(div=>`
     <div class="ob-div-group">
