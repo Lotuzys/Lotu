@@ -2203,7 +2203,12 @@ const SFL_LOGO_FULL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUUAAACbCAYAA
 // to the football emoji only if a team genuinely has no logo asset yet.
 function favTeamLogoImg(favTeam,div){
   if(!favTeam)return '';
-  if(favTeam===SFL_FAN_TEAM)return `<img class="lb-fav-logo" src="${SFL_MARK}" alt="SFL">`;
+  // SFL_MARK is a wide wordmark, not square like team crests — the plain
+  // .lb-fav-logo class's object-fit:contain would shrink it to a near-
+  // invisible sliver at this width. Fixed height + object-fit:fill (same
+  // technique as the onboarding SFL fanas tile) keeps the width identical
+  // to every other team's icon while letting the logo read at a real size.
+  if(favTeam===SFL_FAN_TEAM)return `<img class="lb-fav-logo" src="${SFL_MARK}" alt="SFL" style="height:12px;object-fit:fill">`;
   const src=(DIVISIONS[div]||DIVISIONS.A).logos[favTeam];
   return src?`<img class="lb-fav-logo" src="${src}" alt="${escHtml(favTeam)}">`:'⚽';
 }
