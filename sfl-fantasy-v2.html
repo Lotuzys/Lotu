@@ -1491,6 +1491,8 @@ const I18N={
     privacy_title:'Privatumo politika',
     privacy_s1_h:'Kokius duomenis renkame?',
     privacy_s1_p:'Registruojantis per el. paštą/slaptažodį, „Google" arba „Facebook" paskyrą, prisijungimą tvarko „Firebase Authentication". Programoje papildomai saugome: tavo pasirinktą vardą, mėgstamą komandą, fantasy komandos pavadinimą, diviziono priskyrimą bei kiekvieno turo pasirinktus žaidėjus ir kapitoną.',
+    privacy_s1b_h:'Žaidėjų (futbolininkų) duomenys',
+    privacy_s1b_p:'Realių 7x7 lygos žaidėjų (kurie NĖRA šios programos registruoti vartotojai) vardai, pavardės, komandos, pozicijos ir įmušti įvarčiai imami iš viešai skelbiamų vilniausfutbolas.lt rezultatų ir sudėčių puslapių — tai jau vieša informacija, naudojama tik fantasy taškų skaičiavimui ir žaidėjų sąrašui sudaryti. Šių žaidėjų kontaktinių duomenų (el. pašto, telefono) neturime ir niekada jų nenaudojame jokiai rinkodarai ar komunikacijai su jais. Jei esi vienas iš tokių žaidėjų ir norėtum, kad tavo duomenys būtų pašalinti iš programos, susisiek el. paštu žemiau.',
     privacy_s2_h:'Kas mato tavo informaciją?',
     privacy_s2_p:'Fantasy komandos pavadinimas, mėgstama komanda, pasirinkti žaidėjai ir surinkti taškai matomi visiems to paties diviziono dalyviams — tai reikalinga lyderių lentelei, populiarumo statistikai ir komandų peržiūrai veikti. Tavo el. paštas niekada nesaugomas bendrai matomoje duomenų bazėje ir kitiems dalyviams nerodomas — jis žinomas tik tavo pačios prisijungimo sistemai.',
     privacy_s2b_h:'„Betsson" pasiūlymai (neprivaloma)',
@@ -1676,6 +1678,8 @@ const I18N={
     privacy_title:'Privacy Policy',
     privacy_s1_h:'What data do we collect?',
     privacy_s1_p:"When you register via email/password, Google, or Facebook, sign-in itself is handled by Firebase Authentication. The app additionally stores: your chosen display name, favorite club, fantasy team name, division assignment, and the players/captain you pick each gameweek.",
+    privacy_s1b_h:'Player (footballer) data',
+    privacy_s1b_p:"Real 7x7 league players' (who are NOT registered users of this app) names, teams, positions and goals scored are sourced from the publicly published results and roster pages on vilniausfutbolas.lt — already public information, used only to compute fantasy points and build the player list. We don't hold any contact details (email, phone) for these players and never use this data for any marketing or communication with them. If you are one of these players and would like your data removed from the app, contact the email below.",
     privacy_s2_h:'Who can see your info?',
     privacy_s2_p:"Your fantasy team name, favorite club, picked players and points scored are visible to every other manager in your own division — this is what makes the leaderboard, ownership stats and squad-viewing pages work. Your email address is never stored in that shared database and is never shown to other managers — it's known only to your own sign-in.",
     privacy_s2b_h:'Betsson offers (optional)',
@@ -4329,6 +4333,7 @@ function renderPrivacyModal(){
   const el=document.getElementById('privacy-body');if(!el)return;
   el.innerHTML=
     infoSec('','privacy_s1_h',`<div class="help-sec-p">${t('privacy_s1_p')}</div>`)+
+    infoSec('','privacy_s1b_h',`<div class="help-sec-p">${t('privacy_s1b_p')}</div>`)+
     infoSec('','privacy_s2_h',`<div class="help-sec-p">${t('privacy_s2_p')}</div>`)+
     infoSec('','privacy_s2b_h',`<div class="help-sec-p">${t('privacy_s2b_p')}</div>`)+
     infoSec('','privacy_s3_h',`<div class="help-sec-p">${t('privacy_s3_p')}</div>`)+
