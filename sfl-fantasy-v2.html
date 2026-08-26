@@ -155,6 +155,11 @@ a{color:var(--or)}
 .ob-div-teams{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .team-tile{border:1.5px solid var(--bor);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s var(--ease);font-size:12px;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:7px}
 .team-tile .team-logo{width:28px;height:28px}
+/* SFL_MARK is a wide wordmark (~4.4:1), not square like the team crests —
+   forcing it into the same 28x28 box badly squashed it. Height-constrained
+   with auto width keeps its real proportions; the tile itself spans the
+   full grid row (inline style) so there's room for it. */
+.ob-sfl-logo{height:34px;width:auto;display:block}
 .team-tile:hover{border-color:var(--or);color:var(--or);background:var(--ordim);transform:translateY(-2px);box-shadow:var(--sh)}
 .team-tile.sel{border-color:transparent;background:var(--or-grad);color:#fff;box-shadow:var(--sh-or)}
 
@@ -1415,7 +1420,7 @@ const I18N={
     ob_no_team_label:'Nepalaikau jokios komandos',ob_pick_division_label:'Kurio diviziono fantasy norėtumėte žaisti?',
     toast_need_division:'Pasirink divizioną!',
     ob_step1:'1 žingsnis iš 2',ob_step2:'2 žingsnis iš 2',ob_title1:'Pasirink mėgstamiausią komandą',division_label:'Divizionas',
-    ob_sub1:'Pasirinkus komandą būsi nukreiptas žaisti būtent jos divizione — ne rodomas prie jos lentelėje',ob_title2:'Fantasy komandos pavadinimas',
+    ob_sub1:'Pasirinkus komandą būsi nukreiptas žaisti būtent jos divizione',ob_title2:'Fantasy komandos pavadinimas',
     ph_teamname:'Įrašyk savo komandos pavadinimą',btn_start:'Pradėti žaisti →',ob_loading:'Kraunama...',
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 11 fantasy turų · 22 rungtynių dienos`,btn_build_squad:'Sudaryti komandą →',
     btn_my_history:'Mano istorija',
@@ -1608,7 +1613,7 @@ const I18N={
     ob_no_team_label:"I don't support any team",ob_pick_division_label:'Which division\'s fantasy would you like to play?',
     toast_need_division:'Pick a division!',
     ob_step1:'Step 1 of 2',ob_step2:'Step 2 of 2',ob_title1:'Pick your favorite team',division_label:'Division',
-    ob_sub1:"Picking a team places you in that team's own division — it isn't just shown next to it on a table",ob_title2:'Fantasy team name',
+    ob_sub1:"Picking a team places you in that team's own division",ob_title2:'Fantasy team name',
     ph_teamname:'Enter your team name',btn_start:'Start Playing →',ob_loading:'Loading...',
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 11 fantasy gameweeks · 22 matchdays`,btn_build_squad:'Build Your Team →',
     btn_my_history:'My History',
@@ -2579,7 +2584,15 @@ function updateTopbarForUser(){
   document.getElementById('user-chip-name').textContent=CURRENT_USER.name;
   document.getElementById('user-chip').style.display='flex';
   document.getElementById('pts-chip').style.display='block';
-  document.getElementById('main-nav').style.display='flex';
+  // main-nav (the page tabs, including "Mano komanda") is deliberately NOT
+  // shown here — this runs BEFORE loginUser() decides onboarding vs. main
+  // app, and showing it unconditionally let a brand-new user click "Mano
+  // komanda" straight off the onboarding screen (its onclick calls
+  // goRound() directly, bypassing everything) and land in division A's
+  // squad builder without ever picking a team/division. It's shown from
+  // showMainApp() instead, which only ever runs once onboarding is either
+  // already complete (returning user) or has just been finished
+  // (finishOnboard()'s own call at the end).
   document.getElementById('admbtn').style.display=isAdmin()?'block':'none';
   const divSw=document.getElementById('admdivsw');
   if(isAdmin()){
@@ -2660,20 +2673,20 @@ async function switchDivision(div){
 function showOnboarding(){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById('page-onboard').classList.add('on');
-  document.getElementById('onboard-teams').innerHTML=DIVISION_KEYS.map(div=>`
+  document.getElementById('onboard-teams').innerHTML = `
+    <div class="ob-div-group">
+      <div class="ob-div-label">${t('ob_no_team_label')}</div>
+      <div class="ob-div-teams">
+        <div class="team-tile" id="ot-sflfan" style="grid-column:1/-1" onclick="selectFavTeam('${SFL_FAN_TEAM}',null)"><img class="ob-sfl-logo" src="${SFL_MARK}" alt="SFL"><span>${SFL_FAN_TEAM}</span></div>
+      </div>
+    </div>` + DIVISION_KEYS.map(div=>`
     <div class="ob-div-group">
       <div class="ob-div-label">${t('division_label')} ${div}</div>
       <div class="ob-div-teams">${DIVISIONS[div].teams.map(tm=>
         `<div class="team-tile" id="ot-${div}-${tm.replace(/\s/g,'_')}" onclick="selectFavTeam('${tm}','${div}')">${(DIVISIONS[div].logos[tm]?`<img class="team-logo" src="${DIVISIONS[div].logos[tm]}" alt="${tm}" style="width:24px;height:24px">`:'')}<span>${tm}</span></div>`
       ).join('')}</div>
     </div>`
-  ).join('') + `
-    <div class="ob-div-group">
-      <div class="ob-div-label">${t('ob_no_team_label')}</div>
-      <div class="ob-div-teams">
-        <div class="team-tile" id="ot-sflfan" onclick="selectFavTeam('${SFL_FAN_TEAM}',null)"><img class="team-logo" src="${SFL_MARK}" alt="SFL" style="width:24px;height:24px"><span>${SFL_FAN_TEAM}</span></div>
-      </div>
-    </div>`;
+  ).join('');
   // Only relevant once "SFL fanas" is picked (no team => no implied
   // division) — starts hidden, selectFavTeam() reveals it. Options are
   // (re)built here too so a language switch mid-onboarding, or a fresh
@@ -3431,6 +3444,10 @@ function showPage(name,btn,opts){
 }
 
 function showMainApp(){
+  // Only ever reached once onboarding is done (a returning user, or right
+  // after finishOnboard() succeeds) — see updateTopbarForUser()'s comment
+  // on why this can't live there instead.
+  document.getElementById('main-nav').style.display='flex';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('page-dash').classList.add('on');
