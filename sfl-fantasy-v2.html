@@ -5021,7 +5021,7 @@ function tsSlotHtml(entry,pos){
   return `<div class="slot filled" onclick="openTSPlayerModal('${pos}',${p.id})">
     <div class="sc2" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4)">
       ${kitSvg(p.team,50,p.division)}
-      <span class="spb pos-${pos}">${POS_LT[pos]}</span>${badge}
+      <span class="spb pos-${pos}" title="${POS_LT[pos]}">⭐</span>${badge}
     </div>
     <div class="sn">${pitchSurname(p,p.division)}</div>
     <div class="sp${entry.pts<0?' neg':''}">${entry.pts}pts</div>
