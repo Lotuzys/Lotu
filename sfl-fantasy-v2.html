@@ -1507,7 +1507,11 @@ const I18N={
     help_s2_li5:'Nepasirinkus komandos iki termino, tą turą taškų negausi, bet visada gali rinktis kitą turą iš naujo.',
     help_s3_h:'Kapitonas',
     help_s3_p:'Kiekvienam turui privalai paskirti vieną kapitoną (spausk „C" ženkliuką ties žaidėju). Kapitono surinkti taškai tą turą DVIGUBINAMI — įskaitant ir neigiamus, jei žaidėjas suveikė prastai ar gavo raudoną kortelę, todėl kapitoną verta rinktis atsargiai.',
-    help_s4_h:'Kaip skaičiuojami taškai?',
+    help_s4_h:'Žaidėjų sąrašas ir rikiavimas',
+    help_s4_li1:'Sąrašą kairėje gali rikiuoti pagal: bendrus sezono taškus, kainą, paskutinio turo taškus, populiarumą (%), įmuštus įvarčius arba kainos pokytį.',
+    help_s4_li2:'⭐ šalia pozicijos raidelės rodo, kad žaidėjas šiuo metu patenka į tikrą Sezono rinktinę — geriausiai realiai sužaidusius žaidėjus, nepriklausomai nuo to, ką pasirenki savo komandoje.',
+    help_s4_li3:'Žiūrint jau sužaistą (praėjusį) turą, ta pati žvaigždutė rodo, kas pateko būtent to turo rinktinę.',
+    help_s4_li4:'Pilną taškų skaičiavimo lentelę rasi komandos puslapio dešinėje, skydelyje „Taškų sistema".',
     help_s5_h:'Kas yra techninis rezultatas?',
     help_s5_p:'Kai rungtynės neįvyksta dėl vienos komandos kaltės (pvz. neatvykimo), tokios rungtynės fiksuojamos kaip 3:0 techninis rezultatas. Tada, vietoje įprasto skaičiavimo, laimėjusios komandos visi žaidėjai gauna po +5, o pralaimėjusios — po −2 taškus.',
     help_s6_h:'Kaip keičiasi žaidėjų kainos?',
@@ -1560,7 +1564,7 @@ const I18N={
     rules_s3_h:'Turai ir terminai',
     rules_s3_p:'Kiekvienas turas turi savo terminą (13:30). Iki jo komandą galima keisti neribotą kiekį kartų. Praėjus terminui, kito turo pasirinkimas atsidaro tik po 30 valandų.',
     rules_s4_h:'Taškų skaičiavimas',
-    rules_s4_p:'Taškai skaičiuojami pagal žaidėjo poziciją ir realų jo pasirodymą rungtynėse (įvarčiai, švarūs vartai, pergalė/pralaimėjimas, raudona kortelė, geriausias rungtynių žaidėjas) — pilną lentelę rasi „Pagalba" lange. Kapitonas gauna dvigubai taškų.',
+    rules_s4_p:'Taškai skaičiuojami pagal žaidėjo poziciją ir realų jo pasirodymą rungtynėse (įvarčiai, švarūs vartai, pergalė/pralaimėjimas, raudona kortelė, geriausias rungtynių žaidėjas) — pilną lentelę rasi komandos puslapio skydelyje „Taškų sistema". Kapitonas gauna dvigubai taškų.',
     rules_s5_h:'Techninis rezultatas',
     rules_s5_p:'Kai rungtynės neįvyksta dėl vienos komandos kaltės (pvz. neatvykimo), tokios rungtynės fiksuojamos kaip 3:0 techninis rezultatas. Laimėjusios komandos žaidėjai gauna po +5, pralaimėjusios — po −2 taškus, vietoje įprasto skaičiavimo.',
     rules_s6_h:'Žaidėjų kainos',
@@ -1700,7 +1704,11 @@ const I18N={
     help_s2_li5:"If you don't pick a squad before the deadline, you simply won't score points that gameweek — you can always pick again next time.",
     help_s3_h:'Captain',
     help_s3_p:'You must set exactly one captain each gameweek (tap the "C" badge on a player). Your captain’s points for that gameweek are DOUBLED — including negative ones, if they have a bad game or get a red card — so pick carefully.',
-    help_s4_h:'How are points calculated?',
+    help_s4_h:'Player list & sorting',
+    help_s4_li1:'Sort the list on the left by: total season points, price, last gameweek points, ownership (%), goals scored, or price change.',
+    help_s4_li2:"⭐ next to the position letter means that player is currently in the real Team of the Season — the actual best performers by real results, regardless of who you've picked.",
+    help_s4_li3:"While browsing an already-played (past) gameweek, the same star instead marks whoever made THAT gameweek's Team of the Round.",
+    help_s4_li4:'The full points-scoring table lives in the "Scoring System" panel on the right of the squad page.',
     help_s5_h:'What is a technical result?',
     help_s5_p:"Sometimes a match doesn't actually get played because one team is at fault (e.g. a no-show). That's recorded as a 3:0 (or 0:3) score with no goal scorers at all — this is called a technical result. In that case, instead of the usual scoring, every player on the winning side gets a flat +5 points, and every player on the losing side gets −2.",
     help_s6_h:'How do player prices change?',
@@ -1749,7 +1757,7 @@ const I18N={
     rules_s3_h:'Gameweeks and deadlines',
     rules_s3_p:'Every gameweek has its own deadline (13:30). You can change your squad an unlimited number of times before it. Once the deadline passes, picking for the next gameweek only opens again after 30 hours.',
     rules_s4_h:'Scoring',
-    rules_s4_p:"Points are calculated from a player's position and their real match performance (goals, clean sheets, win/loss, red cards, man of the match) — see the full table in the Help window. The captain scores double.",
+    rules_s4_p:"Points are calculated from a player's position and their real match performance (goals, clean sheets, win/loss, red cards, man of the match) — see the full table in the \"Scoring System\" panel on the squad page. The captain scores double.",
     rules_s5_h:'Technical result',
     rules_s5_p:"When a match doesn't happen because one team is at fault (e.g. a no-show), it's recorded as a 3:0 technical result. Players on the winning side get a flat +5, players on the losing side get −2, instead of the usual scoring.",
     rules_s6_h:'Player prices',
@@ -4377,29 +4385,16 @@ function infoSec(icon,hKey,bodyHtml){return `<div class="help-sec"><div class="h
 function renderHelpModal(){
   const el=document.getElementById('help-body');if(!el)return;
   const sec=infoSec;
-  const scoringTableHtml=`
-    <div class="sc-table-wrap">
-      <table class="sc-table"><thead><tr>
-        <th>${t('sc_th_pos')}</th><th>${t('sc_th_goal')}</th><th>${t('sc_th_cs')}</th><th>${t('sc_th_one')}</th>
-      </tr></thead><tbody>
-        <tr><td>${t('sc_pos_gk')}</td><td><span class="rp">+10</span></td><td><span class="rp">+10</span></td><td><span class="rp">+5</span></td></tr>
-        <tr><td>${t('sc_pos_def')}</td><td><span class="rp">+6</span></td><td><span class="rp">+8</span></td><td><span class="rp">+4</span></td></tr>
-        <tr><td>${t('sc_pos_mid')}</td><td><span class="rp">+5</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
-        <tr><td>${t('sc_pos_fwd')}</td><td><span class="rp">+4</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
-      </tbody></table>
-    </div>
-    <div class="rrow"><span>${t('sc_win')}</span><span class="rp">+2</span></div>
-    <div class="rrow"><span>${t('sc_loss')}</span><span class="rp neg">−1</span></div>
-    <div class="rrow"><span>${t('sc_red')}</span><span class="rp neg">−3</span></div>
-    <div class="rrow"><span>${t('sc_motm')}</span><span class="rp">+2</span></div>
-    <div class="rrow cap-row"><span>${t('sc_cap')}</span><span class="rp cap">×2</span></div>
-    <div class="rrow note-row"><span>${t('sc_note')}</span></div>`;
   const faq=(qKey,aKey)=>`<div class="help-faq-q">🔸 ${t(qKey)}</div><div class="help-faq-a">${t(aKey)}</div>`;
   el.innerHTML=
     sec('🎯','help_s1_h',`<div class="help-sec-p">${t('help_s1_p')}</div>`)+
     sec('🧩','help_s2_h',`<ul class="help-list">${['help_s2_li1','help_s2_li2','help_s2_li3','help_s2_li4','help_s2_li5'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
     sec('🅲','help_s3_h',`<div class="help-sec-p">${t('help_s3_p')}</div>`)+
-    sec('🧮','help_s4_h',scoringTableHtml)+
+    // Points scoring itself lives full-time in the squad page's own "Taškų
+    // sistema" panel, not duplicated here — this section instead covers
+    // the picker's own features (sort options, the XI star) that have no
+    // other explanation anywhere in the app.
+    sec('🧮','help_s4_h',`<ul class="help-list">${['help_s4_li1','help_s4_li2','help_s4_li3','help_s4_li4'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
     sec('⚡','help_s5_h',`<div class="help-sec-p">${t('help_s5_p')}</div>`)+
     sec('💰','help_s6_h',`<div class="help-sec-p">${t('help_s6_p1')}</div><div class="help-sec-p">${t('help_s6_p2')}</div><div class="help-sec-p">${t('help_s6_p3')}</div>`)+
     sec('🔒','help_s7_h',`<div class="help-sec-p">${t('help_s7_p1')}</div><div class="help-sec-p">${t('help_s7_p2')}</div>`)+
