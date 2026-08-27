@@ -865,7 +865,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
         </div>
         <div class="forgot-link"><a onclick="doPasswordReset()" data-i18n="forgot_pw">Pamiršai slaptažodį?</a></div>
         <div class="form-err" id="li-err" data-i18n="err_login">Neteisingi prisijungimo duomenys</div>
-        <div class="form-ok" id="li-ok" data-i18n="ok_pw_reset">Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.</div>
+        <div class="form-ok" id="li-ok" data-i18n="ok_pw_reset">Slaptažodžio atkūrimo laiškas išsiųstas - patikrink savo pašto dėžutę.</div>
         <button class="form-btn" id="li-btn" onclick="doLogin()">
           <span class="btn-spin" id="li-btn-spin" style="display:none"></span>
           <span id="li-btn-label" data-i18n="btn_login">Prisijungti →</span>
@@ -909,7 +909,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
     <div class="onboard-box">
       <div class="onboard-step" data-i18n="ob_step1">1 žingsnis iš 2</div>
       <div class="onboard-title" data-i18n="ob_title1">Pasirink mėgstamiausią komandą</div>
-      <div class="onboard-sub" data-i18n="ob_sub1">Pasirinkus komandą būsi nukreiptas žaisti būtent jos divizione — ne rodomas prie jos lentelėje</div>
+      <div class="onboard-sub" data-i18n="ob_sub1">Pasirinkus komandą būsi nukreiptas žaisti būtent jos divizione - ne rodomas prie jos lentelėje</div>
       <div id="onboard-teams"></div>
       <!-- Only shown once "SFL fanas" is picked above (no team => no
            implied division) — selectFavTeam()/showOnboarding() toggle
@@ -956,7 +956,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
       <button class="btns" onclick="showPage('history',document.querySelectorAll('.nb')[2])" data-i18n="btn_my_history">Mano istorija</button>
     </div>
     <div class="dseason-over" id="dash-season-over" style="display:none">
-      <div class="dseason-over-title" data-i18n="season_over_title">🏆 Ačiū už dalyvavimą — sezonas baigtas</div>
+      <div class="dseason-over-title" data-i18n="season_over_title">🏆 Ačiū už dalyvavimą - sezonas baigtas</div>
       <div class="dseason-over-sub" data-i18n="season_over_sub">Iki susitikimo kitame SFL fantasy turnyre!</div>
     </div>
     <div class="dspons" id="dspons"><span class="dspons-lbl" data-i18n="sponsor_tooltip">Sezono rėmėjas</span></div>
@@ -966,7 +966,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
     <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl" id="stat-teams-lbl">Fantasy komandų</div></div>
     <div class="sc"><div class="sv">600€</div><div class="sl" data-i18n="stat_prizes">Prizai</div></div>
     <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl" id="stat-mypts-lbl">Tavo taškai</div></div>
-    <div class="sc"><div class="sv" id="d-rank">—</div><div class="sl" data-i18n="stat_rank">Vieta</div></div>
+    <div class="sc"><div class="sv" id="d-rank">-</div><div class="sl" data-i18n="stat_rank">Vieta</div></div>
   </div>
   <div class="dsec"><div class="sec-title" data-i18n="sched_title">Fantasy turų tvarkaraštis</div><div class="rgrid" id="d-rounds"></div></div>
 </div>
@@ -1055,8 +1055,8 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
           </tr></thead><tbody>
             <tr><td data-i18n="sc_pos_gk">🧤 Vartininkas</td><td><span class="rp">+10</span></td><td><span class="rp">+10</span></td><td><span class="rp">+5</span></td></tr>
             <tr><td data-i18n="sc_pos_def">🛡 Gynėjas</td><td><span class="rp">+6</span></td><td><span class="rp">+8</span></td><td><span class="rp">+4</span></td></tr>
-            <tr><td data-i18n="sc_pos_mid">⚙ Saugas</td><td><span class="rp">+5</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
-            <tr><td data-i18n="sc_pos_fwd">⚡ Puolėjas</td><td><span class="rp">+4</span></td><td class="sc-dash">—</td><td class="sc-dash">—</td></tr>
+            <tr><td data-i18n="sc_pos_mid">⚙ Saugas</td><td><span class="rp">+5</span></td><td class="sc-dash">-</td><td class="sc-dash">-</td></tr>
+            <tr><td data-i18n="sc_pos_fwd">⚡ Puolėjas</td><td><span class="rp">+4</span></td><td class="sc-dash">-</td><td class="sc-dash">-</td></tr>
           </tbody></table>
         </div>
         <div class="rrow"><span data-i18n="sc_win">✅ Komandos pergalė</span><span class="rp">+2</span></div>
@@ -1064,7 +1064,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
         <div class="rrow"><span data-i18n="sc_red">🟥 Raudona kortelė</span><span class="rp neg">−3</span></div>
         <div class="rrow"><span data-i18n="sc_motm">👑 Geriausias rungtynių žaidėjas</span><span class="rp">+2</span></div>
         <div class="rrow cap-row"><span data-i18n="sc_cap">C Kapitonas</span><span class="rp cap">×2</span></div>
-        <div class="rrow note-row"><span data-i18n="sc_note">⚠ Iš kiekvienos komandos — tik 1 žaidėjas</span></div>
+        <div class="rrow note-row"><span data-i18n="sc_note">⚠ Iš kiekvienos komandos - tik 1 žaidėjas</span></div>
       </div>
       <div class="pan">
         <div class="ph"><h3 data-i18n="prizes_title">Prizai</h3></div>
@@ -1314,12 +1314,12 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
   <div class="prof-modal">
     <div class="prof-head">
       <div class="prof-av" id="prof-av">?</div>
-      <div class="prof-name" id="prof-name">—</div>
-      <div class="prof-sub" id="prof-sub">—</div>
+      <div class="prof-name" id="prof-name">-</div>
+      <div class="prof-sub" id="prof-sub">-</div>
     </div>
     <div class="prof-body">
-      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_teamname">Fantasy komanda</span><span class="prof-row-val" id="prof-teamname">—</span></div>
-      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_favteam">Mėgstama komanda</span><span class="prof-row-val" id="prof-favteam">—</span></div>
+      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_teamname">Fantasy komanda</span><span class="prof-row-val" id="prof-teamname">-</span></div>
+      <div class="prof-row"><span class="prof-row-lbl" data-i18n="prof_favteam">Mėgstama komanda</span><span class="prof-row-val" id="prof-favteam">-</span></div>
       <div class="prof-row"><span class="prof-row-lbl" id="prof-totalpts-lbl">Iš viso taškų</span><span class="prof-row-val" id="prof-pts">0</span></div>
       <div class="prof-row"><span class="prof-row-lbl" id="prof-roundsplayed-lbl">Turų sužaista</span><span class="prof-row-val" id="prof-rounds">0</span></div>
       <!-- Self-service withdraw/re-give of the optional marketing consent —
@@ -1343,9 +1343,9 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
     <div class="tut-head">
       <div class="tut-icon" id="tut-icon">⚽</div>
       <div class="tut-step-of" id="tut-step-of">1 / 4</div>
-      <div class="tut-title" id="tut-title">—</div>
+      <div class="tut-title" id="tut-title">-</div>
     </div>
-    <div class="tut-body" id="tut-body">—</div>
+    <div class="tut-body" id="tut-body">-</div>
     <div class="tut-dots" id="tut-dots"></div>
     <div class="tut-nav">
       <button class="tut-skip" id="tut-skip-btn" onclick="closeSquadTutorial()" data-i18n="tut_skip">Praleisti</button>
@@ -1452,16 +1452,16 @@ const I18N={
     login_sub:'Prisijunk ir rink taškus kiekvieną turą',tab_login:'Prisijungti',tab_register:'Registruotis',
     label_email:'El. paštas',label_password:'Slaptažodis',forgot_pw:'Pamiršai slaptažodį?',
     err_login:'Neteisingi prisijungimo duomenys',
-    err_login_too_many:'Per daug bandymų — palauk kelias minutes ir bandyk dar kartą.',
-    err_login_network:'Nepavyko prisijungti prie interneto — patikrink ryšį ir bandyk dar kartą.',
-    toast_session_expired:'Sesija baigėsi po 1 valandos — prisijunk iš naujo.',
-    ok_pw_reset:'Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.',
+    err_login_too_many:'Per daug bandymų - palauk kelias minutes ir bandyk dar kartą.',
+    err_login_network:'Nepavyko prisijungti prie interneto - patikrink ryšį ir bandyk dar kartą.',
+    toast_session_expired:'Sesija baigėsi po 1 valandos - prisijunk iš naujo.',
+    ok_pw_reset:'Slaptažodžio atkūrimo laiškas išsiųstas - patikrink savo pašto dėžutę.',
     btn_login:'Prisijungti →',ph_password_min:'Min. 6 simboliai',
     err_register:'Toks el. paštas jau užregistruotas',btn_register:'Registruotis →',
     auth_divider:'arba',btn_facebook:'Tęsti su Facebook',
-    err_fb_account_exists:'Šis el. paštas jau užregistruotas su slaptažodžiu — prisijunk įprastu būdu.',
-    err_fb_popup_blocked:'Naršyklė užblokavo prisijungimo langą — leisk iššokančius langus ir bandyk dar kartą.',
-    err_fb_generic:'Nepavyko prisijungti per Facebook — pabandyk dar kartą.',
+    err_fb_account_exists:'Šis el. paštas jau užregistruotas su slaptažodžiu - prisijunk įprastu būdu.',
+    err_fb_popup_blocked:'Naršyklė užblokavo prisijungimo langą - leisk iššokančius langus ir bandyk dar kartą.',
+    err_fb_generic:'Nepavyko prisijungti per Facebook - pabandyk dar kartą.',
     ob_consent_policy_pre:'Sutinku su ',ob_consent_and:' ir ',ob_consent_rules_link:'Taisyklėmis',
     ob_consent_marketing:'Sutinku gauti partnerių pasiūlymus ir naujienas el. paštu (neprivaloma).',
     toast_need_consent:'Turi sutikti su Privatumo politika ir Taisyklėmis, kad galėtum tęsti',
@@ -1473,7 +1473,7 @@ const I18N={
     ph_teamname:'Įrašyk savo komandos pavadinimą',btn_start:'Pradėti žaisti →',ob_loading:'Kraunama...',
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Divizionas · 11 fantasy turų · 22 rungtynių dienos`,btn_build_squad:'Sudaryti komandą →',
     btn_my_history:'Mano istorija',
-    season_over_title:'🏆 Ačiū už dalyvavimą — sezonas baigtas',season_over_sub:'Iki susitikimo kitame SFL fantasy turnyre!',
+    season_over_title:'🏆 Ačiū už dalyvavimą - sezonas baigtas',season_over_sub:'Iki susitikimo kitame SFL fantasy turnyre!',
     rnav_label:'Turai',
     stat_rounds:'Fantasy turų',stat_teams:n=>`Fantasy ${ltForm(n,'komanda','komandos','komandų')}`,stat_prizes:'Prizai',
     stat_mypts:n=>ltForm(n,'Taškas','Taškai','Taškų'),stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
@@ -1486,49 +1486,49 @@ const I18N={
     // language, aimed at someone who's never played fantasy football before.
     tut_step_of:(n,total)=>`${n} / ${total}`,tut_skip:'Praleisti',tut_next:'Toliau →',tut_done:'Supratau, žaidžiam! →',
     tut_s1_title:'Kas yra Fantasy futbolas?',
-    tut_s1_body:'Sudarai savo komandą iš 7 realių žaidėjų. Jie renka taškus už tai, ką padaro tikrose rungtynėse. Kuo daugiau taškų surenka tavo žaidėjai — tuo aukščiau kyli lentelėje.',
+    tut_s1_body:'Sudarai savo komandą iš 7 realių žaidėjų. Jie renka taškus už tai, ką padaro tikrose rungtynėse. Kuo daugiau taškų surenka tavo žaidėjai - tuo aukščiau kyli lentelėje.',
     tut_s2_title:'Sudaryk komandą',
     tut_s2_body:'Turi 50M biudžetą. Reikia išsirinkti: 1 vartininką, 2 gynėjus, 2 saugus ir 2 puolėjus. Iš vieno klubo gali būti tik 1 žaidėjas.',
     tut_s3_title:'Pasirink kapitoną',
-    tut_s3_body:'Vienas žaidėjas — tavo kapitonas — gauna DVIGUBAI taškų. Rinkis tą, kuris, tavo manymu, sužais geriausiai.',
+    tut_s3_body:'Vienas žaidėjas - tavo kapitonas - gauna DVIGUBAI taškų. Rinkis tą, kuris, tavo manymu, sužais geriausiai.',
     tut_s4_title:'Terminas',
-    tut_s4_body:'Kiekvieną turą gali keisti komandą kiek nori kartų — iki termino. Kai jis praeina, komanda užsirakina ir gauni taškus už tą turą. Kitą turą renkiesi iš naujo.',
+    tut_s4_body:'Kiekvieną turą gali keisti komandą kiek nori kartų - iki termino. Kai jis praeina, komanda užsirakina ir gauni taškus už tą turą. Kitą turą renkiesi iš naujo.',
     // "Pagalba" popup — always-available reference (not just a one-time
     // walkthrough) opened from the squad page's round-nav row. Simple,
     // beginner-first language throughout, same tone as the tut_ steps above.
     help_title:'Pagalba',
     help_s1_h:'Kas yra Fantasy 7x7?',
-    help_s1_p:'Betsson 7x7 Fantasy — žaidimas, kuriame sudarai savo svajonių komandą iš tikrų SFL 7x7 lygos žaidėjų. Kiekvieną turą jie žaidžia realias rungtynes, o tu už jų tikrus pasiekimus aikštėje (įvarčius, pergales, švarius vartus ir kt.) gauni fantasy taškus. Varžaisi su kitais savo diviziono vadybininkais dėl vietos lyderių lentelėje ir prizų.',
+    help_s1_p:'Betsson 7x7 Fantasy - žaidimas, kuriame sudarai savo svajonių komandą iš tikrų SFL 7x7 lygos žaidėjų. Kiekvieną turą jie žaidžia realias rungtynes, o tu už jų tikrus pasiekimus aikštėje (įvarčius, pergales, švarius vartus ir kt.) gauni fantasy taškus. Varžaisi su kitais savo diviziono vadybininkais dėl vietos lyderių lentelėje ir prizų.',
     help_s2_h:'Kaip sudaryti komandą?',
-    help_s2_li1:'Turi 50M biudžetą — tiek gali išleisti visai komandai.',
+    help_s2_li1:'Turi 50M biudžetą - tiek gali išleisti visai komandai.',
     help_s2_li2:'Komandą sudaro 7 žaidėjai: 1 vartininkas, 2 gynėjai, 2 saugai, 2 puolėjai.',
     help_s2_li3:'Iš kiekvieno realaus klubo gali rinktis tik 1 žaidėją.',
-    help_s2_li4:'Iki turo termino (13:30) gali keisti komandą kiek tik nori kartų — visiškai laisvai.',
+    help_s2_li4:'Iki turo termino (13:30) gali keisti komandą kiek tik nori kartų - visiškai laisvai.',
     help_s2_li5:'Nepasirinkus komandos iki termino, tą turą taškų negausi, bet visada gali rinktis kitą turą iš naujo.',
-    help_s2_li6:'Kiekvienam turui privalai paskirti vieną kapitoną (spausk „C" ženkliuką ties žaidėju) — jo surinkti taškai tą turą DVIGUBINAMI, įskaitant ir neigiamus, jei žaidėjas suveikė prastai ar gavo raudoną kortelę, todėl kapitoną verta rinktis atsargiai.',
+    help_s2_li6:'Kiekvienam turui privalai paskirti vieną kapitoną (spausk „C" ženkliuką ties žaidėju) - jo surinkti taškai tą turą DVIGUBINAMI, įskaitant ir neigiamus, jei žaidėjas suveikė prastai ar gavo raudoną kortelę, todėl kapitoną verta rinktis atsargiai.',
     help_s4_h:'Žaidėjų sąrašas ir rikiavimas',
     help_s4_li1:'Sąrašą kairėje gali rikiuoti pagal: bendrus sezono taškus, kainą, paskutinio turo taškus, populiarumą (%), įmuštus įvarčius arba kainos pokytį.',
-    help_s4_li2:'⭐ šalia pozicijos raidelės rodo, kad žaidėjas šiuo metu patenka į tikrą Sezono rinktinę — geriausiai realiai sužaidusius žaidėjus, nepriklausomai nuo to, ką pasirenki savo komandoje.',
+    help_s4_li2:'⭐ šalia pozicijos raidelės rodo, kad žaidėjas šiuo metu patenka į tikrą Sezono rinktinę - geriausiai realiai sužaidusius žaidėjus, nepriklausomai nuo to, ką pasirenki savo komandoje.',
     help_s4_li3:'Žiūrint jau sužaistą (praėjusį) turą, ta pati žvaigždutė rodo, kas pateko būtent to turo rinktinę.',
     help_s4_li4:'Pilną taškų skaičiavimo lentelę rasi komandos puslapio dešinėje, skydelyje „Taškų sistema".',
     help_s5_h:'Kas yra techninis rezultatas?',
-    help_s5_p:'Kai rungtynės neįvyksta dėl vienos komandos kaltės (pvz. neatvykimo), tokios rungtynės fiksuojamos kaip 3:0 techninis rezultatas. Tada, vietoje įprasto skaičiavimo, laimėjusios komandos visi žaidėjai gauna po +5, o pralaimėjusios — po −2 taškus.',
+    help_s5_p:'Kai rungtynės neįvyksta dėl vienos komandos kaltės (pvz. neatvykimo), tokios rungtynės fiksuojamos kaip 3:0 techninis rezultatas. Tada, vietoje įprasto skaičiavimo, laimėjusios komandos visi žaidėjai gauna po +5, o pralaimėjusios - po −2 taškus.',
     help_s6_h:'Kaip keičiasi žaidėjų kainos?',
     help_s6_p1:'Kiekvieno žaidėjo pradinė kaina apskaičiuojama pagal jo praėjusio sezono rezultatus ir poziciją.',
-    help_s6_p2:'Po kiekvieno sužaisto turo administratorius gali perskaičiuoti kainas: populiarūs (daug kam priklausantys) ir gerai sužaidę žaidėjai brangsta, o retai renkami bei prastai sužaidę — atpinga.',
+    help_s6_p2:'Po kiekvieno sužaisto turo administratorius gali perskaičiuoti kainas: populiarūs (daug kam priklausantys) ir gerai sužaidę žaidėjai brangsta, o retai renkami bei prastai sužaidę - atpinga.',
     help_s6_p3:'Kaina niekada nenukris žemiau 3.0M, kad ir kaip prastai žaidėjas sužaistų.',
     help_s7_h:'Terminai ir komandos keitimas',
-    help_s7_p1:'Kiekvienas turas turi savo terminą (13:30) — po jo komanda tam turui užsifiksuoja ir keisti jos nebegalima.',
-    help_s7_p2:'Praėjus terminui, kito turo komandų pasirinkimas būna uždarytas 30 valandų — per šį laiką administratorius atnaujina kainas ir įrašo rezultatus. Visą tą laiką gali laisvai naršyti visus kitus puslapius (rezultatus, lentelę, statistiką) — tik naujos komandos rinktis tuo metu negali.',
+    help_s7_p1:'Kiekvienas turas turi savo terminą (13:30) - po jo komanda tam turui užsifiksuoja ir keisti jos nebegalima.',
+    help_s7_p2:'Praėjus terminui, kito turo komandų pasirinkimas būna uždarytas 30 valandų - per šį laiką administratorius atnaujina kainas ir įrašo rezultatus. Visą tą laiką gali laisvai naršyti visus kitus puslapius (rezultatus, lentelę, statistiką) - tik naujos komandos rinktis tuo metu negali.',
     help_faq_h:'Dažniausiai užduodami klausimai',
     help_faq_q1:'Ar galiu keisti komandą prieš terminą?',
-    help_faq_a1:'Taip, tiek kartų, kiek nori — kol dar neprasidėjo turo terminas.',
+    help_faq_a1:'Taip, tiek kartų, kiek nori - kol dar neprasidėjo turo terminas.',
     help_faq_q2:'Kiek žaidėjų galiu turėti iš vieno klubo?',
     help_faq_a2:'Tik vieną.',
     help_faq_q3:'Kodėl žaidėjo kaina pasikeitė?',
-    help_faq_a3:'Administratorius po turo perskaičiavo kainas pagal populiarumą ir surinktus taškus — žr. skyrių apie kainas aukščiau.',
+    help_faq_a3:'Administratorius po turo perskaičiavo kainas pagal populiarumą ir surinktus taškus - žr. skyrių apie kainas aukščiau.',
     help_faq_q4:'Kas atsitinka, jei nepaskiriu kapitono?',
-    help_faq_a4:'Komandos pateikti nepavyks — kapitoną pasirinkti privaloma.',
+    help_faq_a4:'Komandos pateikti nepavyks - kapitoną pasirinkti privaloma.',
     help_faq_q5:'Ar galiu žiūrėti kitų vadybininkų komandas?',
     help_faq_a5:'Taip, „Lyderiai" puslapyje gali paspausti ant bet kurio dalyvio ir peržiūrėti jo pasirinktą komandą.',
     // Footer links + the two info modals they open. Numbers/facts here
@@ -1540,18 +1540,18 @@ const I18N={
     privacy_s1_h:'Kokius duomenis renkame?',
     privacy_s1_p:'Registruojantis per el. paštą/slaptažodį, „Google" arba „Facebook" paskyrą, prisijungimą tvarko „Firebase Authentication". Programoje papildomai saugome: tavo pasirinktą vardą, mėgstamą komandą, fantasy komandos pavadinimą, diviziono priskyrimą bei kiekvieno turo pasirinktus žaidėjus ir kapitoną.',
     privacy_s1b_h:'Žaidėjų (futbolininkų) duomenys',
-    privacy_s1b_p:'Realių 7x7 lygos žaidėjų (kurie NĖRA šios programos registruoti vartotojai) vardai, pavardės, komandos, pozicijos ir įmušti įvarčiai imami iš viešai skelbiamų vilniausfutbolas.lt rezultatų ir sudėčių puslapių — tai jau vieša informacija, naudojama tik fantasy taškų skaičiavimui ir žaidėjų sąrašui sudaryti. Šių žaidėjų kontaktinių duomenų (el. pašto, telefono) neturime ir niekada jų nenaudojame jokiai rinkodarai ar komunikacijai su jais. Jei esi vienas iš tokių žaidėjų ir norėtum, kad tavo duomenys būtų pašalinti iš programos, susisiek el. paštu žemiau.',
+    privacy_s1b_p:'Realių 7x7 lygos žaidėjų (kurie NĖRA šios programos registruoti vartotojai) vardai, pavardės, komandos, pozicijos ir įmušti įvarčiai imami iš viešai skelbiamų vilniausfutbolas.lt rezultatų ir sudėčių puslapių - tai jau vieša informacija, naudojama tik fantasy taškų skaičiavimui ir žaidėjų sąrašui sudaryti. Šių žaidėjų kontaktinių duomenų (el. pašto, telefono) neturime ir niekada jų nenaudojame jokiai rinkodarai ar komunikacijai su jais. Jei esi vienas iš tokių žaidėjų ir norėtum, kad tavo duomenys būtų pašalinti iš programos, susisiek el. paštu žemiau.',
     privacy_s2_h:'Kas mato tavo informaciją?',
-    privacy_s2_p:'Fantasy komandos pavadinimas, mėgstama komanda, pasirinkti žaidėjai ir surinkti taškai matomi visiems to paties diviziono dalyviams — tai reikalinga lyderių lentelei, populiarumo statistikai ir komandų peržiūrai veikti. Tavo el. paštas niekada nesaugomas bendrai matomoje duomenų bazėje ir kitiems dalyviams nerodomas — jis žinomas tik tavo pačios prisijungimo sistemai.',
+    privacy_s2_p:'Fantasy komandos pavadinimas, mėgstama komanda, pasirinkti žaidėjai ir surinkti taškai matomi visiems to paties diviziono dalyviams - tai reikalinga lyderių lentelei, populiarumo statistikai ir komandų peržiūrai veikti. Tavo el. paštas niekada nesaugomas bendrai matomoje duomenų bazėje ir kitiems dalyviams nerodomas - jis žinomas tik tavo pačios prisijungimo sistemai.',
     privacy_s2b_h:'„Betsson" pasiūlymai (neprivaloma)',
-    privacy_s2b_p:'Registruojantis gali papildomai, savo noru, pažymėti varnelę sutinkant gauti „Betsson" pasiūlymus ir naujienas el. paštu. Ši varnelė niekada nėra pažymėta iš anksto — pasirenki pats. Jei ją pažymi, tavo el. pašto adresas bus perduotas „Betsson" tam, kad jie galėtų tiesiogiai siųsti tau savo pasiūlymus/naujienlaiškius. Šis sutikimas visiškai atskiras nuo Privatumo politikos ir Taisyklių priėmimo — jo nepažymėjus, žaisti gali normaliai, o el. paštas niekam trečiajam neperduodamas. Sutikimą bet kada gali atšaukti atsidaręs savo profilį (profilio ikonėlė dešiniajame viršutiniame puslapio kampe).',
+    privacy_s2b_p:'Registruojantis gali papildomai, savo noru, pažymėti varnelę sutinkant gauti „Betsson" pasiūlymus ir naujienas el. paštu. Ši varnelė niekada nėra pažymėta iš anksto - pasirenki pats. Jei ją pažymi, tavo el. pašto adresas bus perduotas „Betsson" tam, kad jie galėtų tiesiogiai siųsti tau savo pasiūlymus/naujienlaiškius. Šis sutikimas visiškai atskiras nuo Privatumo politikos ir Taisyklių priėmimo - jo nepažymėjus, žaisti gali normaliai, o el. paštas niekam trečiajam neperduodamas. Sutikimą bet kada gali atšaukti atsidaręs savo profilį (profilio ikonėlė dešiniajame viršutiniame puslapio kampe).',
     privacy_s3_h:'Kur saugomi duomenys?',
     privacy_s3_p:'Visi duomenys saugomi „Google Firebase" (Firestore duomenų bazė ir Authentication) infrastruktūroje. Jokie tretieji analitikos ar reklamos įrankiai programoje nenaudojami.',
     privacy_s4_h:'Slapukai ir vietinė talpykla',
     privacy_s4_p:'Programa naudoja tik naršyklės vietinę atmintį (localStorage), kad įsimintų tavo pasirinktą kalbą (LT/EN). Jokie stebėjimo slapukai nenaudojami.',
     privacy_s5_h:'Duomenų ištrynimas ir saugojimo trukmė',
-    privacy_s5_li1:'Kol žaidimas yra aktyvus — sezonui pasibaigus, duomenys papildomai saugomi dar 2 mėnesius, po to gali būti ištrinami.',
-    privacy_s5_li2:'Kol negauname Tavo prašymo ištrinti paskyrą — gavus tokį prašymą el. paštu žemiau, paskyra ir duomenys pašalinami per protingą terminą.',
+    privacy_s5_li1:'Kol žaidimas yra aktyvus - sezonui pasibaigus, duomenys papildomai saugomi dar 2 mėnesius, po to gali būti ištrinami.',
+    privacy_s5_li2:'Kol negauname Tavo prašymo ištrinti paskyrą - gavus tokį prašymą el. paštu žemiau, paskyra ir duomenys pašalinami per protingą terminą.',
     privacy_s5_li3:'Tiek, kiek juos saugoti reikalauja galiojantys teisės aktai.',
     privacy_s6_h:'Kontaktai',
     privacy_s6_p:'Klausimais dėl privatumo rašyk: eima.lotuzys@gmail.com',
@@ -1563,51 +1563,51 @@ const I18N={
     rules_s3_h:'Turai ir terminai',
     rules_s3_p:'Kiekvienas turas turi savo terminą (13:30). Iki jo komandą galima keisti neribotą kiekį kartų. Praėjus terminui, kito turo pasirinkimas atsidaro tik po 30 valandų.',
     rules_s4_h:'Taškų skaičiavimas',
-    rules_s4_p:'Taškai skaičiuojami pagal žaidėjo poziciją ir realų jo pasirodymą rungtynėse (įvarčiai, švarūs vartai, pergalė/pralaimėjimas, raudona kortelė, geriausias rungtynių žaidėjas) — pilną lentelę rasi komandos puslapio skydelyje „Taškų sistema". Kapitonas gauna dvigubai taškų.',
+    rules_s4_p:'Taškai skaičiuojami pagal žaidėjo poziciją ir realų jo pasirodymą rungtynėse (įvarčiai, švarūs vartai, pergalė/pralaimėjimas, raudona kortelė, geriausias rungtynių žaidėjas) - pilną lentelę rasi komandos puslapio skydelyje „Taškų sistema". Kapitonas gauna dvigubai taškų.',
     rules_s5_h:'Techninis rezultatas',
-    rules_s5_p:'Kai rungtynės neįvyksta dėl vienos komandos kaltės (pvz. neatvykimo), tokios rungtynės fiksuojamos kaip 3:0 techninis rezultatas. Laimėjusios komandos žaidėjai gauna po +5, pralaimėjusios — po −2 taškus, vietoje įprasto skaičiavimo.',
+    rules_s5_p:'Kai rungtynės neįvyksta dėl vienos komandos kaltės (pvz. neatvykimo), tokios rungtynės fiksuojamos kaip 3:0 techninis rezultatas. Laimėjusios komandos žaidėjai gauna po +5, pralaimėjusios - po −2 taškus, vietoje įprasto skaičiavimo.',
     rules_s6_h:'Žaidėjų kainos',
     rules_s6_p:'Kainos gali kilti arba kristi po kiekvieno sužaisto turo, priklausomai nuo žaidėjo populiarumo ir surinktų taškų. Kaina niekada nenukris žemiau 3.0M.',
     rules_s7_h:'Prizai',
-    rules_s7_p:'1 vieta — 300€, 2 vieta — 200€, 3 vieta — 100€ (startinio mokesčio sumažinimo forma).',
+    rules_s7_p:'1 vieta - 300€, 2 vieta - 200€, 3 vieta - 100€ (startinio mokesčio sumažinimo forma).',
     rules_s8_h:'Taisyklių keitimas',
     rules_s8_p:'Organizatorius pasilieka teisę koreguoti taisykles sezono eigoje, apie pakeitimus informuojant dalyvius.',
     scoring_title:'Taškų sistema',
     sc_th_pos:'Pozicija',sc_th_goal:'Įvartis',sc_th_cs:'Švarūs vartai',sc_th_one:'Praleistas tik 1',
     sc_pos_gk:'🧤 Vartininkas',sc_pos_def:'🛡 Gynėjas',sc_pos_mid:'⚙ Saugas',sc_pos_fwd:'⚡ Puolėjas',
     sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',sc_motm:'👑 Geriausias rungtynių žaidėjas',
-    sc_red:'🟥 Raudona kortelė',sc_cap:'C Kapitonas',sc_note:'⚠ Iš kiekvienos komandos — tik 1 žaidėjas',
+    sc_red:'🟥 Raudona kortelė',sc_cap:'C Kapitonas',sc_note:'⚠ Iš kiekvienos komandos - tik 1 žaidėjas',
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
     prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
     group_a_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupė`,
     sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Populiarumas',sort_goals:'Įmušti įvarčiai',sort_pricechange:'Kainos pokytis',
-    msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota — gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
+    msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota - gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
     msg_open_badge:'Atviras',
     msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
-    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (istorija) — surinkta <strong>${pts}</strong> ${ltForm(pts,'taškas','taškai','taškų')}.`,
-    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> terminas praėjo (${dl}) — komanda nebuvo pateikta laiku, šis turas — 0 taškų.`,
-    msg_pick_frozen:dl=>`🔒 Taškai ir žaidėjų kainos šiuo metu atnaujinami. Rinktis žaidėjų <u>negalima</u> — komandos pasirinkimas atsidarys <strong>${dl}</strong>.`,
-    pitch_frozen_overlay:'Rinktis žaidėjų negalima — taškai ir kainos atnaujinami',
-    fix_title:r=>`🗓 ${r} — rungtynės`,fix_vs:'vs',
+    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (istorija) - surinkta <strong>${pts}</strong> ${ltForm(pts,'taškas','taškai','taškų')}.`,
+    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> terminas praėjo (${dl}) - komanda nebuvo pateikta laiku, šis turas - 0 taškų.`,
+    msg_pick_frozen:dl=>`🔒 Taškai ir žaidėjų kainos šiuo metu atnaujinami. Rinktis žaidėjų <u>negalima</u> - komandos pasirinkimas atsidarys <strong>${dl}</strong>.`,
+    pitch_frozen_overlay:'Rinktis žaidėjų negalima - taškai ir kainos atnaujinami',
+    fix_title:r=>`🗓 ${r} - rungtynės`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pasirink ${pos} iš sąrašo ${dir}`,toast_dir_above:'aukščiau ↑',toast_dir_left:'kairėje ←',
     posAcc:{G:'vartininką',D:'gynėją',M:'saugą',F:'puolėją'},
     toast_team_taken:t=>`${t} jau atstovaujama! Tik 1 žaidėjas iš komandos.`,
     toast_no_free_slot:pos=>`Nėra laisvų ${pos} vietų`,
     toast_budget_short:m=>`Nepakanka biudžeto! Trūksta ${m}M`,toast_added:(n,t)=>`${n} (${t}) pridėtas ✓`,
-    toast_need7:'Reikia 7 žaidėjų!',toast_need_captain:'Pasirink kapitoną — spausk C ženkliuką ant žaidėjo',
-    toast_deadline_submit:dl=>`Terminas praėjo (${dl}) — komandos pateikti nebegalima`,
-    toast_pick_frozen:dl=>`Žaidėjų kainos atnaujinamos — komandos pasirinkti negalima iki ${dl}`,
-    toast_save_fail:'Nepavyko išsaugoti komandos — pabandyk dar kartą arba susisiek su administratoriumi',
-    toast_captain_set:n=>`${n} — Kapitonas 🅲 ×2`,toast_captain_removed:'Kapitonas pašalintas',
-    toast_auto_fail:'Nepavyko sudaryti komandos — pabandyk dar kartą',
+    toast_need7:'Reikia 7 žaidėjų!',toast_need_captain:'Pasirink kapitoną - spausk C ženkliuką ant žaidėjo',
+    toast_deadline_submit:dl=>`Terminas praėjo (${dl}) - komandos pateikti nebegalima`,
+    toast_pick_frozen:dl=>`Žaidėjų kainos atnaujinamos - komandos pasirinkti negalima iki ${dl}`,
+    toast_save_fail:'Nepavyko išsaugoti komandos - pabandyk dar kartą arba susisiek su administratoriumi',
+    toast_captain_set:n=>`${n} - Kapitonas 🅲 ×2`,toast_captain_removed:'Kapitonas pašalintas',
+    toast_auto_fail:'Nepavyko sudaryti komandos - pabandyk dar kartą',
     toast_auto_ok:'Atsitiktinė komanda sudaryta ✓ Nepamiršk pasirinkti kapitono!',
     bb_selected:'Pasirinkta:',bb_review:'Peržiūra (istorija)',bb_deadline_passed:'Terminas praėjo',
     bb_pick_frozen:'🔒 Kainos atnaujinamos',
     bb_update:'Atnaujinti komandą ✓',bb_submit:'Pateikti komandą ▶',bb_saving:'Saugoma...',
-    toast_round_not_open:'Šis turas dar neatidarytas — palauk, kol užsidarys ankstesnis turas',
-    toast_new_round_frozen:(n,dl)=>`${n} prasidėjo — žaidėjų kainos atnaujinamos, komandos pasirinkimas atsidarys ${dl}.`,
+    toast_round_not_open:'Šis turas dar neatidarytas - palauk, kol užsidarys ankstesnis turas',
+    toast_new_round_frozen:(n,dl)=>`${n} prasidėjo - žaidėjų kainos atnaujinamos, komandos pasirinkimas atsidarys ${dl}.`,
     players_count_suffix:'žaid.',team_full:'komanda pilna',not_found:'Nerasta',
-    res_lbl:(r,isUpdate)=>`${r} — komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
+    res_lbl:(r,isUpdate)=>`${r} - komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
     hist_title:'Turų istorija',
     standings_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupės lentelė`,
     standings_sub:'prasideda nuo 0',
@@ -1625,21 +1625,21 @@ const I18N={
     pmfix_lbl:'Šio turo rungtynės',pm_locked:'Komanda užfiksuota',pm_frozen:'Žaidimas atnaujinamas',pm_remove:'Pašalinti ✕',
     pm_team_taken:'Komanda jau atstovaujama',pm_add_price:price=>`Pridėti (${price}M)`,
     phist_current_suffix:'(einamasis)',phist_total_label:n=>`Iš viso (${n} ${ltForm(n,'turas','turai','turų')})`,
-    match_vs:(i,opp)=>`${i} rungtynės — vs ${opp}`,no_data:'Nėra duomenų',
+    match_vs:(i,opp)=>`${i} rungtynės - vs ${opp}`,no_data:'Nėra duomenų',
     mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarūs vartai',mstat_one:'Praleistas tik 1 įvartis',
     mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
     mstat_motm:'👑 Geriausias rungtynių žaidėjas',
     mstat_tech_win:'Tech. pergalė',mstat_tech_loss:'Tech. pralaimėjimas',tech_result_label:'Techninis rezultatas',
     zero_pts:'0 taškų',no_result_yet:'Šiam turui dar nėra rezultato',zero_pts_round:'0 taškų šį turą',
     captain_label:'Kapitonas',
-    toast_new_round:r=>`${r} — rinkis naują komandą!`,
+    toast_new_round:r=>`${r} - rinkis naują komandą!`,
     hist_sub_count:n=>`${n} ${ltForm(n,'turas','turai','turų')} sužaista`,hist_empty:'Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!',
     hist_no_squad:'Komanda nepasirinkta',round_tab:n=>`${n} turas`,
     own_round_label:n=>`Populiarumas (${n} turas)`,
     round_pts_label:n=>`Turo ${ltForm(n,'taškas','taškai','taškų')}`,
     season_pts_label:n=>`Sezono ${ltForm(n,'taškas','taškai','taškų')}`,
     no_finished_rounds:'Dar nėra pasibaigusių turų',whole_season:'visas sezonas',fallback_player:'Žaidėjas',
-    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} nugalėtojas!`,
+    lb_round_winner:(name,round)=>`<strong>${name}</strong> - ${round} nugalėtojas!`,
     lb_sub_count:n=>`${n} ${ltForm(n,'dalyvis','dalyviai','dalyvių')}`,you_suffix:'(Tu)',rounds_count:n=>`${n} ${ltForm(n,'turas','turai','turų')}`,no_participants:'Dar nėra dalyvių',
     lb_fanleague_title:team=>`${team} lyga`,
   },
@@ -1653,16 +1653,16 @@ const I18N={
     login_sub:'Log in and score points every gameweek',tab_login:'Log In',tab_register:'Register',
     label_email:'Email',label_password:'Password',forgot_pw:'Forgot your password?',
     err_login:'Incorrect login credentials',
-    err_login_too_many:'Too many attempts — wait a few minutes and try again.',
-    err_login_network:'Could not reach the network — check your connection and try again.',
-    toast_session_expired:'Your session expired after 1 hour — please log in again.',
-    ok_pw_reset:'Password reset email sent — check your inbox.',
+    err_login_too_many:'Too many attempts - wait a few minutes and try again.',
+    err_login_network:'Could not reach the network - check your connection and try again.',
+    toast_session_expired:'Your session expired after 1 hour - please log in again.',
+    ok_pw_reset:'Password reset email sent - check your inbox.',
     btn_login:'Log In →',ph_password_min:'Min. 6 characters',
     err_register:'This email is already registered',btn_register:'Register →',
     auth_divider:'or',btn_facebook:'Continue with Facebook',
-    err_fb_account_exists:'This email is already registered with a password — log in the usual way instead.',
-    err_fb_popup_blocked:'Your browser blocked the login popup — allow popups and try again.',
-    err_fb_generic:'Facebook sign-in failed — please try again.',
+    err_fb_account_exists:'This email is already registered with a password - log in the usual way instead.',
+    err_fb_popup_blocked:'Your browser blocked the login popup - allow popups and try again.',
+    err_fb_generic:'Facebook sign-in failed - please try again.',
     ob_consent_policy_pre:'I agree to the ',ob_consent_and:' and ',ob_consent_rules_link:'Rules',
     ob_consent_marketing:'I agree to receive partner offers and news by email (optional).',
     toast_need_consent:'You must agree to the Privacy Policy and Rules to continue',
@@ -1674,7 +1674,7 @@ const I18N={
     ph_teamname:'Enter your team name',btn_start:'Start Playing →',ob_loading:'Loading...',
     dash_subtitle:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Division · 11 fantasy gameweeks · 22 matchdays`,btn_build_squad:'Build Your Team →',
     btn_my_history:'My History',
-    season_over_title:'🏆 Thanks for playing — the season is over',season_over_sub:'See you in the next SFL fantasy tournament!',
+    season_over_title:'🏆 Thanks for playing - the season is over',season_over_sub:'See you in the next SFL fantasy tournament!',
     rnav_label:'Gameweeks',
     stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
     stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Gameweek Schedule',
@@ -1689,61 +1689,61 @@ const I18N={
     tut_s2_title:'Build your squad',
     tut_s2_body:'You have a 50M budget. Pick: 1 goalkeeper, 2 defenders, 2 midfielders, 2 forwards. Only 1 player per club.',
     tut_s3_title:'Pick a Captain',
-    tut_s3_body:'One player — your Captain — scores DOUBLE points. Choose whoever you think will play best.',
+    tut_s3_body:'One player - your Captain - scores DOUBLE points. Choose whoever you think will play best.',
     tut_s4_title:'Deadline',
     tut_s4_body:"You can change your team as many times as you like before the deadline. Once it passes, your team locks in and you earn points for that gameweek. Next gameweek, you pick again.",
     help_title:'Help',
     help_s1_h:'What is Fantasy 7x7?',
     help_s1_p:"Betsson 7x7 Fantasy is a game where you build your dream squad from real SFL 7x7 league players. Every gameweek they play real matches, and you earn fantasy points for what they actually do on the pitch (goals, wins, clean sheets, and more). You compete against other managers in your own division for a spot on the leaderboard and prizes.",
     help_s2_h:'How do I build a squad?',
-    help_s2_li1:"You have a 50M budget — that's the total you can spend on your whole squad.",
+    help_s2_li1:"You have a 50M budget - that's the total you can spend on your whole squad.",
     help_s2_li2:'A squad has 7 players: 1 goalkeeper, 2 defenders, 2 midfielders, 2 forwards.',
     help_s2_li3:'You can only pick 1 player from each real club.',
-    help_s2_li4:"You can change your squad as many times as you like — completely free — until that gameweek's deadline (13:30).",
-    help_s2_li5:"If you don't pick a squad before the deadline, you simply won't score points that gameweek — you can always pick again next time.",
-    help_s2_li6:'You must set exactly one captain each gameweek (tap the "C" badge on a player) — their points that gameweek are DOUBLED, including negative ones, if they have a bad game or get a red card, so pick carefully.',
+    help_s2_li4:"You can change your squad as many times as you like - completely free - until that gameweek's deadline (13:30).",
+    help_s2_li5:"If you don't pick a squad before the deadline, you simply won't score points that gameweek - you can always pick again next time.",
+    help_s2_li6:'You must set exactly one captain each gameweek (tap the "C" badge on a player) - their points that gameweek are DOUBLED, including negative ones, if they have a bad game or get a red card, so pick carefully.',
     help_s4_h:'Player list & sorting',
     help_s4_li1:'Sort the list on the left by: total season points, price, last gameweek points, ownership (%), goals scored, or price change.',
-    help_s4_li2:"⭐ next to the position letter means that player is currently in the real Team of the Season — the actual best performers by real results, regardless of who you've picked.",
+    help_s4_li2:"⭐ next to the position letter means that player is currently in the real Team of the Season - the actual best performers by real results, regardless of who you've picked.",
     help_s4_li3:"While browsing an already-played (past) gameweek, the same star instead marks whoever made THAT gameweek's Team of the Round.",
     help_s4_li4:'The full points-scoring table lives in the "Scoring System" panel on the right of the squad page.',
     help_s5_h:'What is a technical result?',
-    help_s5_p:"Sometimes a match doesn't actually get played because one team is at fault (e.g. a no-show). That's recorded as a 3:0 (or 0:3) score with no goal scorers at all — this is called a technical result. In that case, instead of the usual scoring, every player on the winning side gets a flat +5 points, and every player on the losing side gets −2.",
+    help_s5_p:"Sometimes a match doesn't actually get played because one team is at fault (e.g. a no-show). That's recorded as a 3:0 (or 0:3) score with no goal scorers at all - this is called a technical result. In that case, instead of the usual scoring, every player on the winning side gets a flat +5 points, and every player on the losing side gets −2.",
     help_s6_h:'How do player prices change?',
     help_s6_p1:"Each player's starting price is calculated from their performance last season and their position.",
     help_s6_p2:'After every gameweek is played, the admin can recalculate prices: popular (widely-owned) players who performed well get more expensive, while rarely-picked, poorly-performing players get cheaper.',
     help_s6_p3:'A price never drops below 3.0M, no matter how badly a player performs.',
     help_s7_h:'Deadlines and squad changes',
-    help_s7_p1:"Every gameweek has its own deadline (13:30) — after it passes, your squad for that gameweek is locked in and can no longer be changed.",
-    help_s7_p2:"Once the deadline passes, picking for the NEXT gameweek stays closed for 30 hours while the admin updates prices and enters results. You can still freely browse everything else (results, standings, stats) during that time — you just can't pick a new squad yet.",
+    help_s7_p1:"Every gameweek has its own deadline (13:30) - after it passes, your squad for that gameweek is locked in and can no longer be changed.",
+    help_s7_p2:"Once the deadline passes, picking for the NEXT gameweek stays closed for 30 hours while the admin updates prices and enters results. You can still freely browse everything else (results, standings, stats) during that time - you just can't pick a new squad yet.",
     help_faq_h:'Frequently asked questions',
     help_faq_q1:'Can I change my squad before the deadline?',
-    help_faq_a1:'Yes, as many times as you like — right up until that gameweek’s deadline.',
+    help_faq_a1:'Yes, as many times as you like - right up until that gameweek’s deadline.',
     help_faq_q2:'How many players can I have from one club?',
     help_faq_a2:'Just one.',
     help_faq_q3:"Why did a player's price change?",
-    help_faq_a3:'The admin recalculated prices after a gameweek based on ownership and points scored — see the pricing section above.',
+    help_faq_a3:'The admin recalculated prices after a gameweek based on ownership and points scored - see the pricing section above.',
     help_faq_q4:"What happens if I don't set a captain?",
-    help_faq_a4:"You won't be able to submit your squad — setting a captain is required.",
+    help_faq_a4:"You won't be able to submit your squad - setting a captain is required.",
     help_faq_q5:"Can I see other managers' squads?",
-    help_faq_a5:'Yes — on the Leaders page, tap any participant to view the squad they picked.',
+    help_faq_a5:'Yes - on the Leaders page, tap any participant to view the squad they picked.',
     footer_privacy:'Privacy Policy',footer_rules:'Rules',footer_contact:'Contact',
     privacy_title:'Privacy Policy',
     privacy_s1_h:'What data do we collect?',
     privacy_s1_p:"When you register via email/password, Google, or Facebook, sign-in itself is handled by Firebase Authentication. The app additionally stores: your chosen display name, favorite club, fantasy team name, division assignment, and the players/captain you pick each gameweek.",
     privacy_s1b_h:'Player (footballer) data',
-    privacy_s1b_p:"Real 7x7 league players' (who are NOT registered users of this app) names, teams, positions and goals scored are sourced from the publicly published results and roster pages on vilniausfutbolas.lt — already public information, used only to compute fantasy points and build the player list. We don't hold any contact details (email, phone) for these players and never use this data for any marketing or communication with them. If you are one of these players and would like your data removed from the app, contact the email below.",
+    privacy_s1b_p:"Real 7x7 league players' (who are NOT registered users of this app) names, teams, positions and goals scored are sourced from the publicly published results and roster pages on vilniausfutbolas.lt - already public information, used only to compute fantasy points and build the player list. We don't hold any contact details (email, phone) for these players and never use this data for any marketing or communication with them. If you are one of these players and would like your data removed from the app, contact the email below.",
     privacy_s2_h:'Who can see your info?',
-    privacy_s2_p:"Your fantasy team name, favorite club, picked players and points scored are visible to every other manager in your own division — this is what makes the leaderboard, ownership stats and squad-viewing pages work. Your email address is never stored in that shared database and is never shown to other managers — it's known only to your own sign-in.",
+    privacy_s2_p:"Your fantasy team name, favorite club, picked players and points scored are visible to every other manager in your own division - this is what makes the leaderboard, ownership stats and squad-viewing pages work. Your email address is never stored in that shared database and is never shown to other managers - it's known only to your own sign-in.",
     privacy_s2b_h:'Betsson offers (optional)',
-    privacy_s2b_p:"At registration you can optionally, and entirely of your own choosing, tick a box to receive Betsson offers and news by email. That box is never pre-checked — you choose it yourself. If you tick it, your email address is shared with Betsson so they can send you their own direct offers/newsletters. This consent is fully separate from accepting the Privacy Policy and Rules — leaving it unchecked, you can still play normally and your email is not shared with any third party. You can withdraw this consent at any time by opening your profile (the profile icon in the top-right corner of the page).",
+    privacy_s2b_p:"At registration you can optionally, and entirely of your own choosing, tick a box to receive Betsson offers and news by email. That box is never pre-checked - you choose it yourself. If you tick it, your email address is shared with Betsson so they can send you their own direct offers/newsletters. This consent is fully separate from accepting the Privacy Policy and Rules - leaving it unchecked, you can still play normally and your email is not shared with any third party. You can withdraw this consent at any time by opening your profile (the profile icon in the top-right corner of the page).",
     privacy_s3_h:'Where is data stored?',
     privacy_s3_p:'All data is stored on Google Firebase (Firestore database and Authentication) infrastructure. No third-party analytics or advertising tools are used anywhere in the app.',
     privacy_s4_h:'Cookies and local storage',
     privacy_s4_p:'The app only uses your browser\'s local storage (localStorage) to remember your chosen language (LT/EN). No tracking cookies are used.',
     privacy_s5_h:'Data deletion and retention',
-    privacy_s5_li1:'For as long as the game is active — once a season ends, data is kept for a further 2 months, after which it may be deleted.',
-    privacy_s5_li2:"Until we receive your request to delete your account — once requested via the email below, your account and data are removed within a reasonable time.",
+    privacy_s5_li1:'For as long as the game is active - once a season ends, data is kept for a further 2 months, after which it may be deleted.',
+    privacy_s5_li2:"Until we receive your request to delete your account - once requested via the email below, your account and data are removed within a reasonable time.",
     privacy_s5_li3:'For as long as applicable law requires us to keep it.',
     privacy_s6_h:'Contact',
     privacy_s6_p:'For privacy questions, write to: eima.lotuzys@gmail.com',
@@ -1755,13 +1755,13 @@ const I18N={
     rules_s3_h:'Gameweeks and deadlines',
     rules_s3_p:'Every gameweek has its own deadline (13:30). You can change your squad an unlimited number of times before it. Once the deadline passes, picking for the next gameweek only opens again after 30 hours.',
     rules_s4_h:'Scoring',
-    rules_s4_p:"Points are calculated from a player's position and their real match performance (goals, clean sheets, win/loss, red cards, man of the match) — see the full table in the \"Scoring System\" panel on the squad page. The captain scores double.",
+    rules_s4_p:"Points are calculated from a player's position and their real match performance (goals, clean sheets, win/loss, red cards, man of the match) - see the full table in the \"Scoring System\" panel on the squad page. The captain scores double.",
     rules_s5_h:'Technical result',
     rules_s5_p:"When a match doesn't happen because one team is at fault (e.g. a no-show), it's recorded as a 3:0 technical result. Players on the winning side get a flat +5, players on the losing side get −2, instead of the usual scoring.",
     rules_s6_h:'Player prices',
     rules_s6_p:'Prices can rise or fall after every gameweek is played, depending on a player\'s ownership and points scored. A price never drops below 3.0M.',
     rules_s7_h:'Prizes',
-    rules_s7_p:'1st place — €300, 2nd place — €200, 3rd place — €100 (as an entry-fee reduction).',
+    rules_s7_p:'1st place - €300, 2nd place - €200, 3rd place - €100 (as an entry-fee reduction).',
     rules_s8_h:'Changes to these rules',
     rules_s8_p:'The organizer reserves the right to adjust these rules over the course of the season, informing participants of any changes.',
     scoring_title:'Scoring System',
@@ -1773,33 +1773,33 @@ const I18N={
     prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',
     group_a_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()}`,
     sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',sort_pricechange:'Price change',
-    msg_saved:(r,d)=>`<strong>${r}</strong> team saved — change it as many times as you like until <strong>${d}</strong>.`,
+    msg_saved:(r,d)=>`<strong>${r}</strong> team saved - change it as many times as you like until <strong>${d}</strong>.`,
     msg_open_badge:'Open',
     msg_open_sub:(d1,d2,dl)=>`${d1} and ${d2} · deadline ${dl}`,
-    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (history) — scored <strong>${pts}</strong> points.`,
-    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> deadline passed (${dl}) — team wasn't submitted in time, 0 points this gameweek.`,
-    msg_pick_frozen:dl=>`🔒 Points and player prices are being updated right now. Picking a squad is <u>not possible</u> — it reopens <strong>${dl}</strong>.`,
-    pitch_frozen_overlay:'Picking is disabled — points and prices are updating',
-    fix_title:r=>`🗓 ${r} — matches`,fix_vs:'vs',
+    msg_history_pts:(r,pts)=>`<strong>${r}</strong> (history) - scored <strong>${pts}</strong> points.`,
+    msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> deadline passed (${dl}) - team wasn't submitted in time, 0 points this gameweek.`,
+    msg_pick_frozen:dl=>`🔒 Points and player prices are being updated right now. Picking a squad is <u>not possible</u> - it reopens <strong>${dl}</strong>.`,
+    pitch_frozen_overlay:'Picking is disabled - points and prices are updating',
+    fix_title:r=>`🗓 ${r} - matches`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pick a ${pos} from the list ${dir}`,toast_dir_above:'above ↑',toast_dir_left:'on the left ←',
     posAcc:{G:'goalkeeper',D:'defender',M:'midfielder',F:'forward'},
     toast_team_taken:t=>`${t} is already represented! Only 1 player per club.`,
     toast_no_free_slot:pos=>`No free ${pos} slots`,
     toast_budget_short:m=>`Not enough budget! Short by ${m}M`,toast_added:(n,t)=>`${n} (${t}) added ✓`,
-    toast_need7:'You need 7 players!',toast_need_captain:'Pick a captain — tap the C badge on a player',
-    toast_deadline_submit:dl=>`Deadline passed (${dl}) — you can no longer submit a team`,
-    toast_pick_frozen:dl=>`Player prices are being updated — picking is closed until ${dl}`,
-    toast_save_fail:'Failed to save team — try again or contact the admin',
-    toast_captain_set:n=>`${n} — Captain 🅲 ×2`,toast_captain_removed:'Captain removed',
-    toast_auto_fail:'Couldn\'t build a team — try again',
+    toast_need7:'You need 7 players!',toast_need_captain:'Pick a captain - tap the C badge on a player',
+    toast_deadline_submit:dl=>`Deadline passed (${dl}) - you can no longer submit a team`,
+    toast_pick_frozen:dl=>`Player prices are being updated - picking is closed until ${dl}`,
+    toast_save_fail:'Failed to save team - try again or contact the admin',
+    toast_captain_set:n=>`${n} - Captain 🅲 ×2`,toast_captain_removed:'Captain removed',
+    toast_auto_fail:'Couldn\'t build a team - try again',
     toast_auto_ok:'Random team generated ✓ Don\'t forget to pick a captain!',
     bb_selected:'Selected:',bb_review:'Review (history)',bb_deadline_passed:'Deadline passed',
     bb_pick_frozen:'🔒 Prices updating',
     bb_update:'Update Team ✓',bb_submit:'Submit Team ▶',bb_saving:'Saving...',
-    toast_round_not_open:'This gameweek isn\'t open yet — wait for the previous one to close',
-    toast_new_round_frozen:(n,dl)=>`${n} has started — player prices are being updated, squad picking opens ${dl}.`,
+    toast_round_not_open:'This gameweek isn\'t open yet - wait for the previous one to close',
+    toast_new_round_frozen:(n,dl)=>`${n} has started - player prices are being updated, squad picking opens ${dl}.`,
     players_count_suffix:'players',team_full:'team full',not_found:'No results',
-    res_lbl:(r,isUpdate)=>`${r} — team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
+    res_lbl:(r,isUpdate)=>`${r} - team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
     hist_title:'Gameweek History',
     standings_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Table`,
     standings_sub:'starts from 0',
@@ -1815,19 +1815,19 @@ const I18N={
     pmfix_lbl:'This gameweek\'s matches',pm_locked:'Team locked',pm_frozen:'Game updating',pm_remove:'Remove ✕',
     pm_team_taken:'Club already used',pm_add_price:price=>`Add (${price}M)`,
     phist_current_suffix:'(current)',phist_total_label:n=>`Total (${n} gameweeks)`,
-    match_vs:(i,opp)=>`Match ${i} — vs ${opp}`,no_data:'No data',
+    match_vs:(i,opp)=>`Match ${i} - vs ${opp}`,no_data:'No data',
     mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
     mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
     mstat_motm:'👑 Man of the match',
     mstat_tech_win:'Technical win',mstat_tech_loss:'Technical loss',tech_result_label:'Technical result',
     zero_pts:'0 points',no_result_yet:'No result for this gameweek yet',zero_pts_round:'0 points this gameweek',
     captain_label:'Captain',
-    toast_new_round:r=>`${r} — pick a new team!`,
+    toast_new_round:r=>`${r} - pick a new team!`,
     hist_sub_count:n=>`${n} gameweeks played`,hist_empty:'No history yet.<br>Pick a team and play your first gameweek!',
     hist_no_squad:'No team picked',round_tab:n=>`Gameweek ${n}`,
     own_round_label:n=>`Ownership (Gameweek ${n})`,round_pts_label:'Gameweek Points',season_pts_label:'Season Points',
     no_finished_rounds:'No finished gameweeks yet',whole_season:'whole season',fallback_player:'Player',
-    lb_round_winner:(name,round)=>`<strong>${name}</strong> — ${round} winner!`,
+    lb_round_winner:(name,round)=>`<strong>${name}</strong> - ${round} winner!`,
     lb_sub_count:n=>`${n} participants`,you_suffix:'(You)',rounds_count:n=>`${n} gameweeks`,no_participants:'No participants yet',
     lb_fanleague_title:team=>`${team} League`,
   },
@@ -2288,7 +2288,7 @@ function renderBrandLogos(){
   const loginLogo=document.getElementById('login-logo');
   if(loginLogo)loginLogo.innerHTML=`<img src="${SFL_MARK}" alt="SFL">`;
   const dball=document.getElementById('dball');
-  if(dball)dball.innerHTML=`<img src="${SFL_LOGO_FULL}" alt="SFL — Sekmadienio Futbolo Lyga">`;
+  if(dball)dball.innerHTML=`<img src="${SFL_LOGO_FULL}" alt="SFL - Sekmadienio Futbolo Lyga">`;
   const bootLogo=document.getElementById('boot-gate-logo');
   if(bootLogo)bootLogo.src=SFL_MARK;
 }
@@ -2379,11 +2379,11 @@ async function doPasswordReset(){
   }
   try{
     await auth.sendPasswordResetEmail(email);
-    okEl.textContent=`Slaptažodžio atkūrimo laiškas išsiųstas į ${email} — patikrink pašto dėžutę.`;
+    okEl.textContent=`Slaptažodžio atkūrimo laiškas išsiųstas į ${email} - patikrink pašto dėžutę.`;
     okEl.classList.add('show');
   }catch(e){
     // Don't reveal whether the address is registered — same message either way.
-    okEl.textContent=`Jei ${email} užregistruotas, atkūrimo laiškas jau pakeliui — patikrink pašto dėžutę.`;
+    okEl.textContent=`Jei ${email} užregistruotas, atkūrimo laiškas jau pakeliui - patikrink pašto dėžutę.`;
     okEl.classList.add('show');
   }
 }
@@ -2618,7 +2618,7 @@ async function loginUser(user){
     // real saved choice the moment onboarding was completed again. Bail
     // out instead and let them retry rather than guess at "new user".
     console.error('Nepavyko įkelti vartotojo duomenų prisijungimo metu',e);
-    toast('Nepavyko įkelti profilio — patikrink interneto ryšį ir perkrauk puslapį');
+    toast('Nepavyko įkelti profilio - patikrink interneto ryšį ir perkrauk puslapį');
     return;
   }
   const isNew=!doc;
@@ -2862,7 +2862,7 @@ async function finishOnboard(){
     // Something in the async chain above failed (network blip, etc.) —
     // don't leave the button stuck disabled with no way to retry.
     console.error('Nepavyko baigti registracijos',e);
-    toast('Kažkas nepavyko — pabandyk dar kartą');
+    toast('Kažkas nepavyko - pabandyk dar kartą');
     if(btn){
       btn.disabled=false;
       document.getElementById('ob-start-spin').style.display='none';
@@ -3266,7 +3266,7 @@ async function refreshOwnership(){
 function saveLeagueState(){
   if(!isAdmin())return;
   leagueDocRef().set({DB:STATE.DB,teams:STATE.teams,savedMatches:[...STATE.savedMatches]},{merge:true})
-    .catch(e=>{console.error(e);toast('Klaida išsaugant — patikrink admin teises');});
+    .catch(e=>{console.error(e);toast('Klaida išsaugant - patikrink admin teises');});
 }
 
 // ═══════════════════════════════════════════════
@@ -3954,7 +3954,7 @@ async function openPlayerHistoryModal(idArg){
   let total=0,roundsWithData=0;
   const withDataRounds=[];
   const rowsHtml=FR.map((r,ri)=>{
-    if(!db[ri])return `<div class="phist-row em"><span>${roundName(ri)}</span><span>—</span></div>`;
+    if(!db[ri])return `<div class="phist-row em"><span>${roundName(ri)}</span><span>-</span></div>`;
     const pts=computeAllPlayerRoundPts(ri,db,p.division)[id]||0;
     total+=pts;roundsWithData++;withDataRounds.push(ri);
     const ownId=`phist-ownmini-${id}-${ri}`;
@@ -4603,7 +4603,7 @@ function renderHistory(){
     const clickable=!!snap;
     html+=`<div class="hcard ${i===STATE.curRound?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
       <div class="hcard-head"><div class="hcard-title">${roundName(i)}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
-      <div class="hcard-pts ${pts===undefined?'em':pts<0?'neg':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
+      <div class="hcard-pts ${pts===undefined?'em':pts<0?'neg':''}">${pts!==undefined?pts+'pts':'-'}</div></div>
       <div class="hcard-body">`;
     // That round's real Team-of-the-Round ids, computed once per round —
     // the star below marks membership in it, not captaincy (captaincy gets
@@ -4903,7 +4903,7 @@ async function recalcPricesForRound(div,round){
   if(!isAdmin()){toast('Prieiga tik administratoriui');return;}
   const roundLbl=(DIVISIONS[div]||DIVISIONS.A).fr[round].n;
   if(!roundResultsComplete(div,round)){
-    toast(`Ne visos „${roundLbl}“ rungtynės dar išsaugotos — pirma įrašyk visus rezultatus`);
+    toast(`Ne visos „${roundLbl}“ rungtynės dar išsaugotos - pirma įrašyk visus rezultatus`);
     return;
   }
   if(!confirm(`Perskaičiuoti ${div} diviziono žaidėjų kainas pagal „${roundLbl}“ rezultatus?`))return;
@@ -5013,7 +5013,7 @@ function roundXIIds(ri,db,div){
 function tsSlotHtml(entry,pos){
   const icons={G:'🧤',D:'🛡️',M:'⚙️',F:'⚡'};
   if(!entry){
-    return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">${icons[pos]}</span></div><div class="sn">—</div><div class="sp">${t('no_data')}</div></div>`;
+    return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">${icons[pos]}</span></div><div class="sn">-</div><div class="sp">${t('no_data')}</div></div>`;
   }
   const p=entry.p;
   const logos=(DIVISIONS[p.division]||DIVISIONS.A).logos;
@@ -5426,7 +5426,7 @@ async function renderUserSquadViewer(u){
   pitchEl.innerHTML=rows.map(([pos,label])=>{
     const arr=snap.slots[pos]||[];
     return `<div class="rlbl">${label}</div><div class="prow">`+arr.map((p,idx)=>{
-      if(!p)return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">·</span></div><div class="sn">—</div></div>`;
+      if(!p)return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">·</span></div><div class="sn">-</div></div>`;
       const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
       const inXI=xiIds.has(p.id);
       const det=detail.find(d=>d.id===p.id);
@@ -5481,8 +5481,8 @@ function openProfile(){
   document.getElementById('prof-av').textContent=initials;
   document.getElementById('prof-name').textContent=CURRENT_USER.name;
   document.getElementById('prof-sub').textContent=CURRENT_USER.email;
-  document.getElementById('prof-teamname').textContent=STATE.fantasyTeamName||'—';
-  document.getElementById('prof-favteam').textContent=STATE.favTeam||'—';
+  document.getElementById('prof-teamname').textContent=STATE.fantasyTeamName||'-';
+  document.getElementById('prof-favteam').textContent=STATE.favTeam||'-';
   const {totalPts,roundsPlayed}=computeScoring(STATE.mySquads,STATE.DB);
   document.getElementById('prof-pts').textContent=totalPts;
   document.getElementById('prof-rounds').textContent=roundsPlayed;
@@ -5523,7 +5523,7 @@ function renderAdminTabs(){
 }
 function renderAdmin(){
   const sub=document.getElementById('admin-asub');
-  if(sub)sub.textContent=`Išsaugok kiekvieno mačo rezultatą ir įvarčių autorius. — ${STATE.division} divizionas`;
+  if(sub)sub.textContent=`Išsaugok kiekvieno mačo rezultatą ir įvarčių autorius. - ${STATE.division} divizionas`;
   renderAdminTabs();
   renderAdminRound();
 }
@@ -5653,7 +5653,7 @@ function saveM(key,ri,di,mi){
   if(!STATE.DB[ri])STATE.DB[ri]={};if(!STATE.DB[ri][di])STATE.DB[ri][di]={};
   STATE.DB[ri][di][mi]={hg,ag,scorers,reds,motm};
   const svEl=document.getElementById(`sv-${key}`);if(svEl)svEl.classList.add('on');
-  toast(`${m[0]} ${hg}:${ag} ${m[1]} — išsaugota ✓`);
+  toast(`${m[0]} ${hg}:${ag} ${m[1]} - išsaugota ✓`);
   // Tabs only, not a full renderAdmin() — a full rebuild would wipe any
   // unsaved scorer entries you're mid-typing on another match this round.
   renderAdminTabs();renderStMini();renderDash();
@@ -5698,7 +5698,7 @@ const INACTIVITY_LIMIT_MS=60*60*1000;
 setInterval(()=>{
   if(!CURRENT_USER)return;
   if(Date.now()-LAST_ACTIVITY_AT>=INACTIVITY_LIMIT_MS){
-    toast('Atsijungta dėl neaktyvumo (1 val.) — prisijunk iš naujo');
+    toast('Atsijungta dėl neaktyvumo (1 val.) - prisijunk iš naujo');
     doLogout();
   }
 },60000);
