@@ -1505,8 +1505,7 @@ const I18N={
     help_s2_li3:'Iš kiekvieno realaus klubo gali rinktis tik 1 žaidėją.',
     help_s2_li4:'Iki turo termino (13:30) gali keisti komandą kiek tik nori kartų — visiškai laisvai.',
     help_s2_li5:'Nepasirinkus komandos iki termino, tą turą taškų negausi, bet visada gali rinktis kitą turą iš naujo.',
-    help_s3_h:'Kapitonas',
-    help_s3_p:'Kiekvienam turui privalai paskirti vieną kapitoną (spausk „C" ženkliuką ties žaidėju). Kapitono surinkti taškai tą turą DVIGUBINAMI — įskaitant ir neigiamus, jei žaidėjas suveikė prastai ar gavo raudoną kortelę, todėl kapitoną verta rinktis atsargiai.',
+    help_s2_li6:'Kiekvienam turui privalai paskirti vieną kapitoną (spausk „C" ženkliuką ties žaidėju) — jo surinkti taškai tą turą DVIGUBINAMI, įskaitant ir neigiamus, jei žaidėjas suveikė prastai ar gavo raudoną kortelę, todėl kapitoną verta rinktis atsargiai.',
     help_s4_h:'Žaidėjų sąrašas ir rikiavimas',
     help_s4_li1:'Sąrašą kairėje gali rikiuoti pagal: bendrus sezono taškus, kainą, paskutinio turo taškus, populiarumą (%), įmuštus įvarčius arba kainos pokytį.',
     help_s4_li2:'⭐ šalia pozicijos raidelės rodo, kad žaidėjas šiuo metu patenka į tikrą Sezono rinktinę — geriausiai realiai sužaidusius žaidėjus, nepriklausomai nuo to, ką pasirenki savo komandoje.',
@@ -1702,8 +1701,7 @@ const I18N={
     help_s2_li3:'You can only pick 1 player from each real club.',
     help_s2_li4:"You can change your squad as many times as you like — completely free — until that gameweek's deadline (13:30).",
     help_s2_li5:"If you don't pick a squad before the deadline, you simply won't score points that gameweek — you can always pick again next time.",
-    help_s3_h:'Captain',
-    help_s3_p:'You must set exactly one captain each gameweek (tap the "C" badge on a player). Your captain’s points for that gameweek are DOUBLED — including negative ones, if they have a bad game or get a red card — so pick carefully.',
+    help_s2_li6:'You must set exactly one captain each gameweek (tap the "C" badge on a player) — their points that gameweek are DOUBLED, including negative ones, if they have a bad game or get a red card, so pick carefully.',
     help_s4_h:'Player list & sorting',
     help_s4_li1:'Sort the list on the left by: total season points, price, last gameweek points, ownership (%), goals scored, or price change.',
     help_s4_li2:"⭐ next to the position letter means that player is currently in the real Team of the Season — the actual best performers by real results, regardless of who you've picked.",
@@ -4388,8 +4386,7 @@ function renderHelpModal(){
   const faq=(qKey,aKey)=>`<div class="help-faq-q">🔸 ${t(qKey)}</div><div class="help-faq-a">${t(aKey)}</div>`;
   el.innerHTML=
     sec('🎯','help_s1_h',`<div class="help-sec-p">${t('help_s1_p')}</div>`)+
-    sec('🧩','help_s2_h',`<ul class="help-list">${['help_s2_li1','help_s2_li2','help_s2_li3','help_s2_li4','help_s2_li5'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
-    sec('🅲','help_s3_h',`<div class="help-sec-p">${t('help_s3_p')}</div>`)+
+    sec('🧩','help_s2_h',`<ul class="help-list">${['help_s2_li1','help_s2_li2','help_s2_li3','help_s2_li4','help_s2_li5','help_s2_li6'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
     // Points scoring itself lives full-time in the squad page's own "Taškų
     // sistema" panel, not duplicated here — this section instead covers
     // the picker's own features (sort options, the XI star) that have no
