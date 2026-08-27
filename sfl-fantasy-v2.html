@@ -875,10 +875,6 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
       <!-- REGISTER FORM -->
       <div id="form-register" style="display:none">
         <div class="form-group">
-          <label class="form-label" data-i18n="label_name">Vardas</label>
-          <input class="form-input" id="reg-name" type="text" placeholder="Tavo vardas" data-i18n-ph="ph_name">
-        </div>
-        <div class="form-group">
           <label class="form-label" data-i18n="label_email">El. paštas</label>
           <input class="form-input" id="reg-email" type="email" placeholder="vardas@email.com">
         </div>
@@ -1454,7 +1450,7 @@ const I18N={
     err_login_network:'Nepavyko prisijungti prie interneto — patikrink ryšį ir bandyk dar kartą.',
     toast_session_expired:'Sesija baigėsi po 1 valandos — prisijunk iš naujo.',
     ok_pw_reset:'Slaptažodžio atkūrimo laiškas išsiųstas — patikrink savo pašto dėžutę.',
-    btn_login:'Prisijungti →',label_name:'Vardas',ph_name:'Tavo vardas',ph_password_min:'Min. 6 simboliai',
+    btn_login:'Prisijungti →',ph_password_min:'Min. 6 simboliai',
     err_register:'Toks el. paštas jau užregistruotas',btn_register:'Registruotis →',
     auth_divider:'arba',btn_facebook:'Tęsti su Facebook',
     err_fb_account_exists:'Šis el. paštas jau užregistruotas su slaptažodžiu — prisijunk įprastu būdu.',
@@ -1650,7 +1646,7 @@ const I18N={
     err_login_network:'Could not reach the network — check your connection and try again.',
     toast_session_expired:'Your session expired after 1 hour — please log in again.',
     ok_pw_reset:'Password reset email sent — check your inbox.',
-    btn_login:'Log In →',label_name:'Name',ph_name:'Your name',ph_password_min:'Min. 6 characters',
+    btn_login:'Log In →',ph_password_min:'Min. 6 characters',
     err_register:'This email is already registered',btn_register:'Register →',
     auth_divider:'or',btn_facebook:'Continue with Facebook',
     err_fb_account_exists:'This email is already registered with a password — log in the usual way instead.',
@@ -2376,27 +2372,24 @@ async function doPasswordReset(){
   }
 }
 
-let pendingRegisterName=null;
 async function doRegister(){
-  const name=document.getElementById('reg-name').value.trim();
   const email=document.getElementById('reg-email').value.trim().toLowerCase();
   const pass=document.getElementById('reg-pass').value;
   const errEl=document.getElementById('reg-err');
   const btn=document.getElementById('reg-btn');
   errEl.classList.remove('show');
-  if(!name||!email||pass.length<6){
+  if(!email||pass.length<6){
     errEl.textContent='Užpildyk visus laukus (slaptažodis min. 6 simboliai)';
     errEl.classList.add('show');return;
   }
   if(btn.disabled)return;
   setBtnLoading(btn,'reg-btn-spin','reg-btn-label',true);
   try{
-    pendingRegisterName=name;
-    const cred=await auth.createUserWithEmailAndPassword(email,pass);
-    cred.user.updateProfile({displayName:name}).catch(()=>{});
+    await auth.createUserWithEmailAndPassword(email,pass);
+    // No name collected here — loginUser() falls back to the email's own
+    // local part (or 'Žaidėjas') when there's no saved profile name yet.
     // No reset on success — onAuthStateChanged takes over from here.
   }catch(e){
-    pendingRegisterName=null;
     errEl.textContent=e.code==='auth/email-already-in-use'?'Toks el. paštas jau užregistruotas':'Registracijos klaida: '+e.message;
     errEl.classList.add('show');
     setBtnLoading(btn,'reg-btn-spin','reg-btn-label',false,t('btn_register'));
@@ -2619,8 +2612,7 @@ async function loginUser(user){
   // one) — guarded here rather than assumed, same idea as the isNew fetch
   // failure above: a missing field shouldn't throw and strand the user on
   // a blank screen.
-  CURRENT_USER={uid:user.uid,email:user.email,name:(doc&&doc.name)||pendingRegisterName||user.displayName||user.email?.split('@')[0]||'Žaidėjas'};
-  pendingRegisterName=null;
+  CURRENT_USER={uid:user.uid,email:user.email,name:(doc&&doc.name)||user.displayName||user.email?.split('@')[0]||'Žaidėjas'};
   // Every division-scoped constant (TEAMS_KEYS/TEAM_ABBR/TEAM_KIT/TEAM_LOGOS/
   // HIST/FR) must point at this user's own division before anything below
   // renders — dashboard, squad picker, fixtures all read those bare names.
