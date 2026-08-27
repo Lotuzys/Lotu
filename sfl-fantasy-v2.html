@@ -1318,9 +1318,10 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
       <div class="prof-row"><span class="prof-row-lbl" id="prof-totalpts-lbl">Iš viso taškų</span><span class="prof-row-val" id="prof-pts">0</span></div>
       <div class="prof-row"><span class="prof-row-lbl" id="prof-roundsplayed-lbl">Turų sužaista</span><span class="prof-row-val" id="prof-rounds">0</span></div>
       <!-- Self-service withdraw/re-give of the optional marketing consent —
-           the Privacy Policy's own text (privacy_s2b_p) already says this
-           can be withdrawn by email; this is the same choice made directly
-           in-app, one click, instead of requiring an email round-trip. -->
+           the Privacy Policy's own text (privacy_s2b_p) points here
+           directly: opening the profile icon (top-right of the topbar)
+           and flipping this checkbox is the withdrawal mechanism itself,
+           one click, no email round-trip needed. -->
       <label class="ob-check" style="margin-top:12px">
         <input type="checkbox" id="prof-consent-marketing" onchange="toggleProfileMarketingConsent(this.checked)">
         <span data-i18n="ob_consent_marketing">Sutinku gauti partnerių pasiūlymus ir naujienas el. paštu (neprivaloma).</span>
@@ -1535,7 +1536,7 @@ const I18N={
     privacy_s2_h:'Kas mato tavo informaciją?',
     privacy_s2_p:'Fantasy komandos pavadinimas, mėgstama komanda, pasirinkti žaidėjai ir surinkti taškai matomi visiems to paties diviziono dalyviams — tai reikalinga lyderių lentelei, populiarumo statistikai ir komandų peržiūrai veikti. Tavo el. paštas niekada nesaugomas bendrai matomoje duomenų bazėje ir kitiems dalyviams nerodomas — jis žinomas tik tavo pačios prisijungimo sistemai.',
     privacy_s2b_h:'„Betsson" pasiūlymai (neprivaloma)',
-    privacy_s2b_p:'Registruojantis gali papildomai, savo noru, pažymėti varnelę sutinkant gauti „Betsson" pasiūlymus ir naujienas el. paštu. Ši varnelė niekada nėra pažymėta iš anksto — pasirenki pats. Jei ją pažymi, tavo el. pašto adresas bus perduotas „Betsson" tam, kad jie galėtų tiesiogiai siųsti tau savo pasiūlymus/naujienlaiškius. Šis sutikimas visiškai atskiras nuo Privatumo politikos ir Taisyklių priėmimo — jo nepažymėjus, žaisti gali normaliai, o el. paštas niekam trečiajam neperduodamas. Sutikimą bet kada gali atšaukti parašęs žemiau nurodytu el. paštu.',
+    privacy_s2b_p:'Registruojantis gali papildomai, savo noru, pažymėti varnelę sutinkant gauti „Betsson" pasiūlymus ir naujienas el. paštu. Ši varnelė niekada nėra pažymėta iš anksto — pasirenki pats. Jei ją pažymi, tavo el. pašto adresas bus perduotas „Betsson" tam, kad jie galėtų tiesiogiai siųsti tau savo pasiūlymus/naujienlaiškius. Šis sutikimas visiškai atskiras nuo Privatumo politikos ir Taisyklių priėmimo — jo nepažymėjus, žaisti gali normaliai, o el. paštas niekam trečiajam neperduodamas. Sutikimą bet kada gali atšaukti atsidaręs savo profilį (profilio ikonėlė dešiniajame viršutiniame puslapio kampe).',
     privacy_s3_h:'Kur saugomi duomenys?',
     privacy_s3_p:'Visi duomenys saugomi „Google Firebase" (Firestore duomenų bazė ir Authentication) infrastruktūroje. Jokie tretieji analitikos ar reklamos įrankiai programoje nenaudojami.',
     privacy_s4_h:'Slapukai ir vietinė talpykla',
@@ -1722,7 +1723,7 @@ const I18N={
     privacy_s2_h:'Who can see your info?',
     privacy_s2_p:"Your fantasy team name, favorite club, picked players and points scored are visible to every other manager in your own division — this is what makes the leaderboard, ownership stats and squad-viewing pages work. Your email address is never stored in that shared database and is never shown to other managers — it's known only to your own sign-in.",
     privacy_s2b_h:'Betsson offers (optional)',
-    privacy_s2b_p:"At registration you can optionally, and entirely of your own choosing, tick a box to receive Betsson offers and news by email. That box is never pre-checked — you choose it yourself. If you tick it, your email address is shared with Betsson so they can send you their own direct offers/newsletters. This consent is fully separate from accepting the Privacy Policy and Rules — leaving it unchecked, you can still play normally and your email is not shared with any third party. You can withdraw this consent at any time by writing to the email address below.",
+    privacy_s2b_p:"At registration you can optionally, and entirely of your own choosing, tick a box to receive Betsson offers and news by email. That box is never pre-checked — you choose it yourself. If you tick it, your email address is shared with Betsson so they can send you their own direct offers/newsletters. This consent is fully separate from accepting the Privacy Policy and Rules — leaving it unchecked, you can still play normally and your email is not shared with any third party. You can withdraw this consent at any time by opening your profile (the profile icon in the top-right corner of the page).",
     privacy_s3_h:'Where is data stored?',
     privacy_s3_p:'All data is stored on Google Firebase (Firestore database and Authentication) infrastructure. No third-party analytics or advertising tools are used anywhere in the app.',
     privacy_s4_h:'Cookies and local storage',
