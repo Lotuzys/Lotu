@@ -4611,21 +4611,14 @@ function goNextRound(){
 // HISTORY
 // ═══════════════════════════════════════════════
 // Which round cards are showing their full squad list — starts with just
-// the live round's own PAIR expanded (most relevant at a glance) rather
-// than every round at once, which got messy fast once several rounds had
-// squads. .hist-grid lays out 2 cards per row at the widths this page
-// actually renders at, so "pair" means the row the live round sits in —
-// rounds 0&1 share a row, 2&3 share the next, and so on — rather than the
-// live round alone, so that row doesn't end up with one tall expanded
-// card next to one short collapsed one. Once a later round becomes live,
-// its own pair takes over and this one collapses back down.
-// Persists across re-renders (language switch, etc.) since it's a plain
-// module-level Set, not rebuilt inside the function.
+// the live round expanded (most relevant at a glance) and every past round
+// collapsed, rather than every round at once, which got messy fast once
+// several rounds had squads. Once a later round becomes live, only IT
+// starts expanded by default — earlier rounds collapse back down (this only
+// affects the initial default; a user's own manual expand/collapse via
+// toggleHistCard is preserved across re-renders since it's a plain
+// module-level Set, not rebuilt inside the function).
 let HIST_EXPANDED=null;
-function historyPairFor(i){
-  const start=Math.floor(i/2)*2;
-  return [start,start+1].filter(j=>j<FR.length);
-}
 function toggleHistCard(i,ev){
   ev.stopPropagation(); // the card itself is also a goRound() link — don't navigate on an arrow tap
   if(HIST_EXPANDED.has(i))HIST_EXPANDED.delete(i);else HIST_EXPANDED.add(i);
@@ -4636,7 +4629,7 @@ function renderHistory(){
   document.getElementById('hist-sub').textContent=t('hist_sub_count',roundsPlayed);
   const el=document.getElementById('hist-content');
   if(!roundsPlayed){el.innerHTML=`<div class="empty-hist">⚽<br><br>${t('hist_empty')}</div>`;return;}
-  if(!HIST_EXPANDED)HIST_EXPANDED=new Set(historyPairFor(computeCurrentRound()));
+  if(!HIST_EXPANDED)HIST_EXPANDED=new Set([computeCurrentRound()]);
   // A round whose deadline hasn't even come up yet has nothing to show —
   // not a squad, not a "you didn't pick" reminder either, since there was
   // never anything to pick for it yet.
