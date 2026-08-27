@@ -4936,11 +4936,15 @@ async function recalcPricesForRound(div,round){
 // "there's a real result and the best available score happens to be zero or
 // negative" (a red card, or a scoreless loss) — the latter is still a real
 // answer and should be shown, not hidden behind a placeholder.
-function bestXI(ptsMap,hasData,div){
+// ownMap (optional, id -> ownership %) breaks ties on equal points — the
+// owner's own rule: whoever more managers actually picked wins the slot.
+// Without one, ties fall back to PLAYERS' own (arbitrary, id) order, same
+// as before this rule existed.
+function bestXI(ptsMap,hasData,div,ownMap){
   div=div||STATE.division;
   const byPos={G:[],D:[],M:[],F:[]};
   PLAYERS.filter(p=>p.division===div).forEach(p=>byPos[p.pos].push({p,pts:ptsMap[p.id]||0}));
-  Object.values(byPos).forEach(arr=>arr.sort((a,b)=>b.pts-a.pts));
+  Object.values(byPos).forEach(arr=>arr.sort((a,b)=>b.pts-a.pts||((ownMap?.[b.p.id]||0)-(ownMap?.[a.p.id]||0))));
   const top=(pos,n)=>Array.from({length:n},(_,i)=>hasData&&byPos[pos][i]?byPos[pos][i]:null);
   return {G:top('G',1),D:top('D',2),M:top('M',2),F:top('F',2)};
 }
@@ -4948,17 +4952,53 @@ function bestXI(ptsMap,hasData,div){
 // the real best XI" lookup is what every star-marker call site below
 // actually needs, not the position-grouped shape Sezono rinktinė's own
 // pitch renders from.
-function bestXIIds(ptsMap,hasData,div){
-  const xi=bestXI(ptsMap,hasData,div);
+function bestXIIds(ptsMap,hasData,div,ownMap){
+  const xi=bestXI(ptsMap,hasData,div,ownMap);
   const ids=new Set();
   Object.values(xi).forEach(arr=>arr.forEach(e=>{if(e)ids.add(e.p.id);}));
   return ids;
+}
+// ── Ownership tie-break caches ──────────────────────────────────────────
+// bestXI()'s tie-break needs ownership %, but that's a Firestore round-trip
+// (computeOwnershipForDivision()/computeOwnershipMapForRound()) — too slow
+// to await from every sync render call (renderSlot() fires per-slot,
+// renderList() on every keystroke). Cached per division (season) / per
+// division+round (round) instead: a cache miss kicks off the fetch in the
+// background and returns undefined (bestXI() just falls back to id-order
+// for that one render pass, same as no ownMap at all), then re-renders
+// whatever's currently showing a star once it resolves. Never invalidated
+// — ownership shifting slightly during a session isn't worth re-fetching
+// for what's ultimately a tie-break cosmetic detail.
+let SEASON_OWNERSHIP_CACHE={};
+let ROUND_OWNERSHIP_CACHE={};
+async function ensureSeasonOwnership(div){
+  if(!SEASON_OWNERSHIP_CACHE[div])SEASON_OWNERSHIP_CACHE[div]=await computeOwnershipForDivision(div);
+  return SEASON_OWNERSHIP_CACHE[div];
+}
+async function ensureRoundOwnership(div,round){
+  const key=div+'_'+round;
+  if(!ROUND_OWNERSHIP_CACHE[key])ROUND_OWNERSHIP_CACHE[key]=await computeOwnershipMapForRound(div,round);
+  return ROUND_OWNERSHIP_CACHE[key];
+}
+// Re-renders whichever of the XI-star-showing views is currently on
+// screen — called once a background ownership fetch above resolves, so
+// that view's tie-break picks it up instead of staying on the id-order
+// fallback until the next unrelated re-render happens to come along.
+function rerenderXIConsumers(){
+  if(document.getElementById('page-squad')?.classList.contains('on')){renderAllSlots();renderList();}
+  if(document.getElementById('page-history')?.classList.contains('on'))renderHistory();
+  if(document.getElementById('page-teamseason')?.classList.contains('on'))renderTeamOfSeason();
+  if(document.getElementById('usq-bg')?.classList.contains('open')&&USQ_UID){
+    fetchAllUsers().then(allUsersAll=>{const u=allUsersAll.find(x=>x.id===USQ_UID);if(u)renderUserSquadViewer(u);});
+  }
 }
 // Season Team-of-the-Season XI, as player ids — used by the squad pitch's
 // star while a round is still being picked (see renderSlot()).
 function seasonXIIds(db,div){
   db=db||STATE.DB;div=div||STATE.division;
-  return bestXIIds(computeSeasonPlayerPts(db,div),pastRoundIndices().some(ri=>!!db[ri]),div);
+  const ownMap=SEASON_OWNERSHIP_CACHE[div];
+  if(!ownMap)ensureSeasonOwnership(div).then(rerenderXIConsumers).catch(e=>console.error('Nepavyko paskaičiuoti sezono populiarumo (rinktinės lygiųjų taisyklė)',e));
+  return bestXIIds(computeSeasonPlayerPts(db,div),pastRoundIndices().some(ri=>!!db[ri]),div,ownMap);
 }
 // One round's Team-of-the-Round XI, as player ids — used everywhere a
 // LOCKED/historical squad is shown (renderSlot()'s historical branch,
@@ -4966,7 +5006,9 @@ function seasonXIIds(db,div){
 // since a past round's own best XI is the relevant comparison there.
 function roundXIIds(ri,db,div){
   db=db||STATE.DB;div=div||STATE.division;
-  return bestXIIds(computeAllPlayerRoundPts(ri,db,div),!!db[ri],div);
+  const ownMap=ROUND_OWNERSHIP_CACHE[div+'_'+ri];
+  if(!ownMap)ensureRoundOwnership(div,ri).then(rerenderXIConsumers).catch(e=>console.error('Nepavyko paskaičiuoti turo populiarumo (rinktinės lygiųjų taisyklė)',e));
+  return bestXIIds(computeAllPlayerRoundPts(ri,db,div),!!db[ri],div,ownMap);
 }
 function tsSlotHtml(entry,pos){
   const icons={G:'🧤',D:'🛡️',M:'⚙️',F:'⚡'};
@@ -5048,7 +5090,13 @@ async function renderTeamOfSeason(){
   }
   sub.textContent=TS_MODE==='round'?roundName(TS_ROUND):t('whole_season');
   const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND,tsDB,TS_DIVISION):computeSeasonPlayerPts(tsDB,TS_DIVISION);
-  const xi=bestXI(ptsMap,hasData,TS_DIVISION);
+  // Ties on equal points go to whoever more managers actually owned —
+  // season-wide ownership in season mode, that specific round's ownership
+  // in round mode. Awaited directly here (rather than the sync caches
+  // seasonXIIds()/roundXIIds() elsewhere fall back to) since this page IS
+  // the XI itself — no reason to show a since-corrected tie-break pick.
+  const ownMap=TS_MODE==='round'?await ensureRoundOwnership(TS_DIVISION,TS_ROUND):await ensureSeasonOwnership(TS_DIVISION);
+  const xi=bestXI(ptsMap,hasData,TS_DIVISION,ownMap);
   pitch.innerHTML=`
     <div class="rlbl">${t('rlbl_gk')}</div>
     <div class="prow">${tsSlotHtml(xi.G[0],'G')}</div>
@@ -5368,7 +5416,11 @@ async function renderUserSquadViewer(u){
   const detail=roundDetail[USQ_ROUND]||[];
   // That round's real Team-of-the-Round ids — the star below marks
   // membership in it, not captaincy (captaincy gets its own orange "C"
-  // badge on the avatar instead).
+  // badge on the avatar instead). Ownership pre-fetched directly (rather
+  // than relying on roundXIIds()'s own fallback-then-re-render cache miss)
+  // since this view is already async — no reason to show a since-
+  // corrected tie-break pick.
+  await ensureRoundOwnership(div,USQ_ROUND);
   const xiIds=roundXIIds(USQ_ROUND,db,div);
   const rows=[['G',t('rlbl_gk')],['D',t('rlbl_def')],['M',t('rlbl_mid')],['F',t('rlbl_fwd')]];
   pitchEl.innerHTML=rows.map(([pos,label])=>{
