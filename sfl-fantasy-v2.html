@@ -333,6 +333,9 @@ a{color:var(--or)}
 .hcard-head{background:var(--sur);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bor)}
 .hcard-title{font-size:12px;font-weight:700;color:var(--ink)}
 .hcard-pts{font-size:19px;font-weight:900;color:var(--or)}.hcard-pts.em{color:var(--mu);font-size:12px;font-weight:400}.hcard-pts.neg{color:var(--red)}
+.hcard-head-right{display:flex;align-items:center;gap:8px}
+.hcard-toggle{background:none;border:none;cursor:pointer;font-size:11px;color:var(--mu);line-height:1;padding:4px 6px;border-radius:6px;transition:background .15s var(--ease)}
+.hcard-toggle:hover{background:var(--sur2)}
 .hcard-body{padding:13px 16px}
 .hcp{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bor);font-size:11px}
 .hcp:last-child{border-bottom:none}
@@ -1642,6 +1645,7 @@ const I18N={
     toast_new_round:r=>`${r} - rinkis naują komandą!`,
     hist_sub_count:n=>`${n} ${ltForm(n,'turas','turai','turų')} sužaista`,hist_empty:'Dar nėra istorijos.<br>Pasirink komandą ir sužaisk pirmą turą!',
     hist_no_squad:'Komanda nepasirinkta',round_tab:n=>`${n} turas`,
+    hist_expand:'Rodyti sudėtį',hist_collapse:'Slėpti sudėtį',
     own_round_label:n=>`Populiarumas (${n} turas)`,
     round_pts_label:n=>`Turo ${ltForm(n,'taškas','taškai','taškų')}`,
     season_pts_label:n=>`Sezono ${ltForm(n,'taškas','taškai','taškų')}`,
@@ -1832,6 +1836,7 @@ const I18N={
     toast_new_round:r=>`${r} - pick a new team!`,
     hist_sub_count:n=>`${n} gameweeks played`,hist_empty:'No history yet.<br>Pick a team and play your first gameweek!',
     hist_no_squad:'No team picked',round_tab:n=>`Gameweek ${n}`,
+    hist_expand:'Show squad',hist_collapse:'Hide squad',
     own_round_label:n=>`Ownership (Gameweek ${n})`,round_pts_label:'Gameweek Points',season_pts_label:'Season Points',
     no_finished_rounds:'No finished gameweeks yet',whole_season:'whole season',fallback_player:'Player',
     lb_round_winner:(name,round)=>`<strong>${name}</strong> - ${round} winner!`,
@@ -4597,34 +4602,60 @@ function goNextRound(){
 // ═══════════════════════════════════════════════
 // HISTORY
 // ═══════════════════════════════════════════════
+// Which round cards are showing their full squad list — starts with just
+// the live round expanded (most relevant at a glance) rather than every
+// round at once, which got messy fast once several rounds had squads.
+// Persists across re-renders (language switch, etc.) since it's a plain
+// module-level Set, not rebuilt inside the function.
+let HIST_EXPANDED=null;
+function toggleHistCard(i,ev){
+  ev.stopPropagation(); // the card itself is also a goRound() link — don't navigate on an arrow tap
+  if(HIST_EXPANDED.has(i))HIST_EXPANDED.delete(i);else HIST_EXPANDED.add(i);
+  renderHistory();
+}
 function renderHistory(){
   const {roundPts,roundDetail,roundsPlayed}=computeScoring(STATE.mySquads,STATE.DB);
   document.getElementById('hist-sub').textContent=t('hist_sub_count',roundsPlayed);
   const el=document.getElementById('hist-content');
   if(!roundsPlayed){el.innerHTML=`<div class="empty-hist">⚽<br><br>${t('hist_empty')}</div>`;return;}
+  if(!HIST_EXPANDED)HIST_EXPANDED=new Set([computeCurrentRound()]);
+  // A round whose deadline hasn't even come up yet has nothing to show —
+  // not a squad, not a "you didn't pick" reminder either, since there was
+  // never anything to pick for it yet.
+  const live=computeCurrentRound();
   let html='<div class="hist-grid">';
   FR.forEach((r,i)=>{
     const snap=STATE.mySquads[i];const pts=roundPts[i];const detail=roundDetail[i];
+    const future=i>live;
     // Past/current rounds with a submitted squad can be tapped to jump
     // straight to that round's pitch (goRound handles live vs. historical).
     const clickable=!!snap;
+    const expanded=HIST_EXPANDED.has(i);
     html+=`<div class="hcard ${i===STATE.curRound?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
       <div class="hcard-head"><div class="hcard-title">${roundName(i)}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
-      <div class="hcard-pts ${pts===undefined?'em':pts<0?'neg':''}">${pts!==undefined?pts+'pts':'-'}</div></div>
-      <div class="hcard-body">`;
-    // That round's real Team-of-the-Round ids, computed once per round —
-    // the star below marks membership in it, not captaincy (captaincy gets
-    // its own orange "C" badge next to the name instead).
-    const xiIds=snap?roundXIIds(i,STATE.DB,STATE.division):null;
-    if(snap){['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
-      if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
-      const inXI=xiIds.has(p.id);
-      const det=detail?.find(d=>d.id===p.id);
-      html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
-        <div class="hcp-name">${isC?'<span class="cap-c-badge">C</span> ':''}${p.name}${inXI?' ⭐':''} <span class="hcp-pos">${POS_LT[pos]}</span></div>
-        <div class="hcp-pts ${det&&det.pts<0?'neg':isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
-    }));}else{html+=`<div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('hist_no_squad')}</div>`;}
-    html+=`</div></div>`;
+      <div class="hcard-head-right">
+        <div class="hcard-pts ${pts===undefined?'em':pts<0?'neg':''}">${pts!==undefined?pts+'pts':'-'}</div>
+        ${snap?`<button class="hcard-toggle" onclick="toggleHistCard(${i},event)" title="${t(expanded?'hist_collapse':'hist_expand')}">${expanded?'▲':'▼'}</button>`:''}
+      </div></div>`;
+    if(snap&&expanded){
+      html+=`<div class="hcard-body">`;
+      // That round's real Team-of-the-Round ids, computed once per round —
+      // the star below marks membership in it, not captaincy (captaincy
+      // gets its own orange "C" badge next to the name instead).
+      const xiIds=roundXIIds(i,STATE.DB,STATE.division);
+      ['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
+        if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+        const inXI=xiIds.has(p.id);
+        const det=detail?.find(d=>d.id===p.id);
+        html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
+          <div class="hcp-name">${isC?'<span class="cap-c-badge">C</span> ':''}${p.name}${inXI?' ⭐':''} <span class="hcp-pos">${POS_LT[pos]}</span></div>
+          <div class="hcp-pts ${det&&det.pts<0?'neg':isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
+      }));
+      html+=`</div>`;
+    }else if(!snap&&!future){
+      html+=`<div class="hcard-body"><div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('hist_no_squad')}</div></div>`;
+    }
+    html+=`</div>`;
   });
   el.innerHTML=html+'</div>';
 }
