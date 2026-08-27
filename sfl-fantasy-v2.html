@@ -445,6 +445,13 @@ a{color:var(--or)}
 .mm-prow-meta{font-size:9.5px;color:var(--mu);white-space:nowrap}
 .mm-prow-pts{font-weight:800;color:var(--or);font-size:11.5px;flex-shrink:0}
 .mm-prow-pts.neg{color:var(--red)}
+/* Per-position collapsible group within a team column — collapsed by
+   default (see openMatchModal), each with its own arrow toggle. */
+.mm-possec{margin-bottom:2px}
+.mm-possec-head{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 0;cursor:pointer;font-size:11px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--bor)}
+.mm-possec-toggle{background:none;border:none;color:var(--mu);font-size:10px;line-height:1;cursor:pointer;padding:3px 5px;border-radius:6px;transition:background .15s var(--ease)}
+.mm-possec-toggle:hover{background:var(--sur)}
+.mm-possec-body{padding:2px 0 2px}
 /* Round-navigator strip — jump to another round's squad without leaving the
    current screen. Reused by the squad page (own history, right under the
    pitch, above the fixtures list) and the foreign-squad viewer modal
@@ -711,6 +718,11 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 .st th:nth-child(2){text-align:left}
 .st td{padding:9px 11px;border-bottom:1px solid var(--bor);font-size:12px;text-align:center;color:var(--ink2)}
 .st td:nth-child(2){text-align:left;font-weight:600;color:var(--ink)}
+/* Clickable team row/card — standings table, squad-page mini standings —
+   jumps to Statistika filtered to that team (see goToTeamStats()). */
+.clk{cursor:pointer}
+.st tr.clk:hover td{background:var(--sur)}
+.sr2.clk:hover{background:var(--sur)}
 .st tr:last-child td{border-bottom:none}
 .st tr:hover td{background:var(--sur)}
 
@@ -3838,8 +3850,50 @@ function computeMatchScorers(ri,di,mi){
     const red=redSet.has(p.id);if(red)pts+=CONFIG.RED_CARD_PTS;
     const motm=saved.motm===p.id;if(motm)pts+=CONFIG.MOTM_PTS;
     return {p,pts,goals,cs,one,red,motm};
-  }).filter(x=>x.pts!==0).sort((a,b)=>b.pts-a.pts||a.p.name.localeCompare(b.p.name));
+  });
+  // Every real player on both rosters, not just the ones who scored
+  // individually — grouping/sorting is left to the caller (openMatchModal
+  // groups these by position into 4 collapsible sections per team).
   return {home,away,saved:true,hg,ag,isTech:false,rows};
+}
+const MM_POS_ORDER=['G','D','M','F'];
+const MM_POS_I18N={G:'rlbl_gk',D:'rlbl_def',M:'rlbl_mid',F:'rlbl_fwd'};
+function toggleMatchPosSec(id){
+  const body=document.getElementById('mm-body-'+id);
+  const tgl=document.getElementById('mm-tgl-'+id);
+  const opening=body.style.display==='none';
+  body.style.display=opening?'':'none';
+  tgl.textContent=opening?'▲':'▼';
+}
+function mmRowHtml(x){
+  const bits=[];
+  if(x.goals>0)bits.push(`⚽×${x.goals}`);
+  if(x.cs)bits.push('🧤');
+  if(x.one)bits.push('1️⃣');
+  if(x.red)bits.push('🟥');
+  if(x.motm)bits.push('👑');
+  return `<div class="mm-prow"><div class="mm-prow-av">${kitSvg(x.p.team,24)}</div>
+    <div class="mm-prow-info"><div class="mm-prow-name">${x.p.name}</div>
+    <div class="mm-prow-meta">${bits.join(' ')}</div></div>
+    <div class="mm-prow-pts ${x.pts<0?'neg':''}">${x.pts}pts</div></div>`;
+}
+// One team's column: 4 position sections (G/D/M/F), collapsed by default,
+// each independently expandable via its own arrow — colId disambiguates
+// the home vs away column's DOM ids (both teams have a "G" section etc).
+function mmColHtml(rows,team,colId){
+  return MM_POS_ORDER.map(pos=>{
+    const list=rows.filter(x=>x.p.team===team&&x.p.pos===pos).sort((a,b)=>b.pts-a.pts||a.p.name.localeCompare(b.p.name));
+    const secId=`${colId}-${pos}`;
+    return `<div class="mm-possec">
+      <div class="mm-possec-head" onclick="toggleMatchPosSec('${secId}')">
+        <span>${t(MM_POS_I18N[pos])}</span>
+        <button class="mm-possec-toggle" id="mm-tgl-${secId}">▼</button>
+      </div>
+      <div class="mm-possec-body" id="mm-body-${secId}" style="display:none">
+        ${list.length?list.map(mmRowHtml).join(''):`<div class="mm-col-empty">${t('no_data')}</div>`}
+      </div>
+    </div>`;
+  }).join('');
 }
 function openMatchModal(ri,di,mi){
   const data=computeMatchScorers(ri,di,mi);
@@ -3853,28 +3907,17 @@ function openMatchModal(ri,di,mi){
     :t('fix_vs');
   const emptyEl=document.getElementById('mm-empty');
   const colsEl=document.getElementById('mm-cols');
-  const rowHtml=(x)=>{
-    const bits=[];
-    if(x.goals>0)bits.push(`⚽×${x.goals}`);
-    if(x.cs)bits.push('🧤');
-    if(x.one)bits.push('1️⃣');
-    if(x.red)bits.push('🟥');
-    if(x.motm)bits.push('👑');
-    return `<div class="mm-prow"><div class="mm-prow-av">${kitSvg(x.p.team,24)}</div>
-      <div class="mm-prow-info"><div class="mm-prow-name">${x.p.name}</div>
-      <div class="mm-prow-meta">${POS_LT[x.p.pos]}${bits.length?' '+bits.join(' '):''}</div></div>
-      <div class="mm-prow-pts ${x.pts<0?'neg':''}">${x.pts}pts</div></div>`;
-  };
   if(!data.saved){
     emptyEl.textContent=t('no_result_yet');emptyEl.style.display='';colsEl.style.display='none';
-  }else if(!data.rows.length){
+  }else if(data.isTech){
+    // Technical (walkover) result — no individual events at all by
+    // design (flat team bonus only, see isTechResult()), so there's
+    // nothing meaningful to break down by position here.
     emptyEl.textContent=t('match_modal_empty');emptyEl.style.display='';colsEl.style.display='none';
   }else{
     emptyEl.style.display='none';colsEl.style.display='';
-    const homeRows=data.rows.filter(x=>x.p.team===data.home);
-    const awayRows=data.rows.filter(x=>x.p.team===data.away);
-    document.getElementById('mm-home-col').innerHTML=homeRows.length?homeRows.map(rowHtml).join(''):`<div class="mm-col-empty">${t('match_modal_empty')}</div>`;
-    document.getElementById('mm-away-col').innerHTML=awayRows.length?awayRows.map(rowHtml).join(''):`<div class="mm-col-empty">${t('match_modal_empty')}</div>`;
+    document.getElementById('mm-home-col').innerHTML=mmColHtml(data.rows,data.home,'h');
+    document.getElementById('mm-away-col').innerHTML=mmColHtml(data.rows,data.away,'a');
   }
   document.getElementById('mm-bg').classList.add('open');
 }
@@ -3887,7 +3930,7 @@ function renderFixtures(){
     day.m.forEach((m,mi)=>{
       const saved=STATE.DB[STATE.curRound]?.[di]?.[mi];
       const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>${isTechResult(saved)?techMarkHtml():''}`:`<span class="fix-vs">${t('fix_vs')}</span>`;
-      html+=`<div class="fix-match" onclick="openMatchModal(${STATE.curRound},${di},${mi})"><span class="fix-home">${teamLogoImg(m[0],20)}${m[0]}</span>${mid}<span class="fix-away">${m[1]}${teamLogoImg(m[1],20)}</span></div>`;
+      html+=`<div class="fix-match" onclick="openMatchModal(${STATE.curRound},${di},${mi})"><span class="fix-home clk" onclick="event.stopPropagation();goToTeamStats('${m[0]}','${STATE.division}')">${teamLogoImg(m[0],20)}${m[0]}</span>${mid}<span class="fix-away clk" onclick="event.stopPropagation();goToTeamStats('${m[1]}','${STATE.division}')">${m[1]}${teamLogoImg(m[1],20)}</span></div>`;
     });
     html+=`</div>`;
   });
@@ -4802,17 +4845,34 @@ function renderHistory(){
 // ═══════════════════════════════════════════════
 // STANDINGS
 // ═══════════════════════════════════════════════
+// Jumps to Statistika pre-filtered to one team, sorted by points — the
+// shared target for every clickable team name (squad-page mini
+// standings, full Lentelė tab, Fixtures rows). Sets the STATS_* filter
+// state directly (not via setStatsDivision(), which would also reset
+// STATS_TEAM_F right back to 'Visos') before navigating, so it's already
+// in place the moment showPage('stats',...) runs its own renderStats().
+// div is passed explicitly by every caller rather than assumed from
+// STATE.division/STATS_DIVISION — same reasoning as getDivisionDB()
+// elsewhere: the team being clicked isn't reliably in whichever division
+// happens to be globally active.
+function goToTeamStats(team,div){
+  STATS_DIVISION=div||STATE.division;
+  STATS_POS_F='Visos';
+  STATS_TEAM_F=team;
+  STATS_SORT='total';STATS_DIR='desc';
+  showPage('stats',navBtnFor('stats'));
+}
 function renderStMini(){
   const rows=Object.entries(STATE.teams).sort((a,b)=>b[1].pts-a[1].pts||(b[1].gf-b[1].ga)-(a[1].gf-a[1].ga));
   document.getElementById('stand-mini').innerHTML=rows.map(([n,t],i)=>`
-    <div class="sr2"><span class="srp ${i<2?'top':''}">${i+1}</span><span>${teamLogoImg(n,16)}${n}</span>
+    <div class="sr2 clk" onclick="goToTeamStats('${n}','${STATE.division}')"><span class="srp ${i<2?'top':''}">${i+1}</span><span>${teamLogoImg(n,16)}${n}</span>
     <span style="text-align:right;color:var(--mu);font-size:10px">${t.gf-t.ga>0?'+':''}${t.gf-t.ga}</span>
     <span style="font-weight:800;text-align:right;color:var(--or)">${t.pts}</span></div>`).join('');
 }
 function renderStFull(){
   const rows=Object.entries(STATE.teams).sort((a,b)=>b[1].pts-a[1].pts||(b[1].gf-b[1].ga)-(a[1].gf-a[1].ga));
   document.getElementById('stand-full').innerHTML=rows.map(([n,t],i)=>`
-    <tr><td style="font-weight:800;color:${i<2?'var(--gold)':'var(--or)'}">${i+1}</td><td>${teamLogoImg(n,18)}${n}</td>
+    <tr class="clk" onclick="goToTeamStats('${n}','${STATE.division}')"><td style="font-weight:800;color:${i<2?'var(--gold)':'var(--or)'}">${i+1}</td><td>${teamLogoImg(n,18)}${n}</td>
     <td>${t.w+t.d+t.l}</td><td style="color:var(--or);font-weight:600">${t.w}</td>
     <td>${t.d}</td><td style="color:var(--red)">${t.l}</td><td>${t.gf}</td><td>${t.ga}</td>
     <td style="color:${t.gf>t.ga?'var(--or)':'var(--red)'}">${t.gf>t.ga?'+':''}${t.gf-t.ga}</td>
