@@ -257,6 +257,7 @@ a{color:var(--or)}
 .fx-team-logo{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin:0 5px}
 .st-logo{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:6px}
 .pi-pb{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;color:#fff;display:inline-block;margin-top:2px}
+.pi-xi-star{font-size:9px;margin-left:3px}
 .pi-right{text-align:right;flex-shrink:0}
 .pi-price-val{font-size:13.5px;font-weight:800;color:var(--or)}.pi-own-val{font-size:10px;color:var(--mu);margin-top:1px}
 
@@ -1061,7 +1062,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
         <div class="rrow"><span data-i18n="sc_win">✅ Komandos pergalė</span><span class="rp">+2</span></div>
         <div class="rrow"><span data-i18n="sc_loss">❌ Pralaimėjimas</span><span class="rp neg">−1</span></div>
         <div class="rrow"><span data-i18n="sc_red">🟥 Raudona kortelė</span><span class="rp neg">−3</span></div>
-        <div class="rrow"><span data-i18n="sc_motm">⭐ Geriausias rungtynių žaidėjas</span><span class="rp">+2</span></div>
+        <div class="rrow"><span data-i18n="sc_motm">👑 Geriausias rungtynių žaidėjas</span><span class="rp">+2</span></div>
         <div class="rrow cap-row"><span data-i18n="sc_cap">C Kapitonas</span><span class="rp cap">×2</span></div>
         <div class="rrow note-row"><span data-i18n="sc_note">⚠ Iš kiekvienos komandos — tik 1 žaidėjas</span></div>
       </div>
@@ -1571,7 +1572,7 @@ const I18N={
     scoring_title:'Taškų sistema',
     sc_th_pos:'Pozicija',sc_th_goal:'Įvartis',sc_th_cs:'Švarūs vartai',sc_th_one:'Praleistas tik 1',
     sc_pos_gk:'🧤 Vartininkas',sc_pos_def:'🛡 Gynėjas',sc_pos_mid:'⚙ Saugas',sc_pos_fwd:'⚡ Puolėjas',
-    sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',sc_motm:'⭐ Geriausias rungtynių žaidėjas',
+    sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',sc_motm:'👑 Geriausias rungtynių žaidėjas',
     sc_red:'🟥 Raudona kortelė',sc_cap:'C Kapitonas',sc_note:'⚠ Iš kiekvienos komandos — tik 1 žaidėjas',
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
     prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
@@ -1594,7 +1595,7 @@ const I18N={
     toast_deadline_submit:dl=>`Terminas praėjo (${dl}) — komandos pateikti nebegalima`,
     toast_pick_frozen:dl=>`Žaidėjų kainos atnaujinamos — komandos pasirinkti negalima iki ${dl}`,
     toast_save_fail:'Nepavyko išsaugoti komandos — pabandyk dar kartą arba susisiek su administratoriumi',
-    toast_captain_set:n=>`${n} — Kapitonas ⭐ ×2`,toast_captain_removed:'Kapitonas pašalintas',
+    toast_captain_set:n=>`${n} — Kapitonas 🅲 ×2`,toast_captain_removed:'Kapitonas pašalintas',
     toast_auto_fail:'Nepavyko sudaryti komandos — pabandyk dar kartą',
     toast_auto_ok:'Atsitiktinė komanda sudaryta ✓ Nepamiršk pasirinkti kapitono!',
     bb_selected:'Pasirinkta:',bb_review:'Peržiūra (istorija)',bb_deadline_passed:'Terminas praėjo',
@@ -1624,7 +1625,7 @@ const I18N={
     match_vs:(i,opp)=>`${i} rungtynės — vs ${opp}`,no_data:'Nėra duomenų',
     mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarūs vartai',mstat_one:'Praleistas tik 1 įvartis',
     mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
-    mstat_motm:'⭐ Geriausias rungtynių žaidėjas',
+    mstat_motm:'👑 Geriausias rungtynių žaidėjas',
     mstat_tech_win:'Tech. pergalė',mstat_tech_loss:'Tech. pralaimėjimas',tech_result_label:'Techninis rezultatas',
     zero_pts:'0 taškų',no_result_yet:'Šiam turui dar nėra rezultato',zero_pts_round:'0 taškų šį turą',
     captain_label:'Kapitonas',
@@ -1760,7 +1761,7 @@ const I18N={
     scoring_title:'Scoring System',
     sc_th_pos:'Position',sc_th_goal:'Goal',sc_th_cs:'Clean sheet',sc_th_one:'Conceded 1',
     sc_pos_gk:'🧤 Goalkeeper',sc_pos_def:'🛡 Defender',sc_pos_mid:'⚙ Midfielder',sc_pos_fwd:'⚡ Forward',
-    sc_win:'✅ Team win',sc_loss:'❌ Loss',sc_motm:'⭐ Man of the match',
+    sc_win:'✅ Team win',sc_loss:'❌ Loss',sc_motm:'👑 Man of the match',
     sc_red:'🟥 Red card',sc_cap:'C Captain',sc_note:'⚠ Only 1 player per club',
     prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
     prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',
@@ -1783,7 +1784,7 @@ const I18N={
     toast_deadline_submit:dl=>`Deadline passed (${dl}) — you can no longer submit a team`,
     toast_pick_frozen:dl=>`Player prices are being updated — picking is closed until ${dl}`,
     toast_save_fail:'Failed to save team — try again or contact the admin',
-    toast_captain_set:n=>`${n} — Captain ⭐ ×2`,toast_captain_removed:'Captain removed',
+    toast_captain_set:n=>`${n} — Captain 🅲 ×2`,toast_captain_removed:'Captain removed',
     toast_auto_fail:'Couldn\'t build a team — try again',
     toast_auto_ok:'Random team generated ✓ Don\'t forget to pick a captain!',
     bb_selected:'Selected:',bb_review:'Review (history)',bb_deadline_passed:'Deadline passed',
@@ -1811,7 +1812,7 @@ const I18N={
     match_vs:(i,opp)=>`Match ${i} — vs ${opp}`,no_data:'No data',
     mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
     mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
-    mstat_motm:'⭐ Man of the match',
+    mstat_motm:'👑 Man of the match',
     mstat_tech_win:'Technical win',mstat_tech_loss:'Technical loss',tech_result_label:'Technical result',
     zero_pts:'0 points',no_result_yet:'No result for this gameweek yet',zero_pts_round:'0 points this gameweek',
     captain_label:'Captain',
@@ -3457,7 +3458,7 @@ function tutSteps(){
   return [
     {icon:'⚽',title:t('tut_s1_title'),body:t('tut_s1_body')},
     {icon:'💰',title:t('tut_s2_title'),body:t('tut_s2_body')},
-    {icon:'⭐',title:t('tut_s3_title'),body:t('tut_s3_body')},
+    {icon:'🅲',title:t('tut_s3_title'),body:t('tut_s3_body')},
     {icon:'⏰',title:t('tut_s4_title'),body:t('tut_s4_body')},
   ];
 }
@@ -3832,16 +3833,24 @@ function renderList(){
     list.sort((a,b)=>b.price-a.price);
   }
   document.getElementById('pl-cnt').textContent=list.length+' '+t('players_count_suffix');
+  // Star next to the position badge: which XI it's judged against follows
+  // the SAME round the pitch on the right is currently showing — the real
+  // Team of the Season while picking the open round, that round's own
+  // real Team of the Round while browsing a locked/historical one (same
+  // "historical" condition renderSlot() uses for its own pitch avatars).
+  const listHistorical=isLocked()&&STATE.mySquads[STATE.curRound]!==undefined;
+  const listXIIds=listHistorical?roundXIIds(STATE.curRound,STATE.DB,STATE.division):seasonXIIds(STATE.DB,STATE.division);
   document.getElementById('pl-list').innerHTML=list.map(p=>{
     const isTaken=STATE.taken.has(p.id);
     const teamBlocked=STATE.takenTeams.has(p.team)&&!isTaken;
     const warn=teamBlocked?`<span style="color:var(--red);font-size:9px;margin-left:4px">${t('team_full')}</span>`:'';
     const headline=headlineFor?headlineFor(p):`${p.price.toFixed(1)}M`;
+    const xiStar=listXIIds.has(p.id)?'<span class="pi-xi-star">⭐</span>':'';
     return `<div class="pi ${isTaken?'taken':''}" onclick="openPlayerModal(${p.id})">
       <div class="pi-av">${kitSvg(p.team,32)}</div>
       <div class="pi-info"><div class="pi-name">${p.name}${warn}</div>
       <div class="pi-team">${teamLogoImg(p.team,14)}${p.team}</div>
-      <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span></div>
+      <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span>${xiStar}</div>
       <div class="pi-right"><div class="pi-price-val">${headline}</div>${showOwnRow?`<div class="pi-own-val">${ownershipPct(p.id)}%</div>`:''}</div>
     </div>`;
   }).join('')||`<div style="padding:18px;text-align:center;color:var(--mu);font-size:12px">${t('not_found')}</div>`;
@@ -4389,7 +4398,7 @@ function renderHelpModal(){
   el.innerHTML=
     sec('🎯','help_s1_h',`<div class="help-sec-p">${t('help_s1_p')}</div>`)+
     sec('🧩','help_s2_h',`<ul class="help-list">${['help_s2_li1','help_s2_li2','help_s2_li3','help_s2_li4','help_s2_li5'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
-    sec('⭐','help_s3_h',`<div class="help-sec-p">${t('help_s3_p')}</div>`)+
+    sec('🅲','help_s3_h',`<div class="help-sec-p">${t('help_s3_p')}</div>`)+
     sec('🧮','help_s4_h',scoringTableHtml)+
     sec('⚡','help_s5_h',`<div class="help-sec-p">${t('help_s5_p')}</div>`)+
     sec('💰','help_s6_h',`<div class="help-sec-p">${t('help_s6_p1')}</div><div class="help-sec-p">${t('help_s6_p2')}</div><div class="help-sec-p">${t('help_s6_p3')}</div>`)+
