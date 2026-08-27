@@ -331,6 +331,10 @@ a{color:var(--or)}
 .hcp-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
 .hcp-name{flex:1;font-weight:600;color:var(--ink2)}.hcp-pts{font-weight:800;color:var(--or);font-size:12px}
 .hcp-pos{font-size:9px;font-weight:700;color:var(--mu);background:var(--sur2);padding:1px 5px;border-radius:8px;margin-left:2px}
+/* Captain marker in flat name rows (History page, other-user squad viewer) —
+   an orange "C" instead of a star, since a star there now means "made that
+   round's real Team of the Round", a separate fact from who was captain. */
+.cap-c-badge{color:var(--or);font-weight:900}
 .hcp-pts.cap{color:var(--cap)}
 .hcp-pts.neg{color:var(--red)}
 .empty-hist{text-align:center;padding:44px 20px;color:var(--mu);font-size:13px}
@@ -4267,19 +4271,24 @@ function renderSlot(pos,idx){
   const old=circle.querySelector('.srm');if(old)old.remove();
   if(p){
     const cap=isCaptain(pos,idx);
-    el.classList.add('filled');el.classList.toggle('cap',cap);
-    circle.style.background='rgba(255,255,255,.12)';circle.style.borderColor=cap?'#fff':'rgba(255,255,255,.4)';circle.style.borderStyle='solid';
-    const badge=TEAM_LOGOS[p.team]?`<img class="slot-badge" src="${TEAM_LOGOS[p.team]}" alt="">`:'';
-    // The corner badge picks the captain directly on the avatar — a clearer,
-    // single "C" affordance instead of a separate button plus a redundant
-    // position letter (position is already obvious from the pitch row).
-    const capToggle=isLocked()?'':`<span class="captoggle ${cap?'on':''}" onclick="handleCaptainClick(event,'${pos}',${idx})" title="Kapitonas">C</span>`;
-    circle.innerHTML=`${kitSvg(p.team,50)}${capToggle}${badge}`;
     // Once a round is locked (past deadline, or simply not the round being
     // edited), the slot shows what actually happened instead of what it
     // cost — that round's points instead of price — and tapping it opens
     // the round breakdown instead of the live add/remove picker.
     const historical=isLocked()&&STATE.mySquads[STATE.curRound]!==undefined;
+    el.classList.add('filled');el.classList.toggle('cap',cap);
+    circle.style.background='rgba(255,255,255,.12)';circle.style.borderColor=cap?'#fff':'rgba(255,255,255,.4)';circle.style.borderStyle='solid';
+    const badge=TEAM_LOGOS[p.team]?`<img class="slot-badge" src="${TEAM_LOGOS[p.team]}" alt="">`:'';
+    // The corner badge marks the captain directly on the avatar. Live and
+    // editable, it also toggles captain on tap — a clearer, single "C"
+    // affordance instead of a separate button plus a redundant position
+    // letter (position is already obvious from the pitch row). Once locked/
+    // historical, it's the same orange "C" but inert (no tap handler) —
+    // that round's captain is a fixed fact by then, not something to edit.
+    const capToggle=isLocked()
+      ? (cap?`<span class="captoggle on" style="cursor:default" title="${t('captain_label')}">C</span>`:'')
+      : `<span class="captoggle ${cap?'on':''}" onclick="handleCaptainClick(event,'${pos}',${idx})" title="${t('captain_label')}">C</span>`;
+    circle.innerHTML=`${kitSvg(p.team,50)}${capToggle}${badge}`;
     if(!isLocked()){const rb=document.createElement('button');rb.className='srm';rb.innerHTML='✕';rb.onclick=ev=>{ev.stopPropagation();removePlayerFromSlot(pos,idx);};circle.appendChild(rb);}
     el.querySelector('.sn').textContent=pitchSurname(p,STATE.division);
     const sp=el.querySelector('.sp');
@@ -4288,11 +4297,18 @@ function renderSlot(pos,idx){
       const {roundDetail}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
       const det=roundDetail[STATE.curRound]?.find(d=>d.id===p.id);
       const dpts=det?det.pts:0;
-      sp.textContent=cap?`${dpts}pts ⭐`:`${dpts}pts`;sp.className=`sp${cap?' c':''}${dpts<0?' neg':''}`;
+      // Star now marks THAT round's real Team of the Round, not captaincy
+      // (captaincy has its own orange "C" badge on the avatar above).
+      const inXI=roundXIIds(STATE.curRound,STATE.DB,STATE.division).has(p.id);
+      sp.textContent=inXI?`${dpts}pts ⭐`:`${dpts}pts`;sp.className=`sp${inXI?' c':''}${dpts<0?' neg':''}`;
       if(sfx)sfx.textContent='';
       el.onclick=()=>openHistoricalPlayerModal(pos,idx);
     }else{
-      sp.textContent=cap?`${p.price.toFixed(1)}M ⭐`:`${p.price.toFixed(1)}M`;sp.className=cap?'sp c':'sp';
+      // Star marks the player currently being in the real Team of the
+      // Season — a "this pick is in form" cue while building next round's
+      // squad, unrelated to who you make captain.
+      const inXI=seasonXIIds(STATE.DB,STATE.division).has(p.id);
+      sp.textContent=inXI?`${p.price.toFixed(1)}M ⭐`:`${p.price.toFixed(1)}M`;sp.className=inXI?'sp c':'sp';
       // Which 2 teams the player's club faces this round, right under the
       // price — visible on the pitch itself, no need to open the card.
       if(sfx){
@@ -4548,8 +4564,12 @@ function showSquadSavedScreen(isUpdate){
   Object.entries(snap.slots).forEach(([pos,arr])=>arr.forEach((p,idx)=>{
     if(!p)return;
     const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+    // No star here — captaincy is already unambiguous via the "·
+    // kapitonas" suffix below and this card's own purple highlight
+    // (a star elsewhere in the app now specifically means Team-of-the-
+    // Round/Season membership, not captaincy).
     cards.push(`<div class="rc good ${isC?'cap':''}">
-      <div class="rcname">${isC?'⭐ ':''}${p.name}</div>
+      <div class="rcname">${isC?'<span class="cap-c-badge">C</span> ':''}${p.name}</div>
       <div class="rcteam">${p.team} · ${POS_FL[pos]}</div>
       <div class="rcpts ${isC?'cap':''}">${p.price.toFixed(1)}M${isC?' · '+t('res_captain_suffix'):''}</div>
     </div>`);
@@ -4584,11 +4604,16 @@ function renderHistory(){
       <div class="hcard-head"><div class="hcard-title">${roundName(i)}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
       <div class="hcard-pts ${pts===undefined?'em':pts<0?'neg':''}">${pts!==undefined?pts+'pts':'—'}</div></div>
       <div class="hcard-body">`;
+    // That round's real Team-of-the-Round ids, computed once per round —
+    // the star below marks membership in it, not captaincy (captaincy gets
+    // its own orange "C" badge next to the name instead).
+    const xiIds=snap?roundXIIds(i,STATE.DB,STATE.division):null;
     if(snap){['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
       if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+      const inXI=xiIds.has(p.id);
       const det=detail?.find(d=>d.id===p.id);
       html+=`<div class="hcp"><div class="hcp-av">${kitSvg(p.team,25)}</div>
-        <div class="hcp-name">${isC?'⭐ ':''}${p.name} <span class="hcp-pos">${POS_LT[pos]}</span></div>
+        <div class="hcp-name">${isC?'<span class="cap-c-badge">C</span> ':''}${p.name}${inXI?' ⭐':''} <span class="hcp-pos">${POS_LT[pos]}</span></div>
         <div class="hcp-pts ${det&&det.pts<0?'neg':isC?'cap':''}">${det?det.pts+'pts':''}</div></div>`;
     }));}else{html+=`<div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('hist_no_squad')}</div>`;}
     html+=`</div></div>`;
@@ -4917,6 +4942,30 @@ function bestXI(ptsMap,hasData,div){
   Object.values(byPos).forEach(arr=>arr.sort((a,b)=>b.pts-a.pts));
   const top=(pos,n)=>Array.from({length:n},(_,i)=>hasData&&byPos[pos][i]?byPos[pos][i]:null);
   return {G:top('G',1),D:top('D',2),M:top('M',2),F:top('F',2)};
+}
+// Flat id Set version of bestXI() — a per-player "is this id currently in
+// the real best XI" lookup is what every star-marker call site below
+// actually needs, not the position-grouped shape Sezono rinktinė's own
+// pitch renders from.
+function bestXIIds(ptsMap,hasData,div){
+  const xi=bestXI(ptsMap,hasData,div);
+  const ids=new Set();
+  Object.values(xi).forEach(arr=>arr.forEach(e=>{if(e)ids.add(e.p.id);}));
+  return ids;
+}
+// Season Team-of-the-Season XI, as player ids — used by the squad pitch's
+// star while a round is still being picked (see renderSlot()).
+function seasonXIIds(db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  return bestXIIds(computeSeasonPlayerPts(db,div),pastRoundIndices().some(ri=>!!db[ri]),div);
+}
+// One round's Team-of-the-Round XI, as player ids — used everywhere a
+// LOCKED/historical squad is shown (renderSlot()'s historical branch,
+// History page, another user's squad viewer) instead of the season XI,
+// since a past round's own best XI is the relevant comparison there.
+function roundXIIds(ri,db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  return bestXIIds(computeAllPlayerRoundPts(ri,db,div),!!db[ri],div);
 }
 function tsSlotHtml(entry,pos){
   const icons={G:'🧤',D:'🛡️',M:'⚙️',F:'⚡'};
@@ -5316,20 +5365,26 @@ async function renderUserSquadViewer(u){
   const db=await getDivisionDB(div);
   const {roundDetail}=computeScoring({[USQ_ROUND]:snap},db,div);
   const detail=roundDetail[USQ_ROUND]||[];
+  // That round's real Team-of-the-Round ids — the star below marks
+  // membership in it, not captaincy (captaincy gets its own orange "C"
+  // badge on the avatar instead).
+  const xiIds=roundXIIds(USQ_ROUND,db,div);
   const rows=[['G',t('rlbl_gk')],['D',t('rlbl_def')],['M',t('rlbl_mid')],['F',t('rlbl_fwd')]];
   pitchEl.innerHTML=rows.map(([pos,label])=>{
     const arr=snap.slots[pos]||[];
     return `<div class="rlbl">${label}</div><div class="prow">`+arr.map((p,idx)=>{
       if(!p)return `<div class="slot" style="cursor:default"><div class="sc2"><span class="slot-icon ${pos==='G'?'':'sm'}">·</span></div><div class="sn">—</div></div>`;
       const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
+      const inXI=xiIds.has(p.id);
       const det=detail.find(d=>d.id===p.id);
       const badge=DIVISIONS[div]?.logos?.[p.team]?`<img class="slot-badge" src="${DIVISIONS[div].logos[p.team]}" alt="">`:'';
+      const capBadge=isC?`<span class="captoggle on" style="cursor:default" title="${t('captain_label')}">C</span>`:'';
       return `<div class="slot filled" onclick="openUserSquadPlayerModal(${p.id},'${pos}',${idx})">
         <div class="sc2" style="background:rgba(255,255,255,.12);border-color:${isC?'#fff':'rgba(255,255,255,.4)'};border-style:solid">
-          ${kitSvg(p.team,50,div)}${badge}
+          ${kitSvg(p.team,50,div)}${capBadge}${badge}
         </div>
-        <div class="sn">${isC?'⭐ ':''}${escHtml(pitchSurname(p,div))}</div>
-        <div class="sp${(det?det.pts:0)<0?' neg':''}">${det?det.pts:0}pts</div>
+        <div class="sn">${escHtml(pitchSurname(p,div))}</div>
+        <div class="sp${inXI?' c':''}${(det?det.pts:0)<0?' neg':''}">${det?det.pts:0}pts${inXI?' ⭐':''}</div>
       </div>`;
     }).join('')+'</div>';
   }).join('');
