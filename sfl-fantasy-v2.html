@@ -223,7 +223,8 @@ a{color:var(--or)}
 .fix-box{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r);padding:12px 15px;margin-top:16px}
 .fix-title{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
 .fix-day{margin-bottom:9px}.fix-day-lbl{font-size:10px;font-weight:600;color:var(--mu);margin-bottom:5px}
-.fix-match{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--bor);font-size:11.5px}
+.fix-match{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--bor);font-size:11.5px;cursor:pointer;border-radius:8px;transition:background .15s var(--ease)}
+.fix-match:hover{background:var(--sur)}
 .fix-match:last-child{border-bottom:none}
 .fix-home{text-align:right;font-weight:600;color:var(--ink2);flex:1}
 .fix-away{text-align:left;font-weight:600;color:var(--ink2);flex:1}
@@ -414,6 +415,15 @@ a{color:var(--or)}
 .pmname{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:3px;letter-spacing:-.01em}.pmteam{font-size:11px;color:var(--mu)}
 .pmchip{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;margin-top:6px}
 .pmclose{position:absolute;top:12px;right:12px;background:var(--sur);border:1px solid var(--bor);color:var(--mu);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
+/* Match modal — a Fixtures row's score at top, real individual point-
+   earners from both teams listed below (reuses .hcp rows from History). */
+.mm-head{padding:20px 18px 14px}
+.mm-teams{display:flex;align-items:center;justify-content:center;gap:14px}
+.mm-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.mm-team-logo img{width:32px;height:32px;object-fit:contain}
+.mm-team-name{font-size:12px;font-weight:700;color:var(--ink);text-align:center;line-height:1.25}
+.mm-score{font-size:22px;font-weight:900;color:var(--ink);white-space:nowrap;display:flex;align-items:center;gap:5px}
+.mm-list{padding:6px 18px 18px;max-height:50vh;overflow-y:auto}
 /* Round-navigator strip — jump to another round's squad without leaving the
    current screen. Reused by the squad page (own history, right under the
    pitch, above the fixtures list) and the foreign-squad viewer modal
@@ -1309,6 +1319,25 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
   </div>
 </div>
 
+<!-- MATCH MODAL — opened from any Fixtures match row: that one match's
+     score, plus every player from BOTH real team rosters who earned
+     points individually (goals, clean sheet/1-conceded, red card, MOTM).
+     Deliberately excludes anyone whose only points came from the flat
+     team win/loss (or technical-result) bonus — see computeMatchScorers(). -->
+<div class="mbg" id="mm-bg" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="pm wide">
+    <div class="pmh mm-head">
+      <button class="pmclose" onclick="document.getElementById('mm-bg').classList.remove('open')">✕</button>
+      <div class="mm-teams">
+        <div class="mm-team"><div class="mm-team-logo" id="mm-home-logo"></div><div class="mm-team-name" id="mm-home-name"></div></div>
+        <div class="mm-score" id="mm-score"></div>
+        <div class="mm-team"><div class="mm-team-logo" id="mm-away-logo"></div><div class="mm-team-name" id="mm-away-name"></div></div>
+      </div>
+    </div>
+    <div class="mm-list" id="mm-list"></div>
+  </div>
+</div>
+
 <!-- STAT MODAL — read-only player detail, reused for a historical round's
      squad (price / round ownership / round points + breakdown) and for
      Sezono rinktinė (price / season points). No "add" action, just info. -->
@@ -1644,6 +1673,7 @@ const I18N={
     pm_team_taken:'Komanda jau atstovaujama',pm_add_price:price=>`Pridėti (${price}M)`,
     phist_current_suffix:'(einamasis)',phist_total_label:n=>`Iš viso (${n} ${ltForm(n,'turas','turai','turų')})`,
     match_vs:(i,opp)=>`${i} rungtynės - vs ${opp}`,no_data:'Nėra duomenų',
+    match_modal_empty:'Šiose rungtynėse individualių taškų niekas nepelnė',
     mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarūs vartai',mstat_one:'Praleistas tik 1 įvartis',
     mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
     mstat_motm:'👑 Geriausias rungtynių žaidėjas',
@@ -1835,6 +1865,7 @@ const I18N={
     pm_team_taken:'Club already used',pm_add_price:price=>`Add (${price}M)`,
     phist_current_suffix:'(current)',phist_total_label:n=>`Total (${n} gameweeks)`,
     match_vs:(i,opp)=>`Match ${i} - vs ${opp}`,no_data:'No data',
+    match_modal_empty:'No one earned individual points in this match',
     mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
     mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
     mstat_motm:'👑 Man of the match',
@@ -3751,6 +3782,70 @@ function renderSquadMsg(){
   }
 }
 
+// Real per-match individual point-earners for BOTH teams — goals, clean
+// sheet/1-conceded (G/D only), red card, MOTM — deliberately excluding the
+// flat team win/loss bonus (that applies to every player on the team
+// regardless of what they personally did, so it isn't "individual") and
+// the flat technical-result bonus (equally team-wide — see isTechResult()).
+// Always the viewer's own division/round-set, same as the rest of the
+// Fixtures panel this is opened from. Returns null if the fixture itself
+// doesn't exist (shouldn't happen from a real Fixtures row).
+function computeMatchScorers(ri,di,mi){
+  const m=FR[ri]?.days?.[di]?.m?.[mi];
+  if(!m)return null;
+  const [home,away]=m;
+  const saved=STATE.DB[ri]?.[di]?.[mi];
+  if(!saved)return {home,away,saved:false};
+  if(isTechResult(saved))return {home,away,saved:true,hg:saved.hg,ag:saved.ag,isTech:true,rows:[]};
+  const hg=saved.hg,ag=saved.ag;
+  const scorerMap={};(saved.scorers||[]).forEach(sc=>{scorerMap[sc.pid]=(scorerMap[sc.pid]||0)+sc.cnt;});
+  const redSet=new Set(saved.reds||[]);
+  const rows=PLAYERS.filter(p=>p.division===STATE.division&&(p.team===home||p.team===away)).map(p=>{
+    const goals=scorerMap[p.id]||0;
+    const teamGA=p.team===home?ag:hg;
+    let pts=goals*CONFIG.PTS_POS[p.pos];
+    let cs=false,one=false;
+    if(p.pos==='G'||p.pos==='D'){
+      if(teamGA===0){cs=true;pts+=CONFIG.CS_PTS[p.pos];}
+      else if(teamGA===1){one=true;pts+=CONFIG.ONE_GOAL_AGAINST_PTS[p.pos];}
+    }
+    const red=redSet.has(p.id);if(red)pts+=CONFIG.RED_CARD_PTS;
+    const motm=saved.motm===p.id;if(motm)pts+=CONFIG.MOTM_PTS;
+    return {p,pts,goals,cs,one,red,motm};
+  }).filter(x=>x.pts!==0).sort((a,b)=>b.pts-a.pts||a.p.name.localeCompare(b.p.name));
+  return {home,away,saved:true,hg,ag,isTech:false,rows};
+}
+function openMatchModal(ri,di,mi){
+  const data=computeMatchScorers(ri,di,mi);
+  if(!data)return;
+  document.getElementById('mm-home-logo').innerHTML=teamLogoImg(data.home,32);
+  document.getElementById('mm-away-logo').innerHTML=teamLogoImg(data.away,32);
+  document.getElementById('mm-home-name').textContent=data.home;
+  document.getElementById('mm-away-name').textContent=data.away;
+  document.getElementById('mm-score').innerHTML=data.saved
+    ?`${data.hg} : ${data.ag}${data.isTech?techMarkHtml():''}`
+    :t('fix_vs');
+  const listEl=document.getElementById('mm-list');
+  if(!data.saved){
+    listEl.innerHTML=`<div class="hcard-body"><div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('no_result_yet')}</div></div>`;
+  }else if(!data.rows.length){
+    listEl.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('match_modal_empty')}</div>`;
+  }else{
+    listEl.innerHTML=data.rows.map(x=>{
+      const bits=[];
+      if(x.goals>0)bits.push(`⚽×${x.goals}`);
+      if(x.cs)bits.push('🧤');
+      if(x.one)bits.push('1️⃣');
+      if(x.red)bits.push('🟥');
+      if(x.motm)bits.push('👑');
+      return `<div class="hcp"><div class="hcp-av">${kitSvg(x.p.team,25)}</div>
+        <div class="hcp-name">${x.p.name} <span class="hcp-pos">${POS_LT[x.p.pos]}</span> ${bits.join(' ')}</div>
+        <div class="hcp-pts ${x.pts<0?'neg':''}">${x.pts}pts</div></div>`;
+    }).join('');
+  }
+  document.getElementById('mm-bg').classList.add('open');
+}
+
 function renderFixtures(){
   const r=FR[STATE.curRound];
   let html=`<div class="fix-box"><div class="fix-title">${t('fix_title',roundName(STATE.curRound))}</div>`;
@@ -3759,7 +3854,7 @@ function renderFixtures(){
     day.m.forEach((m,mi)=>{
       const saved=STATE.DB[STATE.curRound]?.[di]?.[mi];
       const mid=saved?`<span class="fix-score">${saved.hg}:${saved.ag}</span>${isTechResult(saved)?techMarkHtml():''}`:`<span class="fix-vs">${t('fix_vs')}</span>`;
-      html+=`<div class="fix-match"><span class="fix-home">${teamLogoImg(m[0],20)}${m[0]}</span>${mid}<span class="fix-away">${m[1]}${teamLogoImg(m[1],20)}</span></div>`;
+      html+=`<div class="fix-match" onclick="openMatchModal(${STATE.curRound},${di},${mi})"><span class="fix-home">${teamLogoImg(m[0],20)}${m[0]}</span>${mid}<span class="fix-away">${m[1]}${teamLogoImg(m[1],20)}</span></div>`;
     });
     html+=`</div>`;
   });
