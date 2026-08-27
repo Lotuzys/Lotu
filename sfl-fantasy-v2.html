@@ -290,10 +290,14 @@ a{color:var(--or)}
 .slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(249,115,22,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.92);line-height:1.25;max-width:74px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Team of Season/Round's own name+star is often longer than a bare
-   surname (disambiguating initial + the ⭐ suffix) — wraps to a 2nd
-   line instead of ellipsis-clipping like the shorter squad-pitch name
-   does, rather than widening the fixed-width slot column itself. */
-#ts-pitch .sn{white-space:normal;overflow-wrap:break-word}
+   surname (disambiguating initial + the ⭐ suffix) — .lbwrap has plenty
+   of spare width per slot (2-per-row rows use well under half of it),
+   so this widens the column itself rather than wrapping the name or
+   shrinking the star; measured "M. Mašenzo ⭐" (division A's actual
+   longest case) at ~75px against this font, so 74px was clipping it
+   by design margin, not by a fluke. */
+#ts-pitch .slot{width:112px}
+#ts-pitch .sn{max-width:106px}
 .sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
 .sfx{font-size:8.5px;color:rgba(255,255,255,.75);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
 .captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:600;color:rgba(255,255,255,.7);background:rgba(156,163,175,.55);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
@@ -745,9 +749,9 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
      renders a .sfx fixture line, so that rule isn't duplicated here. */
   #ts-pitch{padding-top:90px}
   #ts-pitch .prow{margin-bottom:12px;margin-top:5px}
-  #ts-pitch .slot{width:66px}
+  #ts-pitch .slot{width:96px}
   #ts-pitch .sc2{width:52px;height:52px;font-size:16px}
-  #ts-pitch .sn{font-size:10px;max-width:66px}
+  #ts-pitch .sn{font-size:10px;max-width:90px}
   #ts-pitch .sp{margin-top:0}
   #ts-pitch .slot-icon{font-size:18px}
   #ts-pitch .slot-icon.sm{font-size:14px}
