@@ -328,7 +328,12 @@ a{color:var(--or)}
 .hist-header{background:var(--card);border:1px solid var(--bor);border-radius:var(--r2) var(--r2) 0 0;padding:12px 16px;display:flex;align-items:center;margin-bottom:16px;box-shadow:var(--sh)}
 .hist-title{color:var(--ink);font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
 .hist-sub{color:var(--mu);font-size:10px;margin-left:auto}
-.hist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+/* align-items:start — CSS grid items stretch to the tallest item in their
+   row by default, so a collapsed (header-only) card next to an expanded
+   (full squad) row-mate was being stretched to match it, leaving its own
+   background filling that extra height as a blank area below the header
+   instead of the page's own background showing through. */
+.hist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;align-items:start}
 .hcard{background:var(--card);border:1px solid var(--bor);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh);transition:all .2s var(--ease)}
 .hcard.clk{cursor:pointer}
 .hcard:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
