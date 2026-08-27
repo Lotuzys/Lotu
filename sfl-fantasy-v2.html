@@ -4649,8 +4649,8 @@ function renderHistory(){
     // straight to that round's pitch (goRound handles live vs. historical).
     const clickable=!!snap;
     const expanded=HIST_EXPANDED.has(i);
-    html+=`<div class="hcard ${i===STATE.curRound?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
-      <div class="hcard-head"><div class="hcard-title">${roundName(i)}${i===STATE.curRound?' '+t('phist_current_suffix'):''}</div>
+    html+=`<div class="hcard ${i===live?'cur':''} ${clickable?'clk':''}" ${clickable?`onclick="goRound(${i})"`:''}>
+      <div class="hcard-head"><div class="hcard-title">${roundName(i)}${i===live?' '+t('phist_current_suffix'):''}</div>
       <div class="hcard-head-right">
         <div class="hcard-pts ${pts===undefined?'em':pts<0?'neg':''}">${pts!==undefined?pts+'pts':'-'}</div>
         ${snap?`<button class="hcard-toggle" onclick="toggleHistCard(${i},event)" title="${t(expanded?'hist_collapse':'hist_expand')}">${expanded?'▲':'▼'}</button>`:''}
