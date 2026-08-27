@@ -289,12 +289,16 @@ a{color:var(--or)}
 .slot.filled .sc2{border-style:solid;border-color:var(--or);background:var(--or-grad);box-shadow:0 4px 14px -2px rgba(0,0,0,.35)}
 .slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(249,115,22,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.92);line-height:1.25;max-width:74px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Team of Season/Round's own name+star is often longer than a bare
+   surname (disambiguating initial + the ⭐ suffix) — wraps to a 2nd
+   line instead of ellipsis-clipping like the shorter squad-pitch name
+   does, rather than widening the fixed-width slot column itself. */
+#ts-pitch .sn{white-space:normal;overflow-wrap:break-word}
 .sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
 .sfx{font-size:8.5px;color:rgba(255,255,255,.75);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
 .captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:600;color:rgba(255,255,255,.7);background:rgba(156,163,175,.55);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
 .captoggle:hover{background:rgba(107,114,128,.8);color:#fff;transform:scale(1.15)}
 .captoggle.on{width:18px;height:18px;bottom:-3px;right:-3px;font-size:9.5px;font-weight:900;color:#fff;background:var(--or);border-color:#fff;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(249,115,22,.85)}
-.spb{position:absolute;bottom:-4px;right:-4px;font-size:15px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
 .slot-badge{position:absolute;top:-2px;left:-2px;width:17px;height:17px;border-radius:50%;background:#fffcf5;border:2px solid #fffcf5;object-fit:contain;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .srm{position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;font-weight:900;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .slot.filled .srm{display:flex}
@@ -5019,10 +5023,9 @@ function tsSlotHtml(entry,pos){
   const badge=logos[p.team]?`<img class="slot-badge" src="${logos[p.team]}" alt="">`:'';
   return `<div class="slot filled" onclick="openTSPlayerModal('${pos}',${p.id})">
     <div class="sc2" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4)">
-      ${kitSvg(p.team,50,p.division)}
-      <span class="spb" title="${POS_LT[pos]}">⭐</span>${badge}
+      ${kitSvg(p.team,50,p.division)}${badge}
     </div>
-    <div class="sn">${pitchSurname(p,p.division)}</div>
+    <div class="sn">${pitchSurname(p,p.division)} ⭐</div>
     <div class="sp${entry.pts<0?' neg':''}">${entry.pts}pts</div>
   </div>`;
 }
