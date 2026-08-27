@@ -417,13 +417,34 @@ a{color:var(--or)}
 .pmclose{position:absolute;top:12px;right:12px;background:var(--sur);border:1px solid var(--bor);color:var(--mu);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
 /* Match modal — a Fixtures row's score at top, real individual point-
    earners from both teams listed below (reuses .hcp rows from History). */
+#mm-bg .pm.wide{width:520px}
 .mm-head{padding:20px 18px 14px}
 .mm-teams{display:flex;align-items:center;justify-content:center;gap:14px}
 .mm-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
 .mm-team-logo img{width:32px;height:32px;object-fit:contain}
 .mm-team-name{font-size:12px;font-weight:700;color:var(--ink);text-align:center;line-height:1.25}
 .mm-score{font-size:22px;font-weight:900;color:var(--ink);white-space:nowrap;display:flex;align-items:center;gap:5px}
-.mm-list{padding:6px 18px 18px;max-height:50vh;overflow-y:auto}
+.mm-empty-msg{font-size:13px;font-weight:700;color:var(--ink);padding:8px 18px 18px}
+/* Two side-by-side columns, one per team, split at the middle — rather
+   than one combined list where the two teams' players were only tellable
+   apart by scanning each row's own kit/team. Own compact row (not .hcp,
+   which assumes full modal width) since each column is only ~half as
+   wide — name/position/icons stack onto a second line instead of forcing
+   everything onto one cramped row. */
+.mm-cols{display:flex;padding:6px 16px 18px;gap:0;max-height:55vh;overflow-y:auto}
+.mm-col{flex:1;min-width:0;padding:0 10px;display:flex;flex-direction:column}
+.mm-col:first-child{padding-left:0}
+.mm-col:last-child{padding-right:0}
+.mm-col-empty{font-size:11px;color:var(--mu);font-style:italic;padding:8px 0}
+.mm-divider{width:1px;background:var(--bor);flex-shrink:0}
+.mm-prow{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--bor)}
+.mm-prow:last-child{border-bottom:none}
+.mm-prow-av{width:24px;height:24px;border-radius:50%;flex-shrink:0}
+.mm-prow-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.mm-prow-name{font-size:11.5px;font-weight:600;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mm-prow-meta{font-size:9.5px;color:var(--mu);white-space:nowrap}
+.mm-prow-pts{font-weight:800;color:var(--or);font-size:11.5px;flex-shrink:0}
+.mm-prow-pts.neg{color:var(--red)}
 /* Round-navigator strip — jump to another round's squad without leaving the
    current screen. Reused by the squad page (own history, right under the
    pitch, above the fixtures list) and the foreign-squad viewer modal
@@ -1334,7 +1355,12 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
         <div class="mm-team"><div class="mm-team-logo" id="mm-away-logo"></div><div class="mm-team-name" id="mm-away-name"></div></div>
       </div>
     </div>
-    <div class="mm-list" id="mm-list"></div>
+    <div class="mm-empty-msg" id="mm-empty" style="display:none"></div>
+    <div class="mm-cols" id="mm-cols">
+      <div class="mm-col" id="mm-home-col"></div>
+      <div class="mm-divider"></div>
+      <div class="mm-col" id="mm-away-col"></div>
+    </div>
   </div>
 </div>
 
@@ -3825,23 +3851,30 @@ function openMatchModal(ri,di,mi){
   document.getElementById('mm-score').innerHTML=data.saved
     ?`${data.hg} : ${data.ag}${data.isTech?techMarkHtml():''}`
     :t('fix_vs');
-  const listEl=document.getElementById('mm-list');
+  const emptyEl=document.getElementById('mm-empty');
+  const colsEl=document.getElementById('mm-cols');
+  const rowHtml=(x)=>{
+    const bits=[];
+    if(x.goals>0)bits.push(`⚽×${x.goals}`);
+    if(x.cs)bits.push('🧤');
+    if(x.one)bits.push('1️⃣');
+    if(x.red)bits.push('🟥');
+    if(x.motm)bits.push('👑');
+    return `<div class="mm-prow"><div class="mm-prow-av">${kitSvg(x.p.team,24)}</div>
+      <div class="mm-prow-info"><div class="mm-prow-name">${x.p.name}</div>
+      <div class="mm-prow-meta">${POS_LT[x.p.pos]}${bits.length?' '+bits.join(' '):''}</div></div>
+      <div class="mm-prow-pts ${x.pts<0?'neg':''}">${x.pts}pts</div></div>`;
+  };
   if(!data.saved){
-    listEl.innerHTML=`<div class="hcard-body"><div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('no_result_yet')}</div></div>`;
+    emptyEl.textContent=t('no_result_yet');emptyEl.style.display='';colsEl.style.display='none';
   }else if(!data.rows.length){
-    listEl.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--ink);padding:8px 0">${t('match_modal_empty')}</div>`;
+    emptyEl.textContent=t('match_modal_empty');emptyEl.style.display='';colsEl.style.display='none';
   }else{
-    listEl.innerHTML=data.rows.map(x=>{
-      const bits=[];
-      if(x.goals>0)bits.push(`⚽×${x.goals}`);
-      if(x.cs)bits.push('🧤');
-      if(x.one)bits.push('1️⃣');
-      if(x.red)bits.push('🟥');
-      if(x.motm)bits.push('👑');
-      return `<div class="hcp"><div class="hcp-av">${kitSvg(x.p.team,25)}</div>
-        <div class="hcp-name">${x.p.name} <span class="hcp-pos">${POS_LT[x.p.pos]}</span> ${bits.join(' ')}</div>
-        <div class="hcp-pts ${x.pts<0?'neg':''}">${x.pts}pts</div></div>`;
-    }).join('');
+    emptyEl.style.display='none';colsEl.style.display='';
+    const homeRows=data.rows.filter(x=>x.p.team===data.home);
+    const awayRows=data.rows.filter(x=>x.p.team===data.away);
+    document.getElementById('mm-home-col').innerHTML=homeRows.length?homeRows.map(rowHtml).join(''):`<div class="mm-col-empty">${t('match_modal_empty')}</div>`;
+    document.getElementById('mm-away-col').innerHTML=awayRows.length?awayRows.map(rowHtml).join(''):`<div class="mm-col-empty">${t('match_modal_empty')}</div>`;
   }
   document.getElementById('mm-bg').classList.add('open');
 }
