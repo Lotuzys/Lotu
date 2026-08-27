@@ -4490,12 +4490,38 @@ async function submitSquad(){
   const btn=document.getElementById('bb-btn');
   if(btn){btn.disabled=true;btn.textContent=t('bb_saving');}
   try{
-    await saveSquadForRound(CURRENT_USER.uid,STATE.curRound,newSquad);
+    // Reported: on mobile, a submit sometimes failed outright with the
+    // generic "contact the admin" toast even though nothing was actually
+    // wrong with the squad — most likely a flaky cellular connection
+    // dropping the write mid-flight, not a real rules rejection (checked
+    // meta/players and the live rules directly; both were fine). Those
+    // transient network-class errors are safe to just retry — the write
+    // itself is a plain idempotent .set() — so a couple of quick retries
+    // with backoff absorb a brief drop instead of surfacing it as a hard
+    // failure. A genuine rejection (bad squad, expired deadline, etc.)
+    // fails the same way every time and still surfaces after these retry.
+    let lastErr;
+    for(let attempt=0;attempt<3;attempt++){
+      try{
+        await saveSquadForRound(CURRENT_USER.uid,STATE.curRound,newSquad);
+        lastErr=null;
+        break;
+      }catch(e){
+        lastErr=e;
+        const transient=['unavailable','deadline-exceeded','cancelled','resource-exhausted'].includes(e?.code);
+        if(!transient||attempt===2)throw e;
+        await new Promise(r=>setTimeout(r,500*(attempt+1)));
+      }
+    }
     saveCurrentState();
     showSquadSavedScreen(isUpdate);
   }catch(e){
     // Server rejected the write (e.g. stale/missing player index, illegal
-    // squad) — roll back so the UI never claims a save that didn't happen.
+    // squad) or every retry above still failed — roll back so the UI never
+    // claims a save that didn't happen. Logged with the actual error code
+    // (not just a generic message) so a real rules rejection is instantly
+    // diagnosable from the console instead of needing to be reproduced.
+    console.error('Komandos išsaugojimas nepavyko po visų bandymų',e?.code,e);
     STATE.mySquads[STATE.curRound]=prevSquad;
     renderAllSlots();renderSquadMsg();
     toast(t('toast_save_fail'));
