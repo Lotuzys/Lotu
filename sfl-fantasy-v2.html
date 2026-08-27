@@ -294,10 +294,13 @@ a{color:var(--or)}
    of spare width per slot (2-per-row rows use well under half of it),
    so this widens the column itself rather than wrapping the name or
    shrinking the star; measured "M. Mašenzo ⭐" (division A's actual
-   longest case) at ~75px against this font, so 74px was clipping it
-   by design margin, not by a fluke. */
-#ts-pitch .slot{width:112px}
-#ts-pitch .sn{max-width:106px}
+   longest case) at ~75px against a fallback system font — this dev
+   sandbox can't actually load the real Inter webfont to measure
+   against (its `document.fonts` never populates here), and Inter runs
+   wider than the fallback, so this is deliberately padded well past
+   that ~75px floor rather than trusting it as exact. */
+#ts-pitch .slot{width:124px}
+#ts-pitch .sn{max-width:118px}
 .sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
 .sfx{font-size:8.5px;color:rgba(255,255,255,.75);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
 .captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:600;color:rgba(255,255,255,.7);background:rgba(156,163,175,.55);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
@@ -752,9 +755,9 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
      renders a .sfx fixture line, so that rule isn't duplicated here. */
   #ts-pitch{padding-top:90px}
   #ts-pitch .prow{margin-bottom:12px;margin-top:5px}
-  #ts-pitch .slot{width:96px}
+  #ts-pitch .slot{width:118px}
   #ts-pitch .sc2{width:52px;height:52px;font-size:16px}
-  #ts-pitch .sn{font-size:10px;max-width:90px}
+  #ts-pitch .sn{font-size:10px;max-width:112px}
   #ts-pitch .sp{margin-top:0}
   #ts-pitch .slot-icon{font-size:18px}
   #ts-pitch .slot-icon.sm{font-size:14px}
