@@ -1585,7 +1585,7 @@ const I18N={
     toast_pick_pos:(pos,dir)=>`Pasirink ${pos} iš sąrašo ${dir}`,toast_dir_above:'aukščiau ↑',toast_dir_left:'kairėje ←',
     posAcc:{G:'vartininką',D:'gynėją',M:'saugą',F:'puolėją'},
     toast_team_taken:t=>`${t} jau atstovaujama! Tik 1 žaidėjas iš komandos.`,
-    toast_no_free_slot:pos=>`Nėra laisvų ${pos} vietų`,toast_wrong_pos:pos=>`Šis žaidėjas yra ${pos}`,
+    toast_no_free_slot:pos=>`Nėra laisvų ${pos} vietų`,
     toast_budget_short:m=>`Nepakanka biudžeto! Trūksta ${m}M`,toast_added:(n,t)=>`${n} (${t}) pridėtas ✓`,
     toast_need7:'Reikia 7 žaidėjų!',toast_need_captain:'Pasirink kapitoną — spausk C ženkliuką ant žaidėjo',
     toast_deadline_submit:dl=>`Terminas praėjo (${dl}) — komandos pateikti nebegalima`,
@@ -1772,7 +1772,7 @@ const I18N={
     toast_pick_pos:(pos,dir)=>`Pick a ${pos} from the list ${dir}`,toast_dir_above:'above ↑',toast_dir_left:'on the left ←',
     posAcc:{G:'goalkeeper',D:'defender',M:'midfielder',F:'forward'},
     toast_team_taken:t=>`${t} is already represented! Only 1 player per club.`,
-    toast_no_free_slot:pos=>`No free ${pos} slots`,toast_wrong_pos:pos=>`This player is a ${pos}`,
+    toast_no_free_slot:pos=>`No free ${pos} slots`,
     toast_budget_short:m=>`Not enough budget! Short by ${m}M`,toast_added:(n,t)=>`${n} (${t}) added ✓`,
     toast_need7:'You need 7 players!',toast_need_captain:'Pick a captain — tap the C badge on a player',
     toast_deadline_submit:dl=>`Deadline passed (${dl}) — you can no longer submit a team`,
@@ -4163,12 +4163,23 @@ function selectPlayer(id){
   if(isLocked())return;
   const p=PLAYERS.find(x=>x.id===id);if(!p||STATE.taken.has(p.id))return;
   if(STATE.takenTeams.has(p.team)){toast(t('toast_team_taken',p.team));return;}
-  if(!STATE.activePos){
+  // STATE.activePos only matters when it's actually for THIS player's own
+  // position (tapping that exact empty pitch slot preserves which of the
+  // 1-2 slots for that position gets filled). Any other case — nothing
+  // tapped, or activePos left over from tapping a DIFFERENT position's
+  // slot earlier (e.g. tapped the goalkeeper slot, then switched the list's
+  // position filter tab to browse defenders instead — setPosF() only
+  // changes the filter, not activePos) — just finds this player's own next
+  // open slot, exactly as if nothing were active at all. Bug fixed: this
+  // used to hard-reject as "wrong position" whenever activePos was stale
+  // from an unrelated earlier tap, even though an open slot existed; the
+  // only thing that should ever block a pick here is genuinely having no
+  // free slot left for that position (checked below either way).
+  if(STATE.activePos!==p.pos){
     const ei=STATE.slots[p.pos].findIndex(s=>!s);
     if(ei===-1){toast(t('toast_no_free_slot',POS_FL[p.pos].toLowerCase()));return;}
     STATE.activePos=p.pos;STATE.activePosIdx=ei;
   }
-  if(p.pos!==STATE.activePos){toast(t('toast_wrong_pos',POS_FL[p.pos]));return;}
   const left=CONFIG.BUDGET-usedBudget();
   if(p.price>left+.01){toast(t('toast_budget_short',(p.price-left).toFixed(1)));return;}
   setSlot(STATE.activePos,STATE.activePosIdx,p);
