@@ -9,13 +9,15 @@
  * Design constraints (do not change without re-reading firestore.rules):
  *  - Every player doc gets a stable `id` the moment it is first seen, drawn
  *    from its DIVISION's reserved id block (see BLOCK_START below) and
- *    NEVER reassigned or reused — firestore.rules resolves players by array
- *    index (idx[id-1]) against the `meta/players` mirror doc this file
- *    rebuilds. A shifted or reused id would silently invalidate saved
- *    squads / rules validation for everyone in that division. The block
- *    scheme (A:1-999, B:1000-1499, C:1500-1999, D:2000-2499, E:2500-2999)
- *    matches what sfl-fantasy-v2.html already hardcodes for its static
- *    B-E placeholder data — keep them in sync if either side ever changes.
+ *    NEVER reassigned or reused — firestore.rules resolves players by
+ *    fetching their individual `playersById/{id}` mirror doc (see
+ *    rebuildPlayerIndex() below for why it's one small doc per id rather
+ *    than one big array/mirror doc). A shifted or reused id would silently
+ *    invalidate saved squads / rules validation for everyone in that
+ *    division. The block scheme (A:1-999, B:1000-1499, C:1500-1999,
+ *    D:2000-2499, E:2500-2999) matches what sfl-fantasy-v2.html already
+ *    hardcodes for its static B-E placeholder data — keep them in sync if
+ *    either side ever changes.
  *  - Every player doc/index entry always carries a concrete `division`
  *    field — never omit it. firestore.rules' squadLegal() compares it
  *    directly with no missing-field fallback: an earlier version of that
@@ -279,28 +281,40 @@ async function nextPlayerId(tx, division) {
 }
 
 /**
- * Rebuild the meta/players array mirror (used by firestore.rules) from the
- * players collection, spanning every division's reserved id block. Index i
- * (0-based) always holds the player whose id === i+1; gaps between one
- * division's real players and the next division's block start are left as
- * explicit nulls — firestore.rules' playerAt() treats a null slot as "not
- * a real player", failing that check closed, same as any other id that was
- * never assigned.
+ * Rebuild the playersById/{id} mirror (used by firestore.rules to validate
+ * submitted squads) from the players collection — one small doc per id,
+ * keyed by the app's own permanent id, holding just pos/team/price/
+ * division. firestore.rules resolves a squad's 7 players by fetching
+ * exactly those 7 docs individually.
+ *
+ * This used to be a SINGLE meta/players doc holding one big array (index i
+ * = the player whose id is i+1). That was simpler to write, but Firestore's
+ * security-rules CEL evaluator charges cost proportional to a get()'d
+ * document's total size — once that array grew to cover all 5 divisions
+ * (2700+ entries), just LOADING it during a squad write was enough on its
+ * own to exceed Firestore's 1000-expression-per-request rule budget,
+ * silently denying every legal squad submission. One doc per id keeps each
+ * get() constant-cost regardless of total roster size — see firestore.rules'
+ * playerAt() for the rules-side half of this. Batched at 500 writes/commit
+ * (Firestore's per-batch cap); a stale/never-assigned id simply never gets
+ * a doc, which is exactly what firestore.rules' playerAt() expects (get()
+ * on it fails the write closed, same as any other id that was never
+ * assigned).
  */
 async function rebuildPlayerIndex() {
   const snap = await db.collection('players').orderBy('id').get();
-  const list = [];
+  const docs = [];
   snap.forEach((doc) => {
     const p = doc.data();
-    list[p.id - 1] = {pos: p.pos, team: p.team, price: p.price, division: p.division};
+    docs.push({id: p.id, pos: p.pos, team: p.team, price: p.price, division: p.division});
   });
-  // Firestore arrays can't have trailing/leading holes serialize implicitly
-  // as null the way a plain JS sparse array might be assumed to — fill any
-  // gap explicitly so every index up to the highest assigned id is defined.
-  for (let i = 0; i < list.length; i++) {
-    if (list[i] === undefined) list[i] = null;
+  for (let i = 0; i < docs.length; i += 500) {
+    const batch = db.batch();
+    for (const p of docs.slice(i, i + 500)) {
+      batch.set(db.doc(`playersById/${p.id}`), {pos: p.pos, team: p.team, price: p.price, division: p.division});
+    }
+    await batch.commit();
   }
-  await db.doc('meta/players').set({list, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
 }
 
 async function syncPlayers() {

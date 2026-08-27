@@ -3264,25 +3264,37 @@ function saveLeagueState(){
 // ═══════════════════════════════════════════════
 // PLAYER INDEX — trusted position/team/price lookup for firestore.rules.
 // Rules can't see the PLAYERS constant baked into this HTML file, so a
-// compact copy lives in meta/players (admin-write-only) for the security
-// rules to validate submitted squads against — otherwise a direct Firestore
-// write could claim any price/team it wants for a player. Re-synced every
-// time the admin logs in, so it never drifts from the app's own roster.
+// compact per-player copy lives in playersById/{id} (admin-write-only) for
+// the security rules to validate submitted squads against — otherwise a
+// direct Firestore write could claim any price/team it wants for a player.
+// Re-synced every time the admin logs in, so it never drifts from the
+// app's own roster.
+//
+// One small doc per id, NOT one big meta/players array doc keyed by
+// id-1 (the original design here, kept in sync with firestore.rules'
+// playerIndex()/playerAt()). That array-mirror approach silently broke
+// squad submission for everyone once it grew to cover all 5 divisions
+// (2700+ entries): Firestore's rules CEL evaluator charges cost
+// proportional to a get()'d document's total size, so just LOADING that
+// one giant array during a squad write was enough on its own to exceed
+// Firestore's 1000-expression-per-request rule budget. One doc per id
+// keeps each rules-side get() constant-cost regardless of total roster
+// size — see firestore.rules' playerAt() for the rules-side half of this.
 // ═══════════════════════════════════════════════
-function syncPlayerIndex(){
-  // Must match firestore.rules' playerIndex()/playerAt(): a single `list`
-  // field, indexed by id-1 (idx[id-1]), NOT by array position — PLAYERS is
-  // no longer one contiguous id run now that divisions B-E use their own
-  // reserved id blocks (1000s/1500s/2000s/2500s, see the DIVISIONS REGISTRY
-  // comment), so a plain .map() would silently misalign every division but
-  // A. Build a sparse array sized to the highest id in use instead, with
-  // null filling the unused gaps between each division's block — a null
-  // entry just makes playerAt() fail closed for that id, same as before.
-  const maxId=Math.max(...PLAYERS.map(p=>p.id));
-  const list=new Array(maxId).fill(null);
-  PLAYERS.forEach(p=>{ list[p.id-1]={pos:p.pos,team:p.team,price:p.price,division:p.division||'A'}; });
-  return db.collection('meta').doc('players').set({list})
-    .catch(e=>console.error('Nepavyko sinchronizuoti žaidėjų indekso',e));
+async function syncPlayerIndex(){
+  // Firestore batches cap at 500 writes each.
+  const chunks=[];
+  for(let i=0;i<PLAYERS.length;i+=500)chunks.push(PLAYERS.slice(i,i+500));
+  try{
+    for(const chunk of chunks){
+      const batch=db.batch();
+      chunk.forEach(p=>{
+        batch.set(db.collection('playersById').doc(String(p.id)),
+          {pos:p.pos,team:p.team,price:p.price,division:p.division||'A'});
+      });
+      await batch.commit();
+    }
+  }catch(e){console.error('Nepavyko sinchronizuoti žaidėjų indekso',e);}
 }
 
 // Live roster, auto-synced every 12h from vilniausfutbolas.lt by a scheduled
