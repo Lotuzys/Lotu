@@ -1542,7 +1542,9 @@ const I18N={
     privacy_s4_h:'Slapukai ir vietinė talpykla',
     privacy_s4_p:'Programa naudoja tik naršyklės vietinę atmintį (localStorage), kad įsimintų tavo pasirinktą kalbą (LT/EN). Jokie stebėjimo slapukai nenaudojami.',
     privacy_s5_h:'Duomenų ištrynimas ir saugojimo trukmė',
-    privacy_s5_p:'Tavo duomenis saugome: kol žaidimas yra aktyvus (sezonui pasibaigus — dar 2 mėnesius po sezono pabaigos, po to gali būti ištrinami); kol negauname Tavo prašymo ištrinti paskyrą — gavus tokį prašymą el. paštu žemiau, paskyra ir duomenys pašalinami per protingą terminą; ir tiek, kiek juos saugoti reikalauja galiojantys teisės aktai.',
+    privacy_s5_li1:'Kol žaidimas yra aktyvus — sezonui pasibaigus, duomenys papildomai saugomi dar 2 mėnesius, po to gali būti ištrinami.',
+    privacy_s5_li2:'Kol negauname Tavo prašymo ištrinti paskyrą — gavus tokį prašymą el. paštu žemiau, paskyra ir duomenys pašalinami per protingą terminą.',
+    privacy_s5_li3:'Tiek, kiek juos saugoti reikalauja galiojantys teisės aktai.',
     privacy_s6_h:'Kontaktai',
     privacy_s6_p:'Klausimais dėl privatumo rašyk: eima.lotuzys@gmail.com',
     rules_title:'Taisyklės',
@@ -1729,7 +1731,9 @@ const I18N={
     privacy_s4_h:'Cookies and local storage',
     privacy_s4_p:'The app only uses your browser\'s local storage (localStorage) to remember your chosen language (LT/EN). No tracking cookies are used.',
     privacy_s5_h:'Data deletion and retention',
-    privacy_s5_p:"We keep your data: for as long as the game is active (once a season ends — for a further 2 months, after which it may be deleted); until we receive your request to delete your account — once requested via the email below, your account and data are removed within a reasonable time; and for as long as applicable law requires us to keep it.",
+    privacy_s5_li1:'For as long as the game is active — once a season ends, data is kept for a further 2 months, after which it may be deleted.',
+    privacy_s5_li2:"Until we receive your request to delete your account — once requested via the email below, your account and data are removed within a reasonable time.",
+    privacy_s5_li3:'For as long as applicable law requires us to keep it.',
     privacy_s6_h:'Contact',
     privacy_s6_p:'For privacy questions, write to: eima.lotuzys@gmail.com',
     rules_title:'Rules',
@@ -4404,7 +4408,7 @@ function renderPrivacyModal(){
     infoSec('','privacy_s2b_h',`<div class="help-sec-p">${t('privacy_s2b_p')}</div>`)+
     infoSec('','privacy_s3_h',`<div class="help-sec-p">${t('privacy_s3_p')}</div>`)+
     infoSec('','privacy_s4_h',`<div class="help-sec-p">${t('privacy_s4_p')}</div>`)+
-    infoSec('','privacy_s5_h',`<div class="help-sec-p">${t('privacy_s5_p')}</div>`)+
+    infoSec('','privacy_s5_h',`<ul class="help-list">${['privacy_s5_li1','privacy_s5_li2','privacy_s5_li3'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
     infoSec('','privacy_s6_h',`<div class="help-sec-p">${t('privacy_s6_p')}</div>`);
 }
 
