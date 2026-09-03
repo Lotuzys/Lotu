@@ -1711,7 +1711,6 @@ const I18N={
     pm_team_taken:'Komanda jau atstovaujama',pm_add_price:price=>`Pridėti (${price}M)`,
     phist_current_suffix:'(einamasis)',phist_total_label:n=>`Iš viso (${n} ${ltForm(n,'turas','turai','turų')})`,
     match_vs:(i,opp)=>`${i} rungtynės - vs ${opp}`,no_data:'Nėra duomenų',
-    match_modal_empty:'Šiose rungtynėse individualių taškų niekas nepelnė',
     mstat_goals:(n,pts)=>`Įvarčiai (${n} × ${pts})`,mstat_cs:'Švarūs vartai',mstat_one:'Praleistas tik 1 įvartis',
     mstat_win:'Pergalė',mstat_loss:'Pralaimėjimas',mstat_red:n=>`Raudona kortelė (${n}×)`,
     mstat_motm:'👑 Geriausias rungtynių žaidėjas',
@@ -1903,7 +1902,6 @@ const I18N={
     pm_team_taken:'Club already used',pm_add_price:price=>`Add (${price}M)`,
     phist_current_suffix:'(current)',phist_total_label:n=>`Total (${n} gameweeks)`,
     match_vs:(i,opp)=>`Match ${i} - vs ${opp}`,no_data:'No data',
-    match_modal_empty:'No one earned individual points in this match',
     mstat_goals:(n,pts)=>`Goals (${n} × ${pts})`,mstat_cs:'Clean sheet',mstat_one:'Conceded 1 goal',
     mstat_win:'Win',mstat_loss:'Loss',mstat_red:n=>`Red card (${n}×)`,
     mstat_motm:'👑 Man of the match',
@@ -3834,22 +3832,44 @@ function computeMatchScorers(ri,di,mi){
   const [home,away]=m;
   const saved=STATE.DB[ri]?.[di]?.[mi];
   if(!saved)return {home,away,saved:false};
-  if(isTechResult(saved))return {home,away,saved:true,hg:saved.hg,ag:saved.ag,isTech:true,rows:[]};
+  const players=PLAYERS.filter(p=>p.division===STATE.division&&(p.team===home||p.team===away));
+  if(isTechResult(saved)){
+    // Flat team bonus, same rule as everywhere else (see isTechResult())
+    // — every player on the winning-by-forfeit side gets TECH_WIN_PTS,
+    // every player on the forfeiting side gets TECH_LOSS_PTS, no other
+    // line item applies since none of it genuinely happened.
+    const homeWon=saved.hg>saved.ag;
+    const rows=players.map(p=>{
+      const isHome=p.team===home;
+      const won=isHome?homeWon:!homeWon;
+      return {p,pts:won?CONFIG.TECH_WIN_PTS:CONFIG.TECH_LOSS_PTS,goals:0,cs:false,one:false,red:false,motm:false,win:won,loss:!won};
+    });
+    return {home,away,saved:true,hg:saved.hg,ag:saved.ag,isTech:true,rows};
+  }
   const hg=saved.hg,ag=saved.ag;
   const scorerMap={};(saved.scorers||[]).forEach(sc=>{scorerMap[sc.pid]=(scorerMap[sc.pid]||0)+sc.cnt;});
   const redSet=new Set(saved.reds||[]);
-  const rows=PLAYERS.filter(p=>p.division===STATE.division&&(p.team===home||p.team===away)).map(p=>{
+  const rows=players.map(p=>{
+    const isHome=p.team===home;
     const goals=scorerMap[p.id]||0;
-    const teamGA=p.team===home?ag:hg;
+    const teamGA=isHome?ag:hg;
     let pts=goals*CONFIG.PTS_POS[p.pos];
     let cs=false,one=false;
     if(p.pos==='G'||p.pos==='D'){
       if(teamGA===0){cs=true;pts+=CONFIG.CS_PTS[p.pos];}
       else if(teamGA===1){one=true;pts+=CONFIG.ONE_GOAL_AGAINST_PTS[p.pos];}
     }
+    // Every player's full match points, same as a real squad pick would
+    // score — including the team win/loss bonus, which everyone on the
+    // roster gets regardless of what they personally did that match.
+    let win=false,loss=false;
+    if(hg!==ag){
+      const teamWon=isHome?hg>ag:ag>hg;
+      if(teamWon){win=true;pts+=CONFIG.WIN_PTS;}else{loss=true;pts+=CONFIG.LOSS_PTS;}
+    }
     const red=redSet.has(p.id);if(red)pts+=CONFIG.RED_CARD_PTS;
     const motm=saved.motm===p.id;if(motm)pts+=CONFIG.MOTM_PTS;
-    return {p,pts,goals,cs,one,red,motm};
+    return {p,pts,goals,cs,one,red,motm,win,loss};
   });
   // Every real player on both rosters, not just the ones who scored
   // individually — grouping/sorting is left to the caller (openMatchModal
@@ -3872,6 +3892,8 @@ function mmRowHtml(x){
   if(x.one)bits.push('1️⃣');
   if(x.red)bits.push('🟥');
   if(x.motm)bits.push('👑');
+  if(x.win)bits.push('✅');
+  if(x.loss)bits.push('❌');
   return `<div class="mm-prow"><div class="mm-prow-av">${kitSvg(x.p.team,24)}</div>
     <div class="mm-prow-info"><div class="mm-prow-name">${x.p.name}</div>
     <div class="mm-prow-meta">${bits.join(' ')}</div></div>
@@ -3884,19 +3906,12 @@ function mmColHtml(rows,team,colId){
   return MM_POS_ORDER.map(pos=>{
     const list=rows.filter(x=>x.p.team===team&&x.p.pos===pos).sort((a,b)=>b.pts-a.pts||a.p.name.localeCompare(b.p.name));
     const secId=`${colId}-${pos}`;
-    // Auto-expand a section that actually has a real point-earner in it —
-    // "G" (goalkeepers) sorts first and is rarely bonus-eligible, so
-    // leaving every section collapsed by default made a match's real
-    // scorers (almost always in D/M/F) easy to miss entirely behind an
-    // empty-looking first section. A section with nothing individual to
-    // show stays collapsed, matching the original ask.
-    const hasScorer=list.some(x=>x.pts!==0);
     return `<div class="mm-possec">
       <div class="mm-possec-head" onclick="toggleMatchPosSec('${secId}')">
         <span>${t(MM_POS_I18N[pos])}</span>
-        <button class="mm-possec-toggle" id="mm-tgl-${secId}">${hasScorer?'▲':'▼'}</button>
+        <button class="mm-possec-toggle" id="mm-tgl-${secId}">▼</button>
       </div>
-      <div class="mm-possec-body" id="mm-body-${secId}" style="display:${hasScorer?'':'none'}">
+      <div class="mm-possec-body" id="mm-body-${secId}" style="display:none">
         ${list.length?list.map(mmRowHtml).join(''):`<div class="mm-col-empty">${t('no_data')}</div>`}
       </div>
     </div>`;
@@ -3916,12 +3931,10 @@ function openMatchModal(ri,di,mi){
   const colsEl=document.getElementById('mm-cols');
   if(!data.saved){
     emptyEl.textContent=t('no_result_yet');emptyEl.style.display='';colsEl.style.display='none';
-  }else if(data.isTech){
-    // Technical (walkover) result — no individual events at all by
-    // design (flat team bonus only, see isTechResult()), so there's
-    // nothing meaningful to break down by position here.
-    emptyEl.textContent=t('match_modal_empty');emptyEl.style.display='';colsEl.style.display='none';
   }else{
+    // Technical (walkover) results now also populate rows (flat
+    // TECH_WIN_PTS/TECH_LOSS_PTS per side, see computeMatchScorers) —
+    // shown the same as any other match, no separate empty state.
     emptyEl.style.display='none';colsEl.style.display='';
     document.getElementById('mm-home-col').innerHTML=mmColHtml(data.rows,data.home,'h');
     document.getElementById('mm-away-col').innerHTML=mmColHtml(data.rows,data.away,'a');
