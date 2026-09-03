@@ -3884,12 +3884,19 @@ function mmColHtml(rows,team,colId){
   return MM_POS_ORDER.map(pos=>{
     const list=rows.filter(x=>x.p.team===team&&x.p.pos===pos).sort((a,b)=>b.pts-a.pts||a.p.name.localeCompare(b.p.name));
     const secId=`${colId}-${pos}`;
+    // Auto-expand a section that actually has a real point-earner in it —
+    // "G" (goalkeepers) sorts first and is rarely bonus-eligible, so
+    // leaving every section collapsed by default made a match's real
+    // scorers (almost always in D/M/F) easy to miss entirely behind an
+    // empty-looking first section. A section with nothing individual to
+    // show stays collapsed, matching the original ask.
+    const hasScorer=list.some(x=>x.pts!==0);
     return `<div class="mm-possec">
       <div class="mm-possec-head" onclick="toggleMatchPosSec('${secId}')">
         <span>${t(MM_POS_I18N[pos])}</span>
-        <button class="mm-possec-toggle" id="mm-tgl-${secId}">▼</button>
+        <button class="mm-possec-toggle" id="mm-tgl-${secId}">${hasScorer?'▲':'▼'}</button>
       </div>
-      <div class="mm-possec-body" id="mm-body-${secId}" style="display:none">
+      <div class="mm-possec-body" id="mm-body-${secId}" style="display:${hasScorer?'':'none'}">
         ${list.length?list.map(mmRowHtml).join(''):`<div class="mm-col-empty">${t('no_data')}</div>`}
       </div>
     </div>`;
