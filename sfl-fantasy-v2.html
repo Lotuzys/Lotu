@@ -10,8 +10,8 @@
 <style>
 :root{
   --bg:#faf9f7;--sur:#f2f0ec;--sur2:#eae7e1;--bor:#e6e2da;--bor2:#d4cfc3;
-  --or:#f97316;--or2:#ea6800;--orlight:#fb923c;--ordim:rgba(249,115,22,.1);--orbor:rgba(249,115,22,.35);
-  --or-grad:linear-gradient(135deg,#fb923c 0%,#f97316 55%,#ea580c 100%);
+  --or:#ee4035;--or2:#c6291d;--orlight:#f26b5e;--ordim:rgba(238,64,53,.1);--orbor:rgba(238,64,53,.35);
+  --or-grad:linear-gradient(135deg,#f26b5e 0%,#ee4035 55%,#c6291d 100%);
   --gr:#22c55e;--red:#ef4444;--gold:#d97706;--cap:#8b5cf6;--capbg:rgba(139,92,246,.08);
   --ink:#171512;--ink2:#3a3630;--mu:#78726a;--mu2:#a39c90;--tx:#222222;--tx2:#444444;
   --card:#fffcf5;
@@ -19,7 +19,7 @@
   --sh-xs:0 1px 2px rgba(23,21,18,.05);
   --sh:0 1px 2px rgba(23,21,18,.04),0 6px 20px -8px rgba(23,21,18,.12);
   --sh-lg:0 8px 12px -4px rgba(23,21,18,.08),0 24px 48px -16px rgba(23,21,18,.18);
-  --sh-or:0 10px 24px -8px rgba(234,88,6,.4);
+  --sh-or:0 10px 24px -8px rgba(198,41,29,.4);
   --ease:cubic-bezier(.2,.8,.2,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -71,7 +71,7 @@ a{color:var(--or)}
 /* Own stacking context, independent of .topbar (which drops position:sticky
    for position:static on mobile — z-index has no effect on static elements,
    so without this the dropdown could lose its elevation and get painted
-   over by page content below it, e.g. the dashboard hero's orange
+   over by page content below it, e.g. the dashboard hero's red
    background). Below the .mbg modals' z-index:500, same as the rest of the
    topbar, so an open modal still correctly covers it. */
 .lang-sw{position:relative;z-index:450}
@@ -118,7 +118,7 @@ a{color:var(--or)}
 .form-input{width:100%;padding:11px 15px;border:1.5px solid var(--bor2);border-radius:11px;font-size:13.5px;color:var(--ink);background:var(--card);outline:none;transition:all .18s var(--ease)}
 .form-input:focus{border-color:var(--or);box-shadow:0 0 0 4px var(--ordim)}
 .form-btn{width:100%;padding:13px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;transition:all .18s var(--ease);margin-top:4px;box-shadow:var(--sh-or);display:flex;align-items:center;justify-content:center;gap:9px}
-.form-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px -8px rgba(234,88,6,.48)}
+.form-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px -8px rgba(198,41,29,.48)}
 .form-btn:disabled{opacity:.65;cursor:default;transform:none;box-shadow:none}
 /* Inline button spinner — reuses #boot-gate's bootspin keyframe (defined
    further down with the rest of that overlay's CSS) so there's only one
@@ -288,7 +288,7 @@ a{color:var(--or)}
 .sc2{width:58px;height:58px;border-radius:50%;margin:0 auto 4px;border:2px dashed rgba(255,255,255,.45);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s var(--ease);position:relative;backdrop-filter:blur(2px)}
 .slot:hover .sc2{border-color:#fff;background:rgba(255,255,255,.28);transform:scale(1.07)}
 .slot.filled .sc2{border-style:solid;border-color:var(--or);background:var(--or-grad);box-shadow:0 4px 14px -2px rgba(0,0,0,.35)}
-.slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(249,115,22,.35),0 4px 14px -2px rgba(0,0,0,.35)}
+.slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(238,64,53,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.92);line-height:1.25;max-width:74px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Team of Season/Round's own name+star is often longer than a bare
    surname (disambiguating initial + the ⭐ suffix) — .lbwrap has plenty
@@ -302,11 +302,11 @@ a{color:var(--or)}
    that ~75px floor rather than trusting it as exact. */
 #ts-pitch .slot{width:124px}
 #ts-pitch .sn{max-width:118px}
-.sp{font-size:9px;color:#fed7aa;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
+.sp{font-size:9px;color:#fecaca;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
 .sfx{font-size:8.5px;color:rgba(255,255,255,.75);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
 .captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:600;color:rgba(255,255,255,.7);background:rgba(156,163,175,.55);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
 .captoggle:hover{background:rgba(107,114,128,.8);color:#fff;transform:scale(1.15)}
-.captoggle.on{width:18px;height:18px;bottom:-3px;right:-3px;font-size:9.5px;font-weight:900;color:#fff;background:var(--or);border-color:#fff;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(249,115,22,.85)}
+.captoggle.on{width:18px;height:18px;bottom:-3px;right:-3px;font-size:9.5px;font-weight:900;color:#fff;background:var(--or);border-color:#fff;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(238,64,53,.85)}
 .slot-badge{position:absolute;top:-2px;left:-2px;width:17px;height:17px;border-radius:50%;background:#fffcf5;border:2px solid #fffcf5;object-fit:contain;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .srm{position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;font-weight:900;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .slot.filled .srm{display:flex}
@@ -352,7 +352,7 @@ a{color:var(--or)}
 .hcp-name{flex:1;font-weight:600;color:var(--ink2)}.hcp-pts{font-weight:800;color:var(--or);font-size:12px}
 .hcp-pos{font-size:9px;font-weight:700;color:var(--mu);background:var(--sur2);padding:1px 5px;border-radius:8px;margin-left:2px}
 /* Captain marker in flat name rows (History page, other-user squad viewer) —
-   an orange "C" instead of a star, since a star there now means "made that
+   an red "C" instead of a star, since a star there now means "made that
    round's real Team of the Round", a separate fact from who was captain. */
 .cap-c-badge{color:var(--or);font-weight:900}
 .hcp-pts.cap{color:var(--cap)}
@@ -829,7 +829,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
      entirely, which combined with .topbar's backdrop-filter (itself a
      stacking-context trigger) was trapping the whole topbar, dropdown
      included, underneath the page content painted after it (e.g. the
-     dashboard hero's orange background). relative lets the topbar's
+     dashboard hero's red background). relative lets the topbar's
      z-index:300 apply again so it — and the language dropdown inside it —
      properly paints above the page. */
   .topbar{position:relative}
@@ -4509,7 +4509,7 @@ function renderSlot(pos,idx){
     // editable, it also toggles captain on tap — a clearer, single "C"
     // affordance instead of a separate button plus a redundant position
     // letter (position is already obvious from the pitch row). Once locked/
-    // historical, it's the same orange "C" but inert (no tap handler) —
+    // historical, it's the same red "C" but inert (no tap handler) —
     // that round's captain is a fixed fact by then, not something to edit.
     const capToggle=isLocked()
       ? (cap?`<span class="captoggle on" style="cursor:default" title="${t('captain_label')}">C</span>`:'')
@@ -4524,7 +4524,7 @@ function renderSlot(pos,idx){
       const det=roundDetail[STATE.curRound]?.find(d=>d.id===p.id);
       const dpts=det?det.pts:0;
       // Star now marks THAT round's real Team of the Round, not captaincy
-      // (captaincy has its own orange "C" badge on the avatar above).
+      // (captaincy has its own red "C" badge on the avatar above).
       const inXI=roundXIIds(STATE.curRound,STATE.DB,STATE.division).has(p.id);
       sp.textContent=inXI?`${dpts}pts ⭐`:`${dpts}pts`;sp.className=`sp${inXI?' c':''}${dpts<0?' neg':''}`;
       if(sfx)sfx.textContent='';
@@ -4843,7 +4843,7 @@ function renderHistory(){
       html+=`<div class="hcard-body">`;
       // That round's real Team-of-the-Round ids, computed once per round —
       // the star below marks membership in it, not captaincy (captaincy
-      // gets its own orange "C" badge next to the name instead).
+      // gets its own red "C" badge next to the name instead).
       const xiIds=roundXIIds(i,STATE.DB,STATE.division);
       ['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
         if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
@@ -5671,7 +5671,7 @@ async function renderUserSquadViewer(u){
   const {roundDetail}=computeScoring({[USQ_ROUND]:snap},db,div);
   const detail=roundDetail[USQ_ROUND]||[];
   // That round's real Team-of-the-Round ids — the star below marks
-  // membership in it, not captaincy (captaincy gets its own orange "C"
+  // membership in it, not captaincy (captaincy gets its own red "C"
   // badge on the avatar instead). Ownership pre-fetched directly (rather
   // than relying on roundXIIds()'s own fallback-then-re-render cache miss)
   // since this view is already async — no reason to show a since-
