@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Olybar 7x7 Fantasy</title>
+<title>Carlsberg 7x7 Fantasy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#faf9f7;--sur:#f2f0ec;--sur2:#eae7e1;--bor:#e6e2da;--bor2:#d4cfc3;
-  --or:#ee4035;--or2:#c6291d;--orlight:#f26b5e;--ordim:rgba(238,64,53,.1);--orbor:rgba(238,64,53,.35);
-  --or-grad:linear-gradient(135deg,#f26b5e 0%,#ee4035 55%,#c6291d 100%);
+  --or:#00543c;--or2:#003a29;--orlight:#1c8a5f;--ordim:rgba(0,84,60,.1);--orbor:rgba(0,84,60,.35);
+  --or-grad:linear-gradient(135deg,#1c8a5f 0%,#00543c 55%,#003a29 100%);
   --gr:#22c55e;--red:#ef4444;--gold:#d97706;--cap:#8b5cf6;--capbg:rgba(139,92,246,.08);
   --ink:#171512;--ink2:#3a3630;--mu:#78726a;--mu2:#a39c90;--tx:#222222;--tx2:#444444;
   --card:#fffcf5;
@@ -19,7 +19,7 @@
   --sh-xs:0 1px 2px rgba(23,21,18,.05);
   --sh:0 1px 2px rgba(23,21,18,.04),0 6px 20px -8px rgba(23,21,18,.12);
   --sh-lg:0 8px 12px -4px rgba(23,21,18,.08),0 24px 48px -16px rgba(23,21,18,.18);
-  --sh-or:0 10px 24px -8px rgba(198,41,29,.4);
+  --sh-or:0 10px 24px -8px rgba(0,58,41,.4);
   --ease:cubic-bezier(.2,.8,.2,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -71,7 +71,7 @@ a{color:var(--or)}
 /* Own stacking context, independent of .topbar (which drops position:sticky
    for position:static on mobile — z-index has no effect on static elements,
    so without this the dropdown could lose its elevation and get painted
-   over by page content below it, e.g. the dashboard hero's red
+   over by page content below it, e.g. the dashboard hero's green
    background). Below the .mbg modals' z-index:500, same as the rest of the
    topbar, so an open modal still correctly covers it. */
 .lang-sw{position:relative;z-index:450}
@@ -118,7 +118,7 @@ a{color:var(--or)}
 .form-input{width:100%;padding:11px 15px;border:1.5px solid var(--bor2);border-radius:11px;font-size:13.5px;color:var(--ink);background:var(--card);outline:none;transition:all .18s var(--ease)}
 .form-input:focus{border-color:var(--or);box-shadow:0 0 0 4px var(--ordim)}
 .form-btn{width:100%;padding:13px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;transition:all .18s var(--ease);margin-top:4px;box-shadow:var(--sh-or);display:flex;align-items:center;justify-content:center;gap:9px}
-.form-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px -8px rgba(198,41,29,.48)}
+.form-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px -8px rgba(0,58,41,.48)}
 .form-btn:disabled{opacity:.65;cursor:default;transform:none;box-shadow:none}
 /* Inline button spinner — reuses #boot-gate's bootspin keyframe (defined
    further down with the rest of that overlay's CSS) so there's only one
@@ -288,7 +288,7 @@ a{color:var(--or)}
 .sc2{width:58px;height:58px;border-radius:50%;margin:0 auto 4px;border:2px dashed rgba(255,255,255,.45);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s var(--ease);position:relative;backdrop-filter:blur(2px)}
 .slot:hover .sc2{border-color:#fff;background:rgba(255,255,255,.28);transform:scale(1.07)}
 .slot.filled .sc2{border-style:solid;border-color:var(--or);background:var(--or-grad);box-shadow:0 4px 14px -2px rgba(0,0,0,.35)}
-.slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(238,64,53,.35),0 4px 14px -2px rgba(0,0,0,.35)}
+.slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(0,84,60,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.92);line-height:1.25;max-width:74px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Team of Season/Round's own name+star is often longer than a bare
    surname (disambiguating initial + the ⭐ suffix) — .lbwrap has plenty
@@ -302,11 +302,11 @@ a{color:var(--or)}
    that ~75px floor rather than trusting it as exact. */
 #ts-pitch .slot{width:124px}
 #ts-pitch .sn{max-width:118px}
-.sp{font-size:9px;color:#fecaca;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
+.sp{font-size:9px;color:#bbf7d0;font-weight:700;margin-top:1px}.sp.c{color:#fde68a}.sp.neg{color:#fca5a5}
 .sfx{font-size:8.5px;color:rgba(255,255,255,.75);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
 .captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:600;color:rgba(255,255,255,.7);background:rgba(156,163,175,.55);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
 .captoggle:hover{background:rgba(107,114,128,.8);color:#fff;transform:scale(1.15)}
-.captoggle.on{width:18px;height:18px;bottom:-3px;right:-3px;font-size:9.5px;font-weight:900;color:#fff;background:var(--or);border-color:#fff;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(238,64,53,.85)}
+.captoggle.on{width:18px;height:18px;bottom:-3px;right:-3px;font-size:9.5px;font-weight:900;color:#fff;background:var(--or);border-color:#fff;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(0,84,60,.85)}
 .slot-badge{position:absolute;top:-2px;left:-2px;width:17px;height:17px;border-radius:50%;background:#fffcf5;border:2px solid #fffcf5;object-fit:contain;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .srm{position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;font-weight:900;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .slot.filled .srm{display:flex}
@@ -352,7 +352,7 @@ a{color:var(--or)}
 .hcp-name{flex:1;font-weight:600;color:var(--ink2)}.hcp-pts{font-weight:800;color:var(--or);font-size:12px}
 .hcp-pos{font-size:9px;font-weight:700;color:var(--mu);background:var(--sur2);padding:1px 5px;border-radius:8px;margin-left:2px}
 /* Captain marker in flat name rows (History page, other-user squad viewer) —
-   an red "C" instead of a star, since a star there now means "made that
+   a green "C" instead of a star, since a star there now means "made that
    round's real Team of the Round", a separate fact from who was captain. */
 .cap-c-badge{color:var(--or);font-weight:900}
 .hcp-pts.cap{color:var(--cap)}
@@ -829,7 +829,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
      entirely, which combined with .topbar's backdrop-filter (itself a
      stacking-context trigger) was trapping the whole topbar, dropdown
      included, underneath the page content painted after it (e.g. the
-     dashboard hero's red background). relative lets the topbar's
+     dashboard hero's green background). relative lets the topbar's
      z-index:300 apply again so it — and the language dropdown inside it —
      properly paints above the page. */
   .topbar{position:relative}
@@ -873,7 +873,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 <div class="topbar">
   <div class="lbrand" onclick="goHome()" data-i18n-title="brand_tooltip" title="Į pagrindinį">
     <div class="lmark" id="lmark"></div>
-    <div class="ltxt"><div class="lname">Olybar 7x7 Fantasy</div><div class="lsub" data-i18n="league_sub">A Divizionas · 2026/27</div></div>
+    <div class="ltxt"><div class="lname">Carlsberg 7x7 Fantasy</div><div class="lsub" data-i18n="league_sub">A Divizionas · 2026/27</div></div>
   </div>
   <div class="spons-top" id="spons-top" data-i18n-title="sponsor_tooltip" title="Sezono rėmėjas"></div>
   <nav class="nav" id="main-nav" style="display:none">
@@ -908,7 +908,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
   <div class="login-wrap">
     <div class="login-box">
       <div class="login-logo" id="login-logo"></div>
-      <div class="login-title">Olybar 7x7 Fantasy</div>
+      <div class="login-title">Carlsberg 7x7 Fantasy</div>
       <div class="login-sub" data-i18n="login_sub">Prisijunk ir rink taškus kiekvieną turą</div>
       <div class="login-tabs">
         <button class="ltab on" id="ltab-in" onclick="switchLoginTab('in')" data-i18n="tab_login">Prisijungti</button>
@@ -1010,7 +1010,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 <div class="page" id="page-dash">
   <div class="dash-hero">
     <div class="dball" id="dball"></div>
-    <div class="dtitle" id="dash-title">Olybar 7x7 Fantasy</div>
+    <div class="dtitle" id="dash-title">Carlsberg 7x7 Fantasy</div>
     <div class="dsub" data-i18n="dash_subtitle">A Divizionas · 11 fantasy turų · 22 rungtynių dienos</div>
     <div class="dactions" id="dash-actions">
       <button class="btnp" onclick="goRound(computeCurrentRound())" data-i18n="btn_build_squad">Sudaryti komandą →</button>
@@ -1583,7 +1583,7 @@ const I18N={
     // beginner-first language throughout, same tone as the tut_ steps above.
     help_title:'Pagalba',
     help_s1_h:'Kas yra Fantasy 7x7?',
-    help_s1_p:'Olybar 7x7 Fantasy - žaidimas, kuriame sudarai savo svajonių komandą iš tikrų SFL 7x7 lygos žaidėjų. Kiekvieną turą jie žaidžia realias rungtynes, o tu už jų tikrus pasiekimus aikštėje (įvarčius, pergales, švarius vartus ir kt.) gauni fantasy taškus. Varžaisi su kitais savo diviziono vadybininkais dėl vietos lyderių lentelėje ir prizų.',
+    help_s1_p:'Carlsberg 7x7 Fantasy - žaidimas, kuriame sudarai savo svajonių komandą iš tikrų SFL 7x7 lygos žaidėjų. Kiekvieną turą jie žaidžia realias rungtynes, o tu už jų tikrus pasiekimus aikštėje (įvarčius, pergales, švarius vartus ir kt.) gauni fantasy taškus. Varžaisi su kitais savo diviziono vadybininkais dėl vietos lyderių lentelėje ir prizų.',
     help_s2_h:'Kaip sudaryti komandą?',
     help_s2_li1:'Turi 50M biudžetą - tiek gali išleisti visai komandai.',
     help_s2_li2:'Komandą sudaro 7 žaidėjai: 1 vartininkas, 2 gynėjai, 2 saugai, 2 puolėjai.',
@@ -1628,8 +1628,8 @@ const I18N={
     privacy_s1b_p:'Realių 7x7 lygos žaidėjų (kurie NĖRA šios programos registruoti vartotojai) vardai, pavardės, komandos, pozicijos ir įmušti įvarčiai imami iš viešai skelbiamų vilniausfutbolas.lt rezultatų ir sudėčių puslapių - tai jau vieša informacija, naudojama tik fantasy taškų skaičiavimui ir žaidėjų sąrašui sudaryti. Šių žaidėjų kontaktinių duomenų (el. pašto, telefono) neturime ir niekada jų nenaudojame jokiai rinkodarai ar komunikacijai su jais. Jei esi vienas iš tokių žaidėjų ir norėtum, kad tavo duomenys būtų pašalinti iš programos, susisiek el. paštu žemiau.',
     privacy_s2_h:'Kas mato tavo informaciją?',
     privacy_s2_p:'Fantasy komandos pavadinimas, mėgstama komanda, pasirinkti žaidėjai ir surinkti taškai matomi visiems to paties diviziono dalyviams - tai reikalinga lyderių lentelei, populiarumo statistikai ir komandų peržiūrai veikti. Tavo el. paštas niekada nesaugomas bendrai matomoje duomenų bazėje ir kitiems dalyviams nerodomas - jis žinomas tik tavo pačios prisijungimo sistemai.',
-    privacy_s2b_h:'„Olybar" pasiūlymai (neprivaloma)',
-    privacy_s2b_p:'Registruojantis gali papildomai, savo noru, pažymėti varnelę sutinkant gauti „Olybar" pasiūlymus ir naujienas el. paštu. Ši varnelė niekada nėra pažymėta iš anksto - pasirenki pats. Jei ją pažymi, tavo el. pašto adresas bus perduotas „Olybar" tam, kad jie galėtų tiesiogiai siųsti tau savo pasiūlymus/naujienlaiškius. Šis sutikimas visiškai atskiras nuo Privatumo politikos ir Taisyklių priėmimo - jo nepažymėjus, žaisti gali normaliai, o el. paštas niekam trečiajam neperduodamas. Sutikimą bet kada gali atšaukti atsidaręs savo profilį (profilio ikonėlė dešiniajame viršutiniame puslapio kampe).',
+    privacy_s2b_h:'„Carlsberg" pasiūlymai (neprivaloma)',
+    privacy_s2b_p:'Registruojantis gali papildomai, savo noru, pažymėti varnelę sutinkant gauti „Carlsberg" pasiūlymus ir naujienas el. paštu. Ši varnelė niekada nėra pažymėta iš anksto - pasirenki pats. Jei ją pažymi, tavo el. pašto adresas bus perduotas „Carlsberg" tam, kad jie galėtų tiesiogiai siųsti tau savo pasiūlymus/naujienlaiškius. Šis sutikimas visiškai atskiras nuo Privatumo politikos ir Taisyklių priėmimo - jo nepažymėjus, žaisti gali normaliai, o el. paštas niekam trečiajam neperduodamas. Sutikimą bet kada gali atšaukti atsidaręs savo profilį (profilio ikonėlė dešiniajame viršutiniame puslapio kampe).',
     privacy_s3_h:'Kur saugomi duomenys?',
     privacy_s3_p:'Visi duomenys saugomi „Google Firebase" (Firestore duomenų bazė ir Authentication) infrastruktūroje. Jokie tretieji analitikos ar reklamos įrankiai programoje nenaudojami.',
     privacy_s4_h:'Slapukai ir vietinė talpykla',
@@ -1780,7 +1780,7 @@ const I18N={
     tut_s4_body:"You can change your team as many times as you like before the deadline. Once it passes, your team locks in and you earn points for that gameweek. Next gameweek, you pick again.",
     help_title:'Help',
     help_s1_h:'What is Fantasy 7x7?',
-    help_s1_p:"Olybar 7x7 Fantasy is a game where you build your dream squad from real SFL 7x7 league players. Every gameweek they play real matches, and you earn fantasy points for what they actually do on the pitch (goals, wins, clean sheets, and more). You compete against other managers in your own division for a spot on the leaderboard and prizes.",
+    help_s1_p:"Carlsberg 7x7 Fantasy is a game where you build your dream squad from real SFL 7x7 league players. Every gameweek they play real matches, and you earn fantasy points for what they actually do on the pitch (goals, wins, clean sheets, and more). You compete against other managers in your own division for a spot on the leaderboard and prizes.",
     help_s2_h:'How do I build a squad?',
     help_s2_li1:"You have a 50M budget - that's the total you can spend on your whole squad.",
     help_s2_li2:'A squad has 7 players: 1 goalkeeper, 2 defenders, 2 midfielders, 2 forwards.',
@@ -1821,8 +1821,8 @@ const I18N={
     privacy_s1b_p:"Real 7x7 league players' (who are NOT registered users of this app) names, teams, positions and goals scored are sourced from the publicly published results and roster pages on vilniausfutbolas.lt - already public information, used only to compute fantasy points and build the player list. We don't hold any contact details (email, phone) for these players and never use this data for any marketing or communication with them. If you are one of these players and would like your data removed from the app, contact the email below.",
     privacy_s2_h:'Who can see your info?',
     privacy_s2_p:"Your fantasy team name, favorite club, picked players and points scored are visible to every other manager in your own division - this is what makes the leaderboard, ownership stats and squad-viewing pages work. Your email address is never stored in that shared database and is never shown to other managers - it's known only to your own sign-in.",
-    privacy_s2b_h:'Olybar offers (optional)',
-    privacy_s2b_p:"At registration you can optionally, and entirely of your own choosing, tick a box to receive Olybar offers and news by email. That box is never pre-checked - you choose it yourself. If you tick it, your email address is shared with Olybar so they can send you their own direct offers/newsletters. This consent is fully separate from accepting the Privacy Policy and Rules - leaving it unchecked, you can still play normally and your email is not shared with any third party. You can withdraw this consent at any time by opening your profile (the profile icon in the top-right corner of the page).",
+    privacy_s2b_h:'Carlsberg offers (optional)',
+    privacy_s2b_p:"At registration you can optionally, and entirely of your own choosing, tick a box to receive Carlsberg offers and news by email. That box is never pre-checked - you choose it yourself. If you tick it, your email address is shared with Carlsberg so they can send you their own direct offers/newsletters. This consent is fully separate from accepting the Privacy Policy and Rules - leaving it unchecked, you can still play normally and your email is not shared with any third party. You can withdraw this consent at any time by opening your profile (the profile icon in the top-right corner of the page).",
     privacy_s3_h:'Where is data stored?',
     privacy_s3_p:'All data is stored on Google Firebase (Firestore database and Authentication) infrastructure. No third-party analytics or advertising tools are used anywhere in the app.',
     privacy_s4_h:'Cookies and local storage',
@@ -2389,11 +2389,11 @@ function goHome(){
 const SPONSOR_LOGO='data:image/png;base64,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';
 function renderSponsorLogos(){
   const top=document.getElementById('spons-top');
-  if(top)top.innerHTML=`<img src="${SPONSOR_LOGO}" alt="olybar">`;
+  if(top)top.innerHTML=`<img src="${SPONSOR_LOGO}" alt="carlsberg">`;
   const hero=document.getElementById('dspons');
-  if(hero)hero.insertAdjacentHTML('beforeend',`<img src="${SPONSOR_LOGO}" alt="olybar">`);
+  if(hero)hero.insertAdjacentHTML('beforeend',`<img src="${SPONSOR_LOGO}" alt="carlsberg">`);
   const panel=document.getElementById('spons-panel-body');
-  if(panel)panel.innerHTML=`<div class="spons-panel-link"><img src="${SPONSOR_LOGO}" alt="olybar"><div class="spons-panel-txt">Sezono rėmėjas</div></div>`;
+  if(panel)panel.innerHTML=`<div class="spons-panel-link"><img src="${SPONSOR_LOGO}" alt="carlsberg"><div class="spons-panel-txt">Sezono rėmėjas</div></div>`;
 }
 renderSponsorLogos();
 
@@ -2978,7 +2978,7 @@ const STATE={
   // Recorded once at onboarding (finishOnboard()) and never re-prompted —
   // consentPolicyAt is required (blocks onboarding until checked);
   // consentMarketing is the separate, optional, unchecked-by-default
-  // Olybar-offers opt-in. Neither is ever pre-checked in the UI — see
+  // Carlsberg-offers opt-in. Neither is ever pre-checked in the UI — see
   // CLAUDE.md.
   consentPolicyAt:null,consentMarketing:false,consentMarketingAt:null,
 };
@@ -4509,7 +4509,7 @@ function renderSlot(pos,idx){
     // editable, it also toggles captain on tap — a clearer, single "C"
     // affordance instead of a separate button plus a redundant position
     // letter (position is already obvious from the pitch row). Once locked/
-    // historical, it's the same red "C" but inert (no tap handler) —
+    // historical, it's the same green "C" but inert (no tap handler) —
     // that round's captain is a fixed fact by then, not something to edit.
     const capToggle=isLocked()
       ? (cap?`<span class="captoggle on" style="cursor:default" title="${t('captain_label')}">C</span>`:'')
@@ -4524,7 +4524,7 @@ function renderSlot(pos,idx){
       const det=roundDetail[STATE.curRound]?.find(d=>d.id===p.id);
       const dpts=det?det.pts:0;
       // Star now marks THAT round's real Team of the Round, not captaincy
-      // (captaincy has its own red "C" badge on the avatar above).
+      // (captaincy has its own green "C" badge on the avatar above).
       const inXI=roundXIIds(STATE.curRound,STATE.DB,STATE.division).has(p.id);
       sp.textContent=inXI?`${dpts}pts ⭐`:`${dpts}pts`;sp.className=`sp${inXI?' c':''}${dpts<0?' neg':''}`;
       if(sfx)sfx.textContent='';
@@ -4843,7 +4843,7 @@ function renderHistory(){
       html+=`<div class="hcard-body">`;
       // That round's real Team-of-the-Round ids, computed once per round —
       // the star below marks membership in it, not captaincy (captaincy
-      // gets its own red "C" badge next to the name instead).
+      // gets its own green "C" badge next to the name instead).
       const xiIds=roundXIIds(i,STATE.DB,STATE.division);
       ['G','D','M','F'].forEach(pos=>(snap.slots[pos]||[]).forEach((p,idx)=>{
         if(!p)return;const isC=snap.captain?.pos===pos&&snap.captain?.idx===idx;
@@ -5671,7 +5671,7 @@ async function renderUserSquadViewer(u){
   const {roundDetail}=computeScoring({[USQ_ROUND]:snap},db,div);
   const detail=roundDetail[USQ_ROUND]||[];
   // That round's real Team-of-the-Round ids — the star below marks
-  // membership in it, not captaincy (captaincy gets its own red "C"
+  // membership in it, not captaincy (captaincy gets its own green "C"
   // badge on the avatar instead). Ownership pre-fetched directly (rather
   // than relying on roundXIIds()'s own fallback-then-re-render cache miss)
   // since this view is already async — no reason to show a since-
