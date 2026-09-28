@@ -10,16 +10,16 @@
 <style>
 :root{
   --bg:#faf9f7;--sur:#f2f0ec;--sur2:#eae7e1;--bor:#e6e2da;--bor2:#d4cfc3;
-  --or:#ee4035;--or2:#c6291d;--orlight:#f26b5e;--ordim:rgba(238,64,53,.1);--orbor:rgba(238,64,53,.35);
-  --or-grad:linear-gradient(135deg,#f26b5e 0%,#ee4035 55%,#c6291d 100%);
+  --or:#ef271a;--or2:#bd170a;--orlight:#f1584b;--ordim:rgba(239,39,26,.1);--orbor:rgba(239,39,26,.35);
+  --or-grad:linear-gradient(135deg,#f1584b 0%,#ef271a 55%,#bd170a 100%);
   --gr:#22c55e;--red:#ef4444;--gold:#d97706;--cap:#8b5cf6;--capbg:rgba(139,92,246,.08);
   --ink:#171512;--ink2:#3a3630;--mu:#78726a;--mu2:#a39c90;--tx:#222222;--tx2:#444444;
   --card:#fffcf5;
   --r-sm:10px;--r:16px;--r2:22px;--r3:28px;
   --sh-xs:0 1px 2px rgba(23,21,18,.05);
-  --sh:0 1px 2px rgba(23,21,18,.04),0 6px 20px -8px rgba(23,21,18,.12);
-  --sh-lg:0 8px 12px -4px rgba(23,21,18,.08),0 24px 48px -16px rgba(23,21,18,.18);
-  --sh-or:0 10px 24px -8px rgba(198,41,29,.4);
+  --sh:0 1px 2px rgba(23,21,18,.06),0 8px 24px -8px rgba(23,21,18,.16);
+  --sh-lg:0 10px 16px -4px rgba(23,21,18,.10),0 28px 56px -16px rgba(23,21,18,.22);
+  --sh-or:0 10px 24px -8px rgba(189,23,10,.4);
   --ease:cubic-bezier(.2,.8,.2,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -118,7 +118,7 @@ a{color:var(--or)}
 .form-input{width:100%;padding:11px 15px;border:1.5px solid var(--bor2);border-radius:11px;font-size:13.5px;color:var(--ink);background:var(--card);outline:none;transition:all .18s var(--ease)}
 .form-input:focus{border-color:var(--or);box-shadow:0 0 0 4px var(--ordim)}
 .form-btn{width:100%;padding:13px;background:var(--or-grad);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;transition:all .18s var(--ease);margin-top:4px;box-shadow:var(--sh-or);display:flex;align-items:center;justify-content:center;gap:9px}
-.form-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px -8px rgba(198,41,29,.48)}
+.form-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px -8px rgba(189,23,10,.48)}
 .form-btn:disabled{opacity:.65;cursor:default;transform:none;box-shadow:none}
 /* Inline button spinner — reuses #boot-gate's bootspin keyframe (defined
    further down with the rest of that overlay's CSS) so there's only one
@@ -160,7 +160,7 @@ a{color:var(--or)}
 
 /* DASHBOARD */
 .dash-hero{background:var(--or-grad);padding:40px 24px 32px;text-align:center;position:relative;overflow:hidden}
-.dash-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.18),transparent 45%),radial-gradient(circle at 85% 75%,rgba(255,255,255,.12),transparent 40%);pointer-events:none}
+.dash-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-100 -100 200 200'%3E%3Cpath transform='rotate(14)' d='M0,-86 L19.4,-26.7 L81.8,-26.6 L31.4,10.2 L50.5,69.6 L0,33 L-50.5,69.6 L-31.4,10.2 L-81.8,-26.6 L-19.4,-26.7 Z' fill='none' stroke='white' stroke-width='3' opacity='0.16'/%3E%3C/svg%3E") 90% -8%/260px 260px no-repeat,radial-gradient(circle at 20% 20%,rgba(255,255,255,.18),transparent 45%),radial-gradient(circle at 85% 75%,rgba(255,255,255,.12),transparent 40%);pointer-events:none}
 .dball{margin-bottom:14px;display:flex;justify-content:center;position:relative}
 .dball img{height:64px;width:auto;display:block;filter:drop-shadow(0 8px 16px rgba(0,0,0,.15))}
 .dtitle{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1.2px;margin-bottom:6px;position:relative}
@@ -288,7 +288,7 @@ a{color:var(--or)}
 .sc2{width:58px;height:58px;border-radius:50%;margin:0 auto 4px;border:2px dashed rgba(255,255,255,.45);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s var(--ease);position:relative;backdrop-filter:blur(2px)}
 .slot:hover .sc2{border-color:#fff;background:rgba(255,255,255,.28);transform:scale(1.07)}
 .slot.filled .sc2{border-style:solid;border-color:var(--or);background:var(--or-grad);box-shadow:0 4px 14px -2px rgba(0,0,0,.35)}
-.slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(238,64,53,.35),0 4px 14px -2px rgba(0,0,0,.35)}
+.slot.cap .sc2{border-color:#fff!important;box-shadow:0 0 0 3px var(--or),0 0 0 6px rgba(239,39,26,.35),0 4px 14px -2px rgba(0,0,0,.35)}
 .sn{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.92);line-height:1.25;max-width:74px;margin:0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Team of Season/Round's own name+star is often longer than a bare
    surname (disambiguating initial + the ⭐ suffix) — .lbwrap has plenty
@@ -306,7 +306,7 @@ a{color:var(--or)}
 .sfx{font-size:8.5px;color:rgba(255,255,255,.75);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
 .captoggle{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:600;color:rgba(255,255,255,.7);background:rgba(156,163,175,.55);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s var(--ease);z-index:6}
 .captoggle:hover{background:rgba(107,114,128,.8);color:#fff;transform:scale(1.15)}
-.captoggle.on{width:18px;height:18px;bottom:-3px;right:-3px;font-size:9.5px;font-weight:900;color:#fff;background:var(--or);border-color:#fff;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(238,64,53,.85)}
+.captoggle.on{width:18px;height:18px;bottom:-3px;right:-3px;font-size:9.5px;font-weight:900;color:#fff;background:var(--or);border-color:#fff;box-shadow:0 0 0 2px #fff,0 0 9px 2px rgba(239,39,26,.85)}
 .slot-badge{position:absolute;top:-2px;left:-2px;width:17px;height:17px;border-radius:50%;background:#fffcf5;border:2px solid #fffcf5;object-fit:contain;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .srm{position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;font-weight:900;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .slot.filled .srm{display:flex}
