@@ -4090,7 +4090,7 @@ function renderList(){
   }else if(sortMode==='mvp'){
     const mvp=computeSeasonMvpCounts();
     list.sort((a,b)=>(mvp[b.id]||0)-(mvp[a.id]||0)||b.price-a.price);
-    headlineFor=p=>`👑 ${mvp[p.id]||0}`;
+    headlineFor=p=>`👑&nbsp;${mvp[p.id]||0}`;
   }else if(sortMode==='pricechange'){
     // Biggest risers first, biggest fallers last — same latest-recalc delta
     // as priceChangeFor() everywhere else.
@@ -5780,7 +5780,7 @@ async function renderStats(){
       <td><div class="stats-teamname">${teamLogoImg(p.team,16,p.division)}<span>${p.team}</span></div></td>
       <td>${p.price.toFixed(1)}M</td>
       <td style="color:${priceChangeFor(p)>0?'var(--gr)':priceChangeFor(p)<0?'var(--red)':'inherit'}">${priceChangeFor(p)>0?'+':''}${priceChangeFor(p)}M</td>
-      <td>👑 ${mvp[p.id]||0}</td>
+      <td>👑&nbsp;${mvp[p.id]||0}</td>
       <td>${ownership[p.id]??0}%</td>
       <td style="color:${(form[p.id]??0)<0?'var(--red)':'inherit'}">${form[p.id]??0}</td>
       <td style="font-weight:800;color:${(totals[p.id]||0)<0?'var(--red)':'var(--or)'}">${totals[p.id]||0}</td>
