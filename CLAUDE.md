@@ -179,6 +179,22 @@ them as fixed unless the owner asks to change them, not as something to
   matches this app's existing pattern of explicit, reviewable admin
   actions (`saveM()` for match results) rather than a silent write.
 
+## Team/League of the Month — round-range mapping fixed by the league owner
+
+`MONTHS` in `sfl-fantasy-v2.html` maps fantasy round NUMBER (not calendar
+date) to a calendar month, since the real season goes live on winter
+Sundays starting 2026-12-06: rounds 1-4 (indices 0-3) → December, 5-9
+(indices 4-8) → January, 10-11 (indices 9-10) → February. This is keyed by
+round index specifically so it stays correct regardless of whatever
+literal dates a given `FR` array attaches to those rounds (including this
+season-3 test cycle's own dates, which don't start in December at all) —
+it's always "round N", never "whatever day round N happens to land on".
+`computeMonthPlayerPts()`/`computeMvpCounts()` (Fantasy rinktinė's Team of
+the Month, and the Leaders page's monthly board) sum across
+`monthRounds(key)` the same way `computeSeasonPlayerPts()` sums across
+`pastRoundIndices()`. Don't change the round ranges without the owner
+re-confirming — this is a business rule, not an inferred default.
+
 ## Technical results (walkover matches) — rule fixed by the league owner, do not alter
 
 SFL allows a match to not actually be played because one team is at fault

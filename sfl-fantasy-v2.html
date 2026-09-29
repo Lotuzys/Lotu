@@ -1183,9 +1183,11 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
       <div class="lb-filters">
         <div class="lb-mode">
           <button class="lb-mb on" id="lbm-season" onclick="setLBMode('season')" data-i18n="lb_mode_season">Sezono lyderiai</button>
+          <button class="lb-mb" id="lbm-month" onclick="setLBMode('month')" data-i18n="lb_mode_month">Mėnesio lyderiai</button>
           <button class="lb-mb" id="lbm-round" onclick="setLBMode('round')" data-i18n="lb_mode_round">Turo lyderiai</button>
         </div>
         <select class="lb-divsel" id="lb-divsel" onchange="setLBDivision(this.value)"></select>
+        <div class="rtabs" id="lb-months" style="display:none;margin-bottom:0"></div>
         <div class="rtabs" id="lb-rounds" style="display:none;margin-bottom:0"></div>
       </div>
       <div class="lb-prize" id="lb-prize" style="display:none"></div>
@@ -1214,9 +1216,11 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
     <div class="lb-filters">
       <div class="lb-mode">
         <button class="lb-mb on" id="tsm-season" onclick="setTSMode('season')" data-i18n="ts_mode_season">Sezono rinktinė</button>
+        <button class="lb-mb" id="tsm-month" onclick="setTSMode('month')" data-i18n="ts_mode_month">Mėnesio rinktinė</button>
         <button class="lb-mb" id="tsm-round" onclick="setTSMode('round')" data-i18n="ts_mode_round">Turo rinktinė</button>
       </div>
       <select class="lb-divsel" id="ts-divsel" onchange="setTSDivision(this.value)"></select>
+      <div class="rtabs" id="ts-months" style="display:none;margin-bottom:0"></div>
       <div class="rtabs" id="ts-rounds" style="display:none;margin-bottom:0"></div>
     </div>
     <div class="pw">
@@ -1246,6 +1250,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
         <th class="stats-sortable" onclick="setStatsSort('team')"><span data-i18n="th_team">Komanda</span><span class="stats-arrow" id="arr-team"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('price')"><span data-i18n="sort_price">Kaina</span><span class="stats-arrow" id="arr-price"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('pricechange')"><span data-i18n="sort_pricechange">Kainos pokytis</span><span class="stats-arrow" id="arr-pricechange"></span></th>
+        <th class="stats-sortable" onclick="setStatsSort('mvp')"><span data-i18n="sort_mvp">MVP nominacijos</span><span class="stats-arrow" id="arr-mvp"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('ownership')"><span data-i18n="sort_own">Populiarumas</span><span class="stats-arrow" id="arr-ownership"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('form')"><span data-i18n="stats_form">Forma</span><span class="stats-arrow" id="arr-form"></span></th>
         <th class="stats-sortable" onclick="setStatsSort('total')"><span data-i18n="sort_total">Taškai</span><span class="stats-arrow" id="arr-total"></span></th>
@@ -1533,7 +1538,7 @@ const LANG_KEY='sflLang';
 let LANG=localStorage.getItem(LANG_KEY)==='en'?'en':'lt';
 const I18N={
   lt:{
-    nav_dash:'Pagrindinis',nav_myteam:'Mano komanda',nav_history:'Istorija',nav_teamseason:'Sezono rinktinė',
+    nav_dash:'Pagrindinis',nav_myteam:'Mano komanda',nav_history:'Istorija',nav_teamseason:'Fantasy rinktinė',
     nav_stats:'Statistika',stats_form:'Forma',th_player:'Žaidėjas',
     nav_leaders:'Lyderiai',nav_standings:'Lentelė',pts_label:'Taškai',
     ptsWord:n=>ltForm(n,'taškas','taškai','taškų'),
@@ -1670,7 +1675,7 @@ const I18N={
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
     prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
     group_a_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupė`,
-    sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Populiarumas',sort_goals:'Įmušti įvarčiai',sort_pricechange:'Kainos pokytis',
+    sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Populiarumas',sort_goals:'Įmušti įvarčiai',sort_mvp:'MVP nominacijos',sort_pricechange:'Kainos pokytis',
     msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota - gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
     msg_open_badge:'Atviras',
     msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
@@ -1704,9 +1709,10 @@ const I18N={
     th_team:'Komanda',th_played:'R',th_wins:'P',th_draws:'L',th_losses:'Pr',th_goalsfor:'Įm',th_goalsagainst:'Pr',th_points:'Tšk',
     th_played_full:'Rungtynės',th_wins_full:'Pergalės',th_draws_full:'Lygiosios',th_losses_full:'Pralaimėjimai',
     th_goalsfor_full:'Įmušti',th_goalsagainst_full:'Praleisti',th_points_full:'Taškai',
-    leaders_title:'Fantasy lyderiai',lb_mode_season:'Sezono lyderiai',lb_mode_round:'Turo lyderiai',
+    leaders_title:'Fantasy lyderiai',lb_mode_season:'Sezono lyderiai',lb_mode_round:'Turo lyderiai',lb_mode_month:'Mėnesio lyderiai',
     top_scorers_title:'⚽ Rezultatyviausi žaidėjai',lbsc_sub_count:n=>`po ${n} turų`,no_goals_yet:'Dar nėra įmuštų įvarčių',
-    ts_mode_season:'Sezono rinktinė',ts_mode_round:'Turo rinktinė',
+    ts_mode_season:'Sezono rinktinė',ts_mode_round:'Turo rinktinė',ts_mode_month:'Mėnesio rinktinė',
+    month_december:'Gruodis',month_january:'Sausis',month_february:'Vasaris',
     pick_captain_btn:'Rinktis Kapitoną',stat_goals:'Įvarčiai',stat_price:'Kaina',hist_link:'📊 Turų taškų istorija',btn_add:'Pridėti',
     prof_teamname:'Fantasy komanda',prof_favteam:'Mėgstama komanda',
     prof_totalpts:n=>`Iš viso ${ltForm(n,'taškas','taškai','taškų')}`,
@@ -1736,7 +1742,7 @@ const I18N={
     lb_fanleague_title:team=>`${team} lyga`,
   },
   en:{
-    nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Team of the Season',
+    nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Fantasy Squad',
     nav_stats:'Statistics',stats_form:'Form',th_player:'Player',
     nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',
     ptsWord:n=>n===1?'point':'points',
@@ -1864,7 +1870,7 @@ const I18N={
     prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
     prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',
     group_a_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()}`,
-    sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',sort_pricechange:'Price change',
+    sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',sort_mvp:'MVP nominations',sort_pricechange:'Price change',
     msg_saved:(r,d)=>`<strong>${r}</strong> team saved - change it as many times as you like until <strong>${d}</strong>.`,
     msg_open_badge:'Open',
     msg_open_sub:(d1,d2,dl)=>`${d1} and ${d2} · deadline ${dl}`,
@@ -1898,9 +1904,10 @@ const I18N={
     th_team:'Team',th_played:'P',th_wins:'W',th_draws:'D',th_losses:'L',th_goalsfor:'F',th_goalsagainst:'A',th_points:'Pts',
     th_played_full:'Played',th_wins_full:'Wins',th_draws_full:'Draws',th_losses_full:'Losses',
     th_goalsfor_full:'Goals for',th_goalsagainst_full:'Goals against',th_points_full:'Points',
-    leaders_title:'Fantasy Leaders',lb_mode_season:'Season Leaders',lb_mode_round:'Gameweek Leaders',
+    leaders_title:'Fantasy Leaders',lb_mode_season:'Season Leaders',lb_mode_round:'Gameweek Leaders',lb_mode_month:'Monthly Leaders',
     top_scorers_title:'⚽ Top Scorers',lbsc_sub_count:n=>`after ${n} gameweeks`,no_goals_yet:'No goals scored yet',
-    ts_mode_season:'Team of the Season',ts_mode_round:'Team of the Gameweek',
+    ts_mode_season:'Team of the Season',ts_mode_round:'Team of the Gameweek',ts_mode_month:'Team of the Month',
+    month_december:'December',month_january:'January',month_february:'February',
     pick_captain_btn:'Make Captain',stat_goals:'Goals',stat_price:'Price',hist_link:'📊 Gameweek Points History',btn_add:'Add',
     prof_teamname:'Fantasy Team',prof_favteam:'Favorite Team',prof_totalpts:'Total Points',prof_roundsplayed:'Gameweeks Played',
     btn_close:'Close',btn_logout:'Log Out',btn_ok_thanks:'OK, thanks →',
@@ -4035,7 +4042,7 @@ function renderSortOptions(){
   const roundDefault=STATE.curRound===0?'price':'total';
   const cur=roundChanged?roundDefault:(sel.value||roundDefault);
   const lastOpt=lastRoundWithData()!==null?`<option value="last">${t('sort_last')}</option>`:'';
-  sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>${lastOpt}<option value="ownership">${t('sort_own')}</option><option value="goals">${t('sort_goals')}</option><option value="pricechange">${t('sort_pricechange')}</option>`;
+  sel.innerHTML=`<option value="total">${t('sort_total')}</option><option value="price">${t('sort_price')}</option>${lastOpt}<option value="ownership">${t('sort_own')}</option><option value="goals">${t('sort_goals')}</option><option value="mvp">${t('sort_mvp')}</option><option value="pricechange">${t('sort_pricechange')}</option>`;
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:roundDefault;
 }
 
@@ -4080,6 +4087,10 @@ function renderList(){
     // — that field is last season's tally, used only for initial pricing.
     list.sort((a,b)=>currentSeasonGoals(b.id)-currentSeasonGoals(a.id)||b.price-a.price);
     headlineFor=p=>`⚽ ${currentSeasonGoals(p.id)}`;
+  }else if(sortMode==='mvp'){
+    const mvp=computeSeasonMvpCounts();
+    list.sort((a,b)=>(mvp[b.id]||0)-(mvp[a.id]||0)||b.price-a.price);
+    headlineFor=p=>`👑 ${mvp[p.id]||0}`;
   }else if(sortMode==='pricechange'){
     // Biggest risers first, biggest fallers last — same latest-recalc delta
     // as priceChangeFor() everywhere else.
@@ -4993,6 +5004,22 @@ async function getDivisionDB(div){
 // isn't offered as a tab at all rather than showing an empty/zero table.
 function pastRoundIndices(){return FR.map((_,i)=>i).filter(i=>isPastDeadline(i));}
 
+// ── Team/League of the Month ────────────────────────────────────────────
+// Fixed round-range mapping, owner-set: once the real season goes live
+// (winter Sundays starting Dec 6), rounds 1-4 (indices 0-3) fall in
+// December, 5-9 (indices 4-8) in January, 10-11 (indices 9-10) in
+// February. Keyed by ROUND NUMBER, not calendar date, so it stays correct
+// regardless of whichever literal dates a given FR array happens to attach
+// to those rounds (this season-3 test cycle's own dates included) — it's
+// always "round N", never "whatever day round N happens to land on".
+const MONTHS=[
+  {key:'december',rounds:[0,1,2,3]},
+  {key:'january',rounds:[4,5,6,7,8]},
+  {key:'february',rounds:[9,10]},
+];
+function monthRounds(key){return (MONTHS.find(m=>m.key===key)||{}).rounds||[];}
+function monthForRound(ri){const m=MONTHS.find(mo=>mo.rounds.includes(ri));return m?m.key:null;}
+
 // ═══════════════════════════════════════════════
 // TEAM OF THE SEASON — the best real 1-2-2-2 XI by actual match points,
 // independent of anyone's fantasy picks. Same per-player scoring rules as
@@ -5074,6 +5101,38 @@ function computeSeasonPlayerPts(db,div){
   const totals={};const players=PLAYERS.filter(p=>p.division===div);
   players.forEach(p=>totals[p.id]=0);
   pastRoundIndices().forEach(ri=>{
+    const rp=computeAllPlayerRoundPts(ri,db,div);
+    players.forEach(p=>totals[p.id]+=rp[p.id]);
+  });
+  return totals;
+}
+// MVP (Best Match Player) nomination count per player, summed over an
+// arbitrary set of rounds — reuses computeMatchMotm()'s own per-round
+// lookup (the same one computeAllPlayerRoundPts() folds into its points
+// total) instead of duplicating how a match's motm field is read. Season
+// total and Team of the Month both need this, just with a different round
+// list, so it takes rounds explicitly rather than always assuming the
+// whole season.
+function computeMvpCounts(rounds,db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  const counts={};
+  rounds.forEach(ri=>{
+    const motmMap=computeMatchMotm(ri,db,div);
+    Object.values(motmMap).forEach(dayMap=>Object.values(dayMap).forEach(id=>{if(id)counts[id]=(counts[id]||0)+1;}));
+  });
+  return counts;
+}
+function computeSeasonMvpCounts(db,div){return computeMvpCounts(pastRoundIndices(),db,div);}
+// Team of the Month's points map — same aggregation pattern as
+// computeSeasonPlayerPts(), just over that month's fixed round list
+// (monthRounds()) instead of every past round. computeAllPlayerRoundPts()
+// already returns all-zero for a round with no result in yet, so a
+// not-yet-played round in the list costs nothing extra to include.
+function computeMonthPlayerPts(monthKey,db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  const totals={};const players=PLAYERS.filter(p=>p.division===div);
+  players.forEach(p=>totals[p.id]=0);
+  monthRounds(monthKey).forEach(ri=>{
     const rp=computeAllPlayerRoundPts(ri,db,div);
     players.forEach(p=>totals[p.id]+=rp[p.id]);
   });
@@ -5483,16 +5542,28 @@ async function openTSPlayerModal(pos,playerId){
 
 let TS_MODE='season';
 let TS_ROUND=null;
+let TS_MONTH=null;
 function setTSMode(mode){
   TS_MODE=mode;
   if(mode==='round'&&TS_ROUND===null){
     const past=pastRoundIndices();
     TS_ROUND=past.length?past[past.length-1]:null;
   }
+  // Defaults to whichever month the most recent past round falls in — same
+  // "most recent" idea as round mode's own default, just at month
+  // granularity — falling back to the season's first month before any
+  // round has finished yet.
+  if(mode==='month'&&TS_MONTH===null){
+    const past=pastRoundIndices();
+    TS_MONTH=past.length?monthForRound(past[past.length-1]):MONTHS[0].key;
+  }
   document.getElementById('tsm-season').classList.toggle('on',mode==='season');
   document.getElementById('tsm-round').classList.toggle('on',mode==='round');
+  document.getElementById('tsm-month').classList.toggle('on',mode==='month');
   document.getElementById('ts-rounds').style.display=mode==='round'?'flex':'none';
+  document.getElementById('ts-months').style.display=mode==='month'?'flex':'none';
   if(mode==='round')renderTSRoundTabs();
+  if(mode==='month')renderTSMonthTabs();
   renderTeamOfSeason();
 }
 function renderTSRoundTabs(){
@@ -5500,6 +5571,11 @@ function renderTSRoundTabs(){
     `<button class="rtb ${i===TS_ROUND?'on':''}" onclick="setTSRound(${i})">${t('round_tab',i+1)}</button>`).join('');
 }
 function setTSRound(i){TS_ROUND=i;renderTSRoundTabs();renderTeamOfSeason();}
+function renderTSMonthTabs(){
+  document.getElementById('ts-months').innerHTML=MONTHS.map(m=>
+    `<button class="rtb ${m.key===TS_MONTH?'on':''}" onclick="setTSMonth('${m.key}')">${t('month_'+m.key)}</button>`).join('');
+}
+function setTSMonth(key){TS_MONTH=key;renderTSMonthTabs();renderTeamOfSeason();}
 
 // Same own-division-default / read-only-peek-at-others pattern as the
 // leaderboard's LB_DIVISION — see getDivisionDB().
@@ -5519,29 +5595,33 @@ async function renderTeamOfSeason(){
     return;
   }
   const tsDB=await getDivisionDB(TS_DIVISION);
-  const hasData=TS_MODE==='round'?!!tsDB[TS_ROUND]:pastRoundIndices().some(ri=>!!tsDB[ri]);
-  // Before round 1 has finished, season mode has nothing to rank players
-  // by yet either — same single message as round mode above, instead of
-  // 7 individually-empty position slots.
-  if(TS_MODE==='season'&&!hasData){
+  const hasData=TS_MODE==='round'?!!tsDB[TS_ROUND]:TS_MODE==='month'?monthRounds(TS_MONTH).some(ri=>!!tsDB[ri]):pastRoundIndices().some(ri=>!!tsDB[ri]);
+  // Before round 1 has finished, season/month mode has nothing to rank
+  // players by yet either — same single message as round mode above,
+  // instead of 7 individually-empty position slots.
+  if((TS_MODE==='season'||TS_MODE==='month')&&!hasData){
     sub.textContent='';
     pitch.innerHTML=`<div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,.75);font-size:13px">${t('no_finished_rounds')}</div>`;
     return;
   }
-  sub.textContent=TS_MODE==='round'?roundName(TS_ROUND):t('whole_season');
-  const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND,tsDB,TS_DIVISION):computeSeasonPlayerPts(tsDB,TS_DIVISION);
+  sub.textContent=TS_MODE==='round'?roundName(TS_ROUND):TS_MODE==='month'?t('month_'+TS_MONTH):t('whole_season');
+  const ptsMap=TS_MODE==='round'?computeAllPlayerRoundPts(TS_ROUND,tsDB,TS_DIVISION):TS_MODE==='month'?computeMonthPlayerPts(TS_MONTH,tsDB,TS_DIVISION):computeSeasonPlayerPts(tsDB,TS_DIVISION);
   // Ties on equal points — the owner's rule, with a DIFFERENT ownership
   // priority per mode (same as roundXIIds()/seasonXIIds() elsewhere): round
   // mode breaks on that round's own ownership first, then overall
   // (season-wide, the same figure Statistika shows); season mode breaks on
-  // overall ownership first, then the most recent round with a result in.
-  // Both maps + the standings table are awaited directly here (rather than
-  // the sync caches seasonXIIds()/roundXIIds() fall back to elsewhere)
-  // since this page IS the XI itself — no reason to show a since-corrected
-  // tie-break pick.
+  // overall ownership first, then the most recent round with a result in;
+  // month mode is season mode's same priority, just narrowed to the most
+  // recent round WITHIN that month for the second tiebreak. Both maps + the
+  // standings table are awaited directly here (rather than the sync caches
+  // seasonXIIds()/roundXIIds() fall back to elsewhere) since this page IS
+  // the XI itself — no reason to show a since-corrected tie-break pick.
   let ownMaps;
   if(TS_MODE==='round'){
     ownMaps=[await ensureRoundOwnership(TS_DIVISION,TS_ROUND),await ensureSeasonOwnership(TS_DIVISION)];
+  }else if(TS_MODE==='month'){
+    const lastMonthRound=[...monthRounds(TS_MONTH)].reverse().find(ri=>!!tsDB[ri]);
+    ownMaps=[await ensureSeasonOwnership(TS_DIVISION),lastMonthRound!==undefined?await ensureRoundOwnership(TS_DIVISION,lastMonthRound):undefined];
   }else{
     const lastRound=lastRoundWithDataFor(tsDB);
     ownMaps=[await ensureSeasonOwnership(TS_DIVISION),lastRound!==null?await ensureRoundOwnership(TS_DIVISION,lastRound):undefined];
@@ -5560,16 +5640,24 @@ async function renderTeamOfSeason(){
   `;
 }
 
+let LB_MONTH=null;
 function setLBMode(mode){
   LB_MODE=mode;
   if(mode==='round'&&LB_ROUND===null){
     const past=pastRoundIndices();
     LB_ROUND=past.length?past[past.length-1]:null;
   }
+  if(mode==='month'&&LB_MONTH===null){
+    const past=pastRoundIndices();
+    LB_MONTH=past.length?monthForRound(past[past.length-1]):MONTHS[0].key;
+  }
   document.getElementById('lbm-season').classList.toggle('on',mode==='season');
   document.getElementById('lbm-round').classList.toggle('on',mode==='round');
+  document.getElementById('lbm-month').classList.toggle('on',mode==='month');
   document.getElementById('lb-rounds').style.display=mode==='round'?'flex':'none';
+  document.getElementById('lb-months').style.display=mode==='month'?'flex':'none';
   if(mode==='round')renderLBRoundTabs();
+  if(mode==='month')renderLBMonthTabs();
   renderLB();
 }
 function renderLBRoundTabs(){
@@ -5577,6 +5665,11 @@ function renderLBRoundTabs(){
     `<button class="rtb ${i===LB_ROUND?'on':''}" onclick="setLBRound(${i})">${t('round_tab',i+1)}</button>`).join('');
 }
 function setLBRound(i){LB_ROUND=i;renderLBRoundTabs();renderLB();}
+function renderLBMonthTabs(){
+  document.getElementById('lb-months').innerHTML=MONTHS.map(m=>
+    `<button class="rtb ${m.key===LB_MONTH?'on':''}" onclick="setLBMonth('${m.key}')">${t('month_'+m.key)}</button>`).join('');
+}
+function setLBMonth(key){LB_MONTH=key;renderLBMonthTabs();renderLB();}
 
 // Real top-10 scorers panel — lives on the Standings ("Lentelė") tab,
 // called from renderStFull(). Independent of fantasy points/anyone's picks.
@@ -5614,7 +5707,7 @@ function setStatsSort(key){
   renderStats();
 }
 function updateStatsArrows(){
-  ['name','team','price','pricechange','ownership','form','total'].forEach(k=>{
+  ['name','team','price','pricechange','mvp','ownership','form','total'].forEach(k=>{
     const el=document.getElementById('arr-'+k);
     if(el)el.textContent=STATS_SORT===k?(STATS_DIR==='desc'?'▼':'▲'):'';
   });
@@ -5646,6 +5739,7 @@ async function renderStats(){
   const db=await getDivisionDB(div);
   const totals=computeSeasonPlayerPts(db,div);
   const form=computeFormPts(db,div,2);
+  const mvp=computeSeasonMvpCounts(db,div);
   const ownership=await computeOwnershipForDivision(div);
   const teamsMap=await ensureDivisionTeams(div);
   let players=PLAYERS.filter(p=>p.division===div&&p.active!==false);
@@ -5658,6 +5752,7 @@ async function renderStats(){
     total:p=>totals[p.id]||0,
     price:p=>p.price,
     pricechange:p=>priceChangeFor(p),
+    mvp:p=>mvp[p.id]||0,
     ownership:p=>ownership[p.id]||0,
     form:p=>form[p.id]||0,
   }[STATS_SORT]||(p=>totals[p.id]||0);
@@ -5685,10 +5780,11 @@ async function renderStats(){
       <td><div class="stats-teamname">${teamLogoImg(p.team,16,p.division)}<span>${p.team}</span></div></td>
       <td>${p.price.toFixed(1)}M</td>
       <td style="color:${priceChangeFor(p)>0?'var(--gr)':priceChangeFor(p)<0?'var(--red)':'inherit'}">${priceChangeFor(p)>0?'+':''}${priceChangeFor(p)}M</td>
+      <td>👑 ${mvp[p.id]||0}</td>
       <td>${ownership[p.id]??0}%</td>
       <td style="color:${(form[p.id]??0)<0?'var(--red)':'inherit'}">${form[p.id]??0}</td>
       <td style="font-weight:800;color:${(totals[p.id]||0)<0?'var(--red)':'var(--or)'}">${totals[p.id]||0}</td>
-    </tr>`).join('')||`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--mu)">${t('not_found')}</td></tr>`;
+    </tr>`).join('')||`<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--mu)">${t('not_found')}</td></tr>`;
 }
 
 // Clicking a Statistika row — the exact same 4 figures that row already
@@ -5743,6 +5839,26 @@ async function renderLB(){
     if(entries.length&&entries[0].pts>0){
       prizeEl.style.display='flex';
       prizeEl.innerHTML=`<span style="font-size:20px">🏆</span><span>${t('lb_round_winner',escHtml(entries[0].teamName),roundName(ri))}</span>`;
+    }else{
+      prizeEl.style.display='none';
+    }
+  }else if(LB_MODE==='month'){
+    const rounds=monthRounds(LB_MONTH);
+    entries=allUsers.map(u=>{
+      const {roundPts}=computeScoring(u.mySquads||{},lbDB,LB_DIVISION);
+      return {
+        uid:u.id,
+        pts:rounds.reduce((sum,ri)=>sum+(roundPts[ri]||0),0),
+        rounds:rounds.filter(ri=>u.mySquads&&u.mySquads[ri]).length,
+        favTeam:u.favTeam||'',
+        teamName:u.fantasyTeamName||t('fallback_player')+"'s FC",
+        isMe:CURRENT_USER&&u.id===CURRENT_USER.uid,
+      };
+    }).sort((a,b)=>b.pts-a.pts);
+    document.getElementById('lb-sub').textContent=t('month_'+LB_MONTH);
+    if(entries.length&&entries[0].pts>0){
+      prizeEl.style.display='flex';
+      prizeEl.innerHTML=`<span style="font-size:20px">🏆</span><span>${t('lb_round_winner',escHtml(entries[0].teamName),t('month_'+LB_MONTH))}</span>`;
     }else{
       prizeEl.style.display='none';
     }
@@ -5813,6 +5929,13 @@ async function renderLBFanLeague(){
       return {uid:u.id,pts:roundPts[ri]||0,teamName:u.fantasyTeamName||t('fallback_player')+"'s FC",isMe:CURRENT_USER&&u.id===CURRENT_USER.uid};
     }).sort((a,b)=>b.pts-a.pts);
     document.getElementById('lb-fanleague-sub').textContent=roundName(ri);
+  }else if(LB_MODE==='month'){
+    const rounds=monthRounds(LB_MONTH);
+    entries=fans.map(u=>{
+      const {roundPts}=computeScoring(u.mySquads||{},fanDB,fanDiv);
+      return {uid:u.id,pts:rounds.reduce((sum,ri)=>sum+(roundPts[ri]||0),0),rounds:rounds.filter(ri=>u.mySquads&&u.mySquads[ri]).length,teamName:u.fantasyTeamName||t('fallback_player')+"'s FC",isMe:CURRENT_USER&&u.id===CURRENT_USER.uid};
+    }).sort((a,b)=>b.pts-a.pts);
+    document.getElementById('lb-fanleague-sub').textContent=t('month_'+LB_MONTH);
   }else{
     entries=fans.map(u=>{
       const {totalPts,roundsPlayed}=computeScoring(u.mySquads||{},fanDB,fanDiv);
