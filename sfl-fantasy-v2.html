@@ -5017,6 +5017,23 @@ function computeAllPlayerRoundPts(ri,db,div){
   });
   return pts;
 }
+// Per-player goal count for ONE round (both matchdays summed) — the input
+// the position-specific price-rise bonuses below need (calcPriceRise()'s
+// GK/DF/MF/FW goal-count tiers). A technical result (walkover) credits no
+// individual goals — same skip computeAllPlayerRoundPts() itself applies —
+// since none of them genuinely happened.
+function computeRoundGoalCounts(ri,db,div){
+  db=db||STATE.DB;div=div||STATE.division;
+  const goals={};
+  const r=(DIVISIONS[div]||DIVISIONS.A).fr[ri];const round=db[ri];
+  if(!r||!round)return goals;
+  r.days.forEach((day,di)=>day.m.forEach((m,mi)=>{
+    const saved=round?.[di]?.[mi];if(!saved)return;
+    if(isTechResult(saved))return;
+    saved.scorers.forEach(sc=>{goals[sc.pid]=(goals[sc.pid]||0)+sc.cnt;});
+  }));
+  return goals;
+}
 function computeSeasonPlayerPts(db,div){
   db=db||STATE.DB;div=div||STATE.division;
   const totals={};const players=PLAYERS.filter(p=>p.division===div);
@@ -5138,12 +5155,31 @@ async function computeOwnershipMapForRound(div,round){
 // AUTOMATIC PRICE UPDATES — admin-triggered, once a round's results are
 // fully entered (see recalcPricesForRound()). Rules fixed by the league
 // owner:
-//   RISE — both can apply, summed: ownership 30-49.99% → +0.5M, 50%+ →
-//   +1M; round points 15-24 → +0.5M, 25-34 → +1M, 35+ → +1.5M.
+//   RISE — round points 15-24 → +0.5M, 25+ → +1M. If (and ONLY if) that
+//   points tier triggered at all, ownership >25% adds a further +0.5M on
+//   top — unlike FALL below, this ownership bonus is GATED by the points
+//   tier, not an independent additive source of its own.
+//   Also 4 independent, position-specific goal-count bonuses, each
+//   +0.5M, that apply regardless of points/ownership (a player who
+//   scored a hat-trick in a 2-point loss still gets theirs): GK 1+ goal
+//   in the round (across either of its 2 matchdays), DF 2+, MF 4+, FW 6+.
+//   These stack with the points/ownership rise above and with each other
+//   in the sense that a player only ever has ONE position so only ONE of
+//   the 4 can ever apply to them, but nothing stops it applying the same
+//   round as a points/ownership rise.
+//   RISE CEILING: capped at ORIGINAL_PRICE+PRICE_RISE_CAP, where
+//   ORIGINAL_PRICE is the player's frozen first-seen price
+//   (calcPrice()/calcPriceFor() from their static goals/pos/team — never
+//   `price` itself, which already moved). Once a player's price would
+//   exceed that ceiling, the excess rise is simply not applied (price
+//   clamps to the ceiling) — they can still fall below it later if a
+//   fall trigger applies.
 //   FALL — one tier per ownership bracket, the stricter points cutoff
-//   always wins over the milder one (never both): ownership 20%+ and
-//   points <5 → -1M, else points <10 → -0.5M; ownership 5-19.99% and
-//   points <1 → -1M, else points <5 → -0.5M. Below 5% ownership: no fall.
+//   always wins over the milder one (never both): ownership 25%+ and
+//   round points <=4 → -1M, else points 5-8 → -0.5M; ownership 10-24.99%
+//   and points <=0 → -1M, else points 1-4 → -0.5M. Below 10% ownership:
+//   no fall. GOALKEEPERS ARE EXEMPT FROM FALL ENTIRELY — never lose price
+//   through this mechanism regardless of ownership/points.
 //   RISE and FALL are independent of each other and both apply the same
 //   round if triggered (e.g. a widely-owned player having a bad round
 //   nets a rise from ownership against a fall from underperforming) —
@@ -5151,13 +5187,19 @@ async function computeOwnershipMapForRound(div,round){
 //   Floor: price never drops below PRICE_FLOOR regardless of the total.
 // ═══════════════════════════════════════════════
 const PRICE_FLOOR=3;
-function priceDeltaFor(ownershipPct,roundPts){
-  const ownRise=ownershipPct>=50?1:ownershipPct>=30?0.5:0;
-  const ptsRise=roundPts>=35?1.5:roundPts>=25?1:roundPts>=15?0.5:0;
-  let fall=0;
-  if(ownershipPct>=20)fall=roundPts<5?1:roundPts<10?0.5:0;
-  else if(ownershipPct>=5)fall=roundPts<1?1:roundPts<5?0.5:0;
-  return ownRise+ptsRise-fall;
+const PRICE_RISE_CAP=5;
+const PRICE_RISE_GOALS={G:1,D:2,M:4,F:6};
+function priceRiseFor(ownershipPct,roundPts,pos,roundGoals){
+  const ptsRise=roundPts>=25?1:roundPts>=15?0.5:0;
+  const ownBonus=(ptsRise>0&&ownershipPct>25)?0.5:0;
+  const goalBonus=roundGoals>=PRICE_RISE_GOALS[pos]?0.5:0;
+  return ptsRise+ownBonus+goalBonus;
+}
+function priceFallFor(ownershipPct,roundPts,pos){
+  if(pos==='G')return 0;
+  if(ownershipPct>=25)return roundPts<=4?1:(roundPts<=8?0.5:0);
+  if(ownershipPct>=10)return roundPts<=0?1:(roundPts<=4?0.5:0);
+  return 0;
 }
 // True only once every match in the round has a saved result — recalculating
 // against a partially-entered round would silently treat every not-yet-
@@ -5183,9 +5225,11 @@ async function recalcPricesForRound(div,round){
     return;
   }
   if(!confirm(`Perskaičiuoti ${div} diviziono žaidėjų kainas pagal „${roundLbl}“ rezultatus?`))return;
-  const [ownMap,ptsMap,snap]=await Promise.all([
+  const hist=(DIVISIONS[div]||DIVISIONS.A).hist;
+  const [ownMap,ptsMap,goalsMap,snap]=await Promise.all([
     computeOwnershipMapForRound(div,round),
     Promise.resolve(computeAllPlayerRoundPts(round,STATE.DB,div)),
+    Promise.resolve(computeRoundGoalCounts(round,STATE.DB,div)),
     db.collection('players').where('division','==',div).get(),
   ]);
   const batch=db.batch();
@@ -5194,8 +5238,20 @@ async function recalcPricesForRound(div,round){
     const p=docSnap.data();
     if(!p.id)return;
     const base=(p.priceBase&&p.priceBase[round]!==undefined)?p.priceBase[round]:p.price;
-    const delta=priceDeltaFor(ownMap[p.id]||0,ptsMap[p.id]||0);
-    const newPrice=Math.max(PRICE_FLOOR,Math.round((base+delta)*2)/2);
+    const own=ownMap[p.id]||0,pts=ptsMap[p.id]||0,goals=goalsMap[p.id]||0;
+    const rise=priceRiseFor(own,pts,p.pos,goals);
+    const fall=priceFallFor(own,pts,p.pos);
+    // calcPriceFor() from the player's static goals/pos/team, NOT p.price
+    // itself, is the player's original/first-seen price — the frozen
+    // baseline PRICE_RISE_CAP is measured from (see the rules comment
+    // above). p.pos/p.team could in principle have drifted from what they
+    // were at first-seen (a roster resync can update them) — deliberately
+    // still using their CURRENT pos/team here to match calcPrice()'s own
+    // "recompute from today's static fields" contract, same as the static
+    // fallback list does at boot.
+    const ceiling=calcPriceFor(p.goals,p.pos,p.team,hist)+PRICE_RISE_CAP;
+    const rawPrice=Math.round((base+rise-fall)*2)/2;
+    const newPrice=Math.max(PRICE_FLOOR,Math.min(rawPrice,ceiling));
     if(newPrice>p.price)up++;else if(newPrice<p.price)down++;else same++;
     batch.update(docSnap.ref,{price:newPrice,[`priceBase.${round}`]:base,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
   });

@@ -102,14 +102,36 @@ round points. These are business rules the owner set explicitly — treat
 them as fixed unless the owner asks to change them, not as something to
 "improve":
 
-- **Rise** — both can apply, summed onto the price: ownership 30-49.99% →
-  +0.5M, 50%+ → +1M; round points 15-24 → +0.5M, 25-34 → +1M, 35+ →
-  +1.5M.
+- **Rise — points tier**: round points 15-24 → +0.5M, 25+ → +1M.
+- **Rise — ownership bonus, GATED by the points tier** (not an
+  independent additive source the way it used to be): only if the points
+  tier above triggered at all (points >=15), ownership >25% adds a
+  further +0.5M on top.
+- **Rise — 4 independent position-specific goal-count bonuses**, each
+  +0.5M, applying regardless of points/ownership (computed from
+  `computeRoundGoalCounts(round,STATE.DB,div)`, that player's own goals
+  summed across both of the round's matchdays — excludes a technical
+  result's matchday, same as `computeAllPlayerRoundPts()`): goalkeeper
+  1+ goal in the round → +0.5M; defender 2+ → +0.5M; midfielder 4+ →
+  +0.5M; forward 6+ → +0.5M. A player only has one position, so only one
+  of these four ever applies to them, but it stacks with the points/
+  ownership rise above.
+- **Rise ceiling**: capped at that player's ORIGINAL (frozen, first-seen)
+  price + `PRICE_RISE_CAP` (5.0M) — recomputed fresh via
+  `calcPrice()`/`calcPriceFor()` from their static `goals`/`pos`/`team`,
+  never read from `price` itself (which has already moved). Once a
+  player's price would cross that ceiling, the excess rise for that round
+  is simply not applied — price clamps to the ceiling, not summed past
+  it — but they remain fully eligible to fall below it later if a fall
+  trigger applies.
 - **Fall** — one tier per ownership bracket; the stricter points cutoff
   always wins over the milder one (never both, never stacked): ownership
-  20%+ and points <5 → -1M, else points <10 → -0.5M; ownership 5-19.99%
-  and points <1 → -1M, else points <5 → -0.5M. Below 5% ownership: no
-  fall regardless of points.
+  25%+ and round points <=4 → -1M, else points 5-8 → -0.5M; ownership
+  10-24.99% and points <=0 → -1M, else points 1-4 → -0.5M. Below 10%
+  ownership: no fall regardless of points.
+- **Fall — goalkeepers are exempt entirely.** `priceFallFor()` returns 0
+  unconditionally for `pos==='G'` — a goalkeeper's price can only ever
+  rise or stay flat through this mechanism, never fall.
 - **Rise and fall are independent and both apply the same round if
   triggered** (e.g. a widely-owned player having a bad round nets a rise
   from ownership against a fall from underperforming) — summed, not one
