@@ -1681,7 +1681,7 @@ const I18N={
     msg_open_sub:(d1,d2,dl)=>`${d1} ir ${d2} · terminas ${dl}`,
     msg_history_pts:(r,pts)=>`<strong>${r}</strong> (istorija) - surinkta <strong>${pts}</strong> ${ltForm(pts,'taškas','taškai','taškų')}.`,
     msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> terminas praėjo (${dl}) - komanda nebuvo pateikta laiku, šis turas - 0 taškų.`,
-    msg_pick_frozen:dl=>`🔒 Taškai ir žaidėjų kainos šiuo metu atnaujinami. Rinktis žaidėjų <u>negalima</u> - komandos pasirinkimas atsidarys <strong>${dl}</strong>.`,
+    msg_pick_frozen:'🔒 Taškai ir žaidėjų kainos šiuo metu atnaujinami. Rinktis žaidėjų <u>negalima</u> - komandos pasirinkimas atsidarys <strong>netrukus</strong>.',
     pitch_frozen_overlay:'Rinktis žaidėjų negalima - taškai ir kainos atnaujinami',
     fix_title:r=>`🗓 ${r} - rungtynės`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pasirink ${pos} iš sąrašo ${dir}`,toast_dir_above:'aukščiau ↑',toast_dir_left:'kairėje ←',
@@ -1691,7 +1691,7 @@ const I18N={
     toast_budget_short:m=>`Nepakanka biudžeto! Trūksta ${m}M`,toast_added:(n,t)=>`${n} (${t}) pridėtas ✓`,
     toast_need7:'Reikia 7 žaidėjų!',toast_need_captain:'Pasirink kapitoną - spausk C ženkliuką ant žaidėjo',
     toast_deadline_submit:dl=>`Terminas praėjo (${dl}) - komandos pateikti nebegalima`,
-    toast_pick_frozen:dl=>`Žaidėjų kainos atnaujinamos - komandos pasirinkti negalima iki ${dl}`,
+    toast_pick_frozen:'Žaidėjų kainos atnaujinamos - komandos pasirinkti negalima, atsidarys netrukus',
     toast_save_fail:'Nepavyko išsaugoti komandos - pabandyk dar kartą arba susisiek su administratoriumi',
     toast_captain_set:n=>`${n} - Kapitonas 🅲 ×2`,toast_captain_removed:'Kapitonas pašalintas',
     toast_auto_fail:'Nepavyko sudaryti komandos - pabandyk dar kartą',
@@ -1700,7 +1700,7 @@ const I18N={
     bb_pick_frozen:'🔒 Kainos atnaujinamos',
     bb_update:'Atnaujinti komandą ✓',bb_submit:'Pateikti komandą ▶',bb_saving:'Saugoma...',
     toast_round_not_open:'Šis turas dar neatidarytas - palauk, kol užsidarys ankstesnis turas',
-    toast_new_round_frozen:(n,dl)=>`${n} prasidėjo - žaidėjų kainos atnaujinamos, komandos pasirinkimas atsidarys ${dl}.`,
+    toast_new_round_frozen:n=>`${n} prasidėjo - žaidėjų kainos atnaujinamos, komandos pasirinkimas atsidarys netrukus.`,
     players_count_suffix:'žaid.',not_found:'Nerasta',
     res_lbl:(r,isUpdate)=>`${r} - komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
     hist_title:'Turų istorija',
@@ -1875,7 +1875,7 @@ const I18N={
     msg_open_sub:(d1,d2,dl)=>`${d1} and ${d2} · deadline ${dl}`,
     msg_history_pts:(r,pts)=>`<strong>${r}</strong> (history) - scored <strong>${pts}</strong> points.`,
     msg_deadline_passed:(r,dl)=>`<strong>${r}</strong> deadline passed (${dl}) - team wasn't submitted in time, 0 points this gameweek.`,
-    msg_pick_frozen:dl=>`🔒 Points and player prices are being updated right now. Picking a squad is <u>not possible</u> - it reopens <strong>${dl}</strong>.`,
+    msg_pick_frozen:'🔒 Points and player prices are being updated right now. Picking a squad is <u>not possible</u> - it reopens <strong>soon</strong>.',
     pitch_frozen_overlay:'Picking is disabled - points and prices are updating',
     fix_title:r=>`🗓 ${r} - matches`,fix_vs:'vs',
     toast_pick_pos:(pos,dir)=>`Pick a ${pos} from the list ${dir}`,toast_dir_above:'above ↑',toast_dir_left:'on the left ←',
@@ -1885,7 +1885,7 @@ const I18N={
     toast_budget_short:m=>`Not enough budget! Short by ${m}M`,toast_added:(n,t)=>`${n} (${t}) added ✓`,
     toast_need7:'You need 7 players!',toast_need_captain:'Pick a captain - tap the C badge on a player',
     toast_deadline_submit:dl=>`Deadline passed (${dl}) - you can no longer submit a team`,
-    toast_pick_frozen:dl=>`Player prices are being updated - picking is closed until ${dl}`,
+    toast_pick_frozen:'Player prices are being updated - picking is closed, reopens soon',
     toast_save_fail:'Failed to save team - try again or contact the admin',
     toast_captain_set:n=>`${n} - Captain 🅲 ×2`,toast_captain_removed:'Captain removed',
     toast_auto_fail:'Couldn\'t build a team - try again',
@@ -1894,7 +1894,7 @@ const I18N={
     bb_pick_frozen:'🔒 Prices updating',
     bb_update:'Update Team ✓',bb_submit:'Submit Team ▶',bb_saving:'Saving...',
     toast_round_not_open:'This gameweek isn\'t open yet - wait for the previous one to close',
-    toast_new_round_frozen:(n,dl)=>`${n} has started - player prices are being updated, squad picking opens ${dl}.`,
+    toast_new_round_frozen:n=>`${n} has started - player prices are being updated, squad picking opens soon.`,
     players_count_suffix:'players',not_found:'No results',
     res_lbl:(r,isUpdate)=>`${r} - team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
     hist_title:'Gameweek History',
@@ -2323,11 +2323,6 @@ function setActiveDivision(div){
 
 function formatDeadline(i){
   return new Intl.DateTimeFormat(LANG==='en'?'en-GB':'lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(FR[i].deadline);
-}
-// Same formatting as formatDeadline(), for the moment squad-picking reopens
-// after the post-deadline price-update freeze — see pickFreezeUntil().
-function formatPickFreezeUntil(){
-  return new Intl.DateTimeFormat(LANG==='en'?'en-GB':'lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(pickFreezeUntil());
 }
 // Round/day display names — FR[ri].n / FR[ri].days[di].l ("1 Fantasy
 // Turas" / "1-oji diena") are the Lithuanian schedule data itself, not UI
@@ -3786,7 +3781,7 @@ function renderSquadMsg(){
       <span class="ti-badge open">${t('msg_open_badge')}</span></div>`;
   }else if(frozen){
     el.innerHTML=`<div class="locked-msg"><div class="lm-icon">🔒</div>
-      <div class="lm-txt">${t('msg_pick_frozen',formatPickFreezeUntil())}</div></div>`;
+      <div class="lm-txt">${t('msg_pick_frozen')}</div></div>`;
   }else if(hasSquad){
     const {roundPts}=computeScoring({[STATE.curRound]:STATE.mySquads[STATE.curRound]},STATE.DB);
     const pts=roundPts[STATE.curRound]||0;
@@ -4733,7 +4728,7 @@ function updateBottomBar(){
 // ═══════════════════════════════════════════════
 async function submitSquad(){
   if(isPastDeadline(STATE.curRound)){toast(t('toast_deadline_submit',formatDeadline(STATE.curRound)));return;}
-  if(isCurRoundFrozen()){toast(t('toast_pick_frozen',formatPickFreezeUntil()));return;}
+  if(isCurRoundFrozen()){toast(t('toast_pick_frozen'));return;}
   if(filledSlots()<7){toast(t('toast_need7'));return;}
   if(!STATE.captain){toast(t('toast_need_captain'));return;}
   const isUpdate=STATE.mySquads[STATE.curRound]!==undefined;
@@ -6110,7 +6105,7 @@ setInterval(()=>{
     // update freeze at this exact moment (it only just became "live" this
     // instant) — so this is never the "go pick now" message, always the
     // frozen one.
-    toast(t('toast_new_round_frozen',roundName(live),formatPickFreezeUntil()));
+    toast(t('toast_new_round_frozen',roundName(live)));
   }else{
     renderSquadMsg();updateBottomBar();renderAllSlots();
   }
