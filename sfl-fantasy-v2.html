@@ -322,7 +322,6 @@ a{color:var(--or)}
 .rrow-match-lbl{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mu);background:var(--sur2);padding:7px 15px}
 .rp{font-weight:800;font-size:11px;color:var(--or);background:var(--ordim);padding:3px 8px;border-radius:20px}
 .rp.neg{color:var(--red);background:rgba(239,68,68,.08)}.rp.cap{color:var(--cap);background:var(--capbg)}.rp.lg{font-size:13px}
-.prize-note{padding:6px 15px;font-size:10px;color:var(--mu)}
 .sr2{display:grid;grid-template-columns:20px 1fr 28px 36px;gap:6px;align-items:center;padding:8px 15px;border-bottom:1px solid var(--bor);font-size:11px}
 .sr2:last-child{border-bottom:none}
 .srp{font-weight:800;color:var(--or);text-align:center;font-size:12px}.srp.top{color:var(--gold)}
@@ -1134,10 +1133,9 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
       </div>
       <div class="pan">
         <div class="ph"><h3 data-i18n="prizes_title">Prizai</h3></div>
-        <div class="rrow"><span data-i18n="prize_1">🥇 1 vieta</span><span class="rp lg">300€</span></div>
-        <div class="rrow"><span data-i18n="prize_2">🥈 2 vieta</span><span class="rp lg">200€</span></div>
-        <div class="rrow"><span data-i18n="prize_3">🥉 3 vieta</span><span class="rp lg">100€</span></div>
-        <div class="prize-note" data-i18n="prize_note">Startinio mokesčio sumažinimas</div>
+        <div class="rrow"><span data-i18n="prize_1">🥇 1 vieta</span><span class="rp lg" data-i18n="prize_1_amt">300€ OlyBar čekis</span></div>
+        <div class="rrow"><span data-i18n="prize_2">🥈 2 vieta</span><span class="rp lg" data-i18n="prize_2_amt">200€ OlyBar čekis</span></div>
+        <div class="rrow"><span data-i18n="prize_3">🥉 3 vieta</span><span class="rp lg" data-i18n="prize_3_amt">100€ OlyBar čekis</span></div>
       </div>
       <div class="pan">
         <div class="ph"><h3 data-i18n="sponsor_panel_title">Rėmėjas</h3></div>
@@ -1664,7 +1662,7 @@ const I18N={
     rules_s6_h:'Žaidėjų kainos',
     rules_s6_p:'Kainos gali kilti arba kristi po kiekvieno sužaisto turo, priklausomai nuo žaidėjo populiarumo ir surinktų taškų. Kaina niekada nenukris žemiau 3.0M.',
     rules_s7_h:'Prizai',
-    rules_s7_p:'1 vieta - 300€, 2 vieta - 200€, 3 vieta - 100€ (startinio mokesčio sumažinimo forma).',
+    rules_s7_p:'1 vieta - 300€ OlyBar čekis, 2 vieta - 200€ OlyBar čekis, 3 vieta - 100€ OlyBar čekis.',
     rules_s8_h:'Taisyklių keitimas',
     rules_s8_p:'Organizatorius pasilieka teisę koreguoti taisykles sezono eigoje, apie pakeitimus informuojant dalyvius.',
     scoring_title:'Taškų sistema',
@@ -1673,7 +1671,8 @@ const I18N={
     sc_win:'✅ Komandos pergalė',sc_loss:'❌ Pralaimėjimas',sc_motm:'👑 Geriausias rungtynių žaidėjas',
     sc_red:'🟥 Raudona kortelė',sc_cap:'C Kapitonas',sc_note:'⚠ Iš kiekvienos komandos - tik 1 žaidėjas',
     prizes_title:'Prizai',prize_1:'🥇 1 vieta',prize_2:'🥈 2 vieta',prize_3:'🥉 3 vieta',
-    prize_note:'Startinio mokesčio sumažinimas',sponsor_panel_title:'Rėmėjas',
+    prize_1_amt:'300€ OlyBar čekis',prize_2_amt:'200€ OlyBar čekis',prize_3_amt:'100€ OlyBar čekis',
+    sponsor_panel_title:'Rėmėjas',
     group_a_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupė`,
     sort_total:'Taškai (viso)',sort_price:'Kaina',sort_last:'Paskutinis turas',sort_own:'Populiarumas',sort_goals:'Įmušti įvarčiai',sort_mvp:'MVP',sort_pricechange:'Kainos pokytis',
     msg_saved:(r,d)=>`<strong>${r}</strong> komanda išsaugota - gali keisti bet kiek kartų iki <strong>${d}</strong>.`,
@@ -1859,7 +1858,7 @@ const I18N={
     rules_s6_h:'Player prices',
     rules_s6_p:'Prices can rise or fall after every gameweek is played, depending on a player\'s ownership and points scored. A price never drops below 3.0M.',
     rules_s7_h:'Prizes',
-    rules_s7_p:'1st place - €300, 2nd place - €200, 3rd place - €100 (as an entry-fee reduction).',
+    rules_s7_p:'1st place - €300 OlyBar voucher, 2nd place - €200 OlyBar voucher, 3rd place - €100 OlyBar voucher.',
     rules_s8_h:'Changes to these rules',
     rules_s8_p:'The organizer reserves the right to adjust these rules over the course of the season, informing participants of any changes.',
     scoring_title:'Scoring System',
@@ -1868,7 +1867,8 @@ const I18N={
     sc_win:'✅ Team win',sc_loss:'❌ Loss',sc_motm:'👑 Man of the match',
     sc_red:'🟥 Red card',sc_cap:'C Captain',sc_note:'⚠ Only 1 player per club',
     prizes_title:'Prizes',prize_1:'🥇 1st place',prize_2:'🥈 2nd place',prize_3:'🥉 3rd place',
-    prize_note:'Entry fee reduction',sponsor_panel_title:'Sponsor',
+    prize_1_amt:'€300 OlyBar voucher',prize_2_amt:'€200 OlyBar voucher',prize_3_amt:'€100 OlyBar voucher',
+    sponsor_panel_title:'Sponsor',
     group_a_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()}`,
     sort_total:'Points (total)',sort_price:'Price',sort_last:'Last gameweek',sort_own:'Ownership',sort_goals:'Goals scored',sort_mvp:'MVP',sort_pricechange:'Price change',
     msg_saved:(r,d)=>`<strong>${r}</strong> team saved - change it as many times as you like until <strong>${d}</strong>.`,
