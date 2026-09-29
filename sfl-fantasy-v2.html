@@ -2656,6 +2656,7 @@ auth.onAuthStateChanged(async user=>{
   }else{
     clearSessionTimeout();
     unsubscribeLeagueState();
+    unsubscribePickUnlock();
     CURRENT_USER=null;
     resetStateData();
     // Ownership % and the in-progress team-favourite/division picks are
@@ -2722,6 +2723,7 @@ async function loginUser(user){
   await loadPlayersFromFirestore();
   loadRoundIntoPitch(computeCurrentRound());
   subscribeLeagueState();
+  subscribePickUnlock();
   updateTopbarForUser();
   if(isAdmin())syncPlayerIndex();
   if(isNew||!STATE.favTeam){showOnboarding();}else{showMainApp();}
@@ -3138,6 +3140,44 @@ function subscribeLeagueState(){
 
 function unsubscribeLeagueState(){if(leagueUnsub){leagueUnsub();leagueUnsub=null;}}
 
+// ── Early pick-unlock ────────────────────────────────────────────────────
+// meta/pickUnlock holds {`${div}_${round}`: true} for every round the admin
+// has manually reopened early via unlockPickingNow() below — the freeze
+// normally lasts a fixed 30h (PICK_FREEZE_MS/pickFreezeUntil()), but once
+// the admin has actually finished updating that round's results/prices
+// there's no reason to keep making everyone wait out the rest of it. ONE
+// doc for every division (not per-division) since it's tiny and there's no
+// division-scoped page that needs to filter it. Live-subscribed exactly
+// like league state above — the admin's own unlock should open picking for
+// everyone immediately, not just whoever happens to reload next.
+let PICK_UNLOCK={};
+let pickUnlockUnsub=null;
+function subscribePickUnlock(){
+  if(pickUnlockUnsub)pickUnlockUnsub();
+  pickUnlockUnsub=db.collection('meta').doc('pickUnlock').onSnapshot(snap=>{
+    PICK_UNLOCK=snap.exists?snap.data():{};
+    // Picking may have just opened for everyone — re-render whatever's
+    // currently showing the frozen/locked squad-page state.
+    if(document.getElementById('page-squad')?.classList.contains('on')){renderSquadMsg();updateBottomBar();renderAllSlots();renderList();}
+    if(document.getElementById('page-admin')?.classList.contains('on')&&isAdmin())renderAdminRound();
+  },e=>console.error('Nepavyko sekti rinkimosi atrakinimo būsenos',e));
+}
+function unsubscribePickUnlock(){if(pickUnlockUnsub){pickUnlockUnsub();pickUnlockUnsub=null;}}
+// Admin-only: end the current 30h freeze early for one round, once its
+// results/prices are actually done. div/round are the round being OPENED
+// (the one after whichever round's results the admin just finished), not
+// the round the admin is currently viewing in the panel — see the "Atrakinti
+// ... dabar" button in renderAdminRound() for how that's derived.
+async function unlockPickingNow(div,round){
+  if(!isAdmin())return;
+  const roundLbl=(DIVISIONS[div]||DIVISIONS.A).fr[round].n;
+  if(!confirm(`Atrakinti „${roundLbl}“ rinkimąsi dabar visiems ${div} diviziono vartotojams?`))return;
+  try{
+    await db.collection('meta').doc('pickUnlock').set({[`${div}_${round}`]:true},{merge:true});
+    toast(`„${roundLbl}“ rinkimasis atrakintas ✓`);
+  }catch(e){console.error('Nepavyko atrakinti rinkimosi',e);toast('Nepavyko atrakinti - pabandyk dar kartą');}
+}
+
 // ═══════════════════════════════════════════════
 // TECHNICAL RESULT (walkover) — SFL convention, rule fixed by the league
 // owner (see CLAUDE.md): a saved match with a 3:0/0:3 scoreline and NO
@@ -3447,7 +3487,14 @@ function pickFreezeUntil(){
   if(cr===0||isPastDeadline(cr))return 0;
   return FR[cr-1].deadline+PICK_FREEZE_MS;
 }
-function isPickingFrozen(){return Date.now()<pickFreezeUntil();}
+// Admin's early unlock (PICK_UNLOCK, see subscribePickUnlock() above)
+// short-circuits the normal 30h wait for the CURRENT round specifically —
+// mirrors firestore.rules' pickWindowOpen()/earlyUnlocked() exactly, so the
+// UI and the server never disagree about whether a write would succeed.
+function isPickingFrozen(){
+  if(PICK_UNLOCK[`${STATE.division}_${computeCurrentRound()}`])return false;
+  return Date.now()<pickFreezeUntil();
+}
 // Editing is only ever allowed on the live round, before its own deadline,
 // and outside the post-deadline price-update freeze — any other round
 // being viewed (history, or a round whose deadline just passed) is
@@ -5967,9 +6014,17 @@ function rcRow(key,idx,opts){
 function renderAdminRound(){
   const fr=FR[STATE.adminRound];
   const priceReady=roundResultsComplete(STATE.division,STATE.adminRound);
+  // The round picking normally waits on next — this round's results/prices
+  // being done is exactly the moment the admin would want to open it early,
+  // so the unlock button lives here rather than on that round's own panel.
+  const nextRound=STATE.adminRound+1;
+  const hasNextRound=nextRound<FR.length;
+  const nextFr=hasNextRound?FR[nextRound]:null;
+  const nextUnlocked=hasNextRound&&PICK_UNLOCK[`${STATE.division}_${nextRound}`]===true;
   let html=`<div style="margin-bottom:14px">
     <button class="savem" style="color:var(--gr);border-color:var(--gr)" ${priceReady?'':'disabled'} onclick="recalcPricesForRound('${STATE.division}',${STATE.adminRound})">💰 Perskaičiuoti ${STATE.division} diviziono kainas — ${fr.n}</button>
     ${priceReady?'':`<div style="font-size:11px;color:var(--mu);margin-top:4px;text-align:center">Įrašyk visų šio turo rungtynių rezultatus, kad galėtum perskaičiuoti kainas</div>`}
+    ${hasNextRound?`<button class="savem" style="color:var(--or);border-color:var(--or);margin-top:8px" ${nextUnlocked?'disabled':''} onclick="unlockPickingNow('${STATE.division}',${nextRound})">${nextUnlocked?`🔓 ${nextFr.n} rinkimasis jau atrakintas`:`🔓 Atrakinti ${nextFr.n} rinkimąsi dabar`}</button>`:''}
   </div>`;
   fr.days.forEach((day,di)=>{
     html+=`<div class="day-block"><div class="day-lbl">${day.l}</div><div class="mgrid">`;

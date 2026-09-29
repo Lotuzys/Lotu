@@ -92,6 +92,20 @@ something that special-cases specific player names or a specific season:
   `isCurRoundFrozen()`); every other page (dashboard, stats, fixtures,
   other users' squads, history) stays fully viewable throughout. Round 0
   has no previous round to wait on and is never frozen.
+- **Admin can end the 30h freeze early** once a round's results/prices are
+  actually done, instead of always making everyone wait out the full
+  window — `unlockPickingNow(div, round)` in `sfl-fantasy-v2.html`, a
+  button in the Admin round panel (next to `recalcPricesForRound`'s own
+  button, on the round whose results/prices were just finished — it
+  unlocks the NEXT round). Writes `{​`${div}_${round}`​: true}` into the
+  single `meta/pickUnlock` doc; `isPickingFrozen()` (client) and
+  `pickWindowOpen()`/`earlyUnlocked()` (`firestore.rules`, server) both
+  check it the same way, so the UI and what the server actually accepts
+  never disagree. Live-subscribed (`subscribePickUnlock()`) so the unlock
+  takes effect for every signed-in user immediately, not just on their
+  next reload. `meta/pickUnlock` must always exist (a plain `get()` on a
+  missing doc throws in Firestore rules, denying every squad write) — it
+  was seeded once, empty, alongside this feature; never delete it.
 
 ## Automatic price updates — rules fixed by the league owner, do not alter
 

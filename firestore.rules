@@ -60,9 +60,26 @@ service cloud.firestore {
     // doesn't memoize function calls, so the caller (the squads/{round}
     // write rule below) computes it once and passes it in here, instead of
     // rebuilding the whole 11-entry map a second time for every write.
-    function pickWindowOpen(round, dl) {
+    // earlyUnlocked() lets the admin end this wait early once that round's
+    // results/prices are actually done, instead of always waiting the full
+    // 30h — see unlockPickingNow() in sfl-fantasy-v2.html.
+    function pickWindowOpen(round, dl, div) {
       return int(round) == 0
-        || request.time >= dl[string(int(round) - 1)] + duration.value(1800, 'm');
+        || request.time >= dl[string(int(round) - 1)] + duration.value(1800, 'm')
+        || earlyUnlocked(div, round);
+    }
+    // meta/pickUnlock holds one small doc, {`${div}_${round}`: true} per
+    // admin-unlocked round — written by unlockPickingNow() (admin-only, via
+    // the meta/{doc} write rule below). Kept in this tiny dedicated doc
+    // rather than on the division's own league/state doc for the same
+    // reason playersById is one-doc-per-player instead of one big mirror:
+    // this doc's own size is what CEL charges get() cost against, and
+    // league/state can grow large (DB/teams/savedMatches for a whole
+    // season). Must ALWAYS exist (seeded once, empty, alongside this rules
+    // change) — a plain get() on a missing doc throws in this rules engine
+    // rather than returning null, which would deny every squad write.
+    function earlyUnlocked(div, round) {
+      return get(/databases/$(database)/documents/meta/pickUnlock).data.get(div + '_' + string(round), false) == true;
     }
 
     // ── Trusted player data ─────────────────────────────────────────────
@@ -224,8 +241,11 @@ service cloud.firestore {
     // work to isSignedIn()/isAdmin(). Removing the need for the branch
     // entirely, rather than trying to make the branch cheaper, is what
     // actually fit back under budget.)
-    function squadLegal(snap, uid) {
-      let div = userDivision(uid);
+    // div is now passed in (computed once by the caller, squadWritable())
+    // rather than each recomputing userDivision(uid) itself — pickWindowOpen()
+    // needs it too now (for earlyUnlocked()), and a second userDivision()
+    // get() call here would push the request over budget for no reason.
+    function squadLegal(snap, div) {
       let s = squadSlots(snap);
       let tp = trustedPlayers(s);
       return (s.size()==7 && slotsValid(s, tp, div))
@@ -234,15 +254,18 @@ service cloud.firestore {
     }
 
     // Bundles the deadline/freeze/legality checks a squad write needs —
-    // computes DEADLINES() once here and hands it to pickWindowOpen()
-    // instead of the two of them each calling it separately (the map
-    // literal itself, 11 timestamp+duration constructions, isn't free to
-    // rebuild twice on every single write).
+    // computes DEADLINES() and userDivision(uid) once here and hands them to
+    // pickWindowOpen()/squadLegal() instead of each recomputing separately
+    // (the map literal itself, 11 timestamp+duration constructions, isn't
+    // free to rebuild twice on every single write; userDivision() spends a
+    // get() call each time it runs, and the 10-get()-per-request budget is
+    // already tight — see trustedPlayers()).
     function squadWritable(round, snap, uid) {
       let dl = DEADLINES();
+      let div = userDivision(uid);
       return request.time < dl[round]
-        && pickWindowOpen(round, dl)
-        && squadLegal(snap, uid);
+        && pickWindowOpen(round, dl, div)
+        && squadLegal(snap, div);
     }
 
     // name/fantasyTeamName/favTeam are free text a user picks for their own
