@@ -289,8 +289,16 @@ service cloud.firestore {
       // into" already only ever mutates STATE.division locally for the
       // admin's own session — this just lets that account's convenience
       // saveCurrentState() calls go through while doing so, same as before.
+      // resource.data.favTeam=='' is ALSO exempted — an account only ever
+      // reaches an empty favTeam via an admin-initiated reset (the app's
+      // own finishOnboard() always writes a non-empty one; there is no
+      // in-app path back to blank), e.g. between testing seasons. Without
+      // this, a reset account's own re-onboarding pick of a different
+      // division's team silently rejects THIS ENTIRE merge write (Firestore
+      // rules reject a write atomically) — favTeam/fantasyTeamName/slots
+      // never save either, even though the app shows onboarding as done.
       allow update: if isSignedIn() && request.auth.uid == uid
-        && (isAdmin() || request.resource.data.division == resource.data.division)
+        && (isAdmin() || resource.data.get('favTeam','') == '' || request.resource.data.division == resource.data.division)
         && profileFieldsSafe(request.resource.data);
 
       // A round's submitted squad. Writable (create or overwrite) only by
