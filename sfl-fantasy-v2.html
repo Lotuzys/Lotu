@@ -1235,7 +1235,9 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
      generic "sort by" dropdown. -->
 <div class="page" id="page-stats">
   <div class="statswrap"><div class="pan">
-    <div class="ph"><h3 data-i18n="nav_stats">Statistika</h3><span class="sub" id="stats-sub"></span></div>
+    <div class="ph"><h3 data-i18n="nav_stats">Statistika</h3><span class="sub" id="stats-sub"></span>
+      <button class="abtn" id="stats-export-btn" style="display:none" onclick="exportStatsExcel()">⬇&nbsp;<span data-i18n="stats_export_btn">Eksportuoti į Excel</span></button>
+    </div>
     <div class="lb-filters">
       <select class="lb-divsel" id="stats-divsel" onchange="setStatsDivision(this.value)"></select>
     </div>
@@ -1486,6 +1488,8 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<!-- SheetJS — admin-only Statistika→Excel export (exportStatsExcel()) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════
 // FIREBASE — fill in with your project's config
@@ -1537,7 +1541,7 @@ let LANG=localStorage.getItem(LANG_KEY)==='en'?'en':'lt';
 const I18N={
   lt:{
     nav_dash:'Pagrindinis',nav_myteam:'Mano komanda',nav_history:'Istorija',nav_teamseason:'Fantasy rinktinė',
-    nav_stats:'Statistika',stats_form:'Forma',th_player:'Žaidėjas',
+    nav_stats:'Statistika',stats_form:'Forma',th_player:'Žaidėjas',stats_export_btn:'Eksportuoti į Excel',
     nav_leaders:'Lyderiai',nav_standings:'Lentelė',pts_label:'Taškai',
     ptsWord:n=>ltForm(n,'taškas','taškai','taškų'),
     my_account:'Mano paskyra',
@@ -1742,7 +1746,7 @@ const I18N={
   },
   en:{
     nav_dash:'Home',nav_myteam:'My Team',nav_history:'History',nav_teamseason:'Fantasy Squad',
-    nav_stats:'Statistics',stats_form:'Form',th_player:'Player',
+    nav_stats:'Statistics',stats_form:'Form',th_player:'Player',stats_export_btn:'Export to Excel',
     nav_leaders:'Leaders',nav_standings:'Table',pts_label:'Points',
     ptsWord:n=>n===1?'point':'points',
     my_account:'My Account',
@@ -5734,6 +5738,7 @@ async function renderStats(){
     `<option value="${d}" ${d===STATS_DIVISION?'selected':''}>${d} divizionas${d===STATE.division?' (tavo)':''}</option>`).join('');
   renderStatsFilters();
   updateStatsArrows();
+  document.getElementById('stats-export-btn').style.display=isAdmin()?'inline-block':'none';
 
   const div=STATS_DIVISION;
   const db=await getDivisionDB(div);
@@ -5805,6 +5810,51 @@ async function openStatsPlayerModal(id){
     {val:form[p.id]??0,label:t('stats_form')},
     {val:totals[p.id]||0,label:t('sort_total')},
   ],'',div);
+}
+
+// Admin-only Statistika export — one .xlsx workbook, one sheet per division
+// (A-E), same columns/values the on-screen table shows (every active
+// player, unfiltered by the pos/team picker), sorted by season points using
+// the exact same tiebreak chain as the on-screen 'total' column sort
+// (points -> season ownership -> standings position -> name).
+async function exportStatsExcel(){
+  if(!isAdmin())return;
+  const btn=document.getElementById('stats-export-btn');
+  if(btn)btn.disabled=true;
+  try{
+    const wb=XLSX.utils.book_new();
+    for(const div of DIVISION_KEYS){
+      const db=await getDivisionDB(div);
+      const totals=computeSeasonPlayerPts(db,div);
+      const form=computeFormPts(db,div,2);
+      const mvp=computeSeasonMvpCounts(db,div);
+      const ownership=await computeOwnershipForDivision(div);
+      const teamsMap=await ensureDivisionTeams(div);
+      const players=PLAYERS.filter(p=>p.division===div&&p.active!==false);
+      const sorted=[...players].sort((a,b)=>{
+        const cmp=((totals[a.id]||0)-(totals[b.id]||0))||((ownership[a.id]||0)-(ownership[b.id]||0))||(-teamStandingCmp(a.team,b.team,teamsMap))||a.name.localeCompare(b.name);
+        return -cmp;
+      });
+      const rows=sorted.map((p,i)=>({
+        '#':i+1,
+        'Žaidėjas':p.name,
+        'Pozicija':POS_LT[p.pos],
+        'Komanda':p.team,
+        'Kaina (M)':p.price,
+        'Kainos pokytis (M)':priceChangeFor(p),
+        'MVP nominacijos':mvp[p.id]||0,
+        'Populiarumas (%)':ownership[p.id]??0,
+        'Forma':form[p.id]??0,
+        'Taškai (viso)':totals[p.id]||0,
+      }));
+      const ws=XLSX.utils.json_to_sheet(rows);
+      ws['!cols']=[{wch:4},{wch:22},{wch:9},{wch:20},{wch:10},{wch:14},{wch:14},{wch:14},{wch:8},{wch:12}];
+      XLSX.utils.book_append_sheet(wb,ws,div+' divizionas');
+    }
+    XLSX.writeFile(wb,`SFL_Fantasy_statistika_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }finally{
+    if(btn)btn.disabled=false;
+  }
 }
 
 async function renderLB(){
