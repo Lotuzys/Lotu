@@ -28,22 +28,22 @@ service cloud.firestore {
 
     // ── Round deadlines ──────────────────────────────────────────────────
     // Each round is played on one day; deadline is 13:30 EEST (10:30 UTC,
-    // i.e. +630 minutes past midnight UTC) that day. Every even day of
-    // August 2026 starting the 4th. Must match FR[i].days[0].date in
+    // i.e. +630 minutes past midnight UTC) that day, every 2nd day starting
+    // 2026-09-29 (season 3). Must match FR[i].days[0].date in
     // sfl-fantasy-v2.html exactly — update both together.
     function DEADLINES() {
       return {
-        '0':  timestamp.date(2026, 8, 25) + duration.value(630, 'm'),
-        '1':  timestamp.date(2026, 8, 27) + duration.value(630, 'm'),
-        '2':  timestamp.date(2026, 8, 29) + duration.value(630, 'm'),
-        '3':  timestamp.date(2026, 8, 31) + duration.value(630, 'm'),
-        '4':  timestamp.date(2026, 9, 2)  + duration.value(630, 'm'),
-        '5':  timestamp.date(2026, 9, 4)  + duration.value(630, 'm'),
-        '6':  timestamp.date(2026, 9, 6)  + duration.value(630, 'm'),
-        '7':  timestamp.date(2026, 9, 8)  + duration.value(630, 'm'),
-        '8':  timestamp.date(2026, 9, 10) + duration.value(630, 'm'),
-        '9':  timestamp.date(2026, 9, 12) + duration.value(630, 'm'),
-        '10': timestamp.date(2026, 9, 14) + duration.value(630, 'm'),
+        '0':  timestamp.date(2026, 9, 29) + duration.value(630, 'm'),
+        '1':  timestamp.date(2026, 10, 1) + duration.value(630, 'm'),
+        '2':  timestamp.date(2026, 10, 3) + duration.value(630, 'm'),
+        '3':  timestamp.date(2026, 10, 5) + duration.value(630, 'm'),
+        '4':  timestamp.date(2026, 10, 7) + duration.value(630, 'm'),
+        '5':  timestamp.date(2026, 10, 9) + duration.value(630, 'm'),
+        '6':  timestamp.date(2026, 10, 11) + duration.value(630, 'm'),
+        '7':  timestamp.date(2026, 10, 13) + duration.value(630, 'm'),
+        '8':  timestamp.date(2026, 10, 15) + duration.value(630, 'm'),
+        '9':  timestamp.date(2026, 10, 17) + duration.value(630, 'm'),
+        '10': timestamp.date(2026, 10, 19) + duration.value(630, 'm'),
       };
     }
 
