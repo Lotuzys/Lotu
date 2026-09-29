@@ -253,7 +253,7 @@ a{color:var(--or)}
 .pf:hover{color:var(--or);border-color:var(--or)}.pf.on{background:var(--or-grad);border-color:transparent;color:#fff;box-shadow:var(--sh-xs)}
 .pl-list{max-height:420px;overflow-y:auto}
 .pi{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--bor);cursor:pointer;transition:all .15s var(--ease)}
-.pi:hover{background:var(--sur)}.pi.taken{opacity:.35;pointer-events:none}
+.pi:hover{background:var(--sur)}.pi.taken,.pi.blocked{opacity:.35;pointer-events:none}
 .pi-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:var(--sh-xs)}
 .pi-info{flex:1;min-width:0}
 .pi-name{font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1701,7 +1701,7 @@ const I18N={
     bb_update:'Atnaujinti komandą ✓',bb_submit:'Pateikti komandą ▶',bb_saving:'Saugoma...',
     toast_round_not_open:'Šis turas dar neatidarytas - palauk, kol užsidarys ankstesnis turas',
     toast_new_round_frozen:(n,dl)=>`${n} prasidėjo - žaidėjų kainos atnaujinamos, komandos pasirinkimas atsidarys ${dl}.`,
-    players_count_suffix:'žaid.',team_full:'komanda pilna',not_found:'Nerasta',
+    players_count_suffix:'žaid.',not_found:'Nerasta',
     res_lbl:(r,isUpdate)=>`${r} - komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
     hist_title:'Turų istorija',
     standings_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupės lentelė`,
@@ -1894,7 +1894,7 @@ const I18N={
     bb_update:'Update Team ✓',bb_submit:'Submit Team ▶',bb_saving:'Saving...',
     toast_round_not_open:'This gameweek isn\'t open yet - wait for the previous one to close',
     toast_new_round_frozen:(n,dl)=>`${n} has started - player prices are being updated, squad picking opens ${dl}.`,
-    players_count_suffix:'players',team_full:'team full',not_found:'No results',
+    players_count_suffix:'players',not_found:'No results',
     res_lbl:(r,isUpdate)=>`${r} - team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
     hist_title:'Gameweek History',
     standings_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Table`,
@@ -4057,15 +4057,23 @@ function renderList(){
   // "historical" condition renderSlot() uses for its own pitch avatars).
   const listHistorical=isLocked()&&STATE.mySquads[STATE.curRound]!==undefined;
   const listXIIds=listHistorical?roundXIIds(STATE.curRound,STATE.DB,STATE.division):seasonXIIds(STATE.DB,STATE.division);
+  // A player who can't currently be added — their club's already in the
+  // squad, or their price is more than what's left of the budget — used to
+  // get a red "komanda pilna" text badge instead of ever being greyed out.
+  // Now styled identically to an already-picked player (.taken) instead of
+  // a distinct red warning: same dimmed/inert treatment either way, rather
+  // than two different visual languages for "you can't pick this".
+  const leftBudget=CONFIG.BUDGET-usedBudget();
   document.getElementById('pl-list').innerHTML=list.map(p=>{
     const isTaken=STATE.taken.has(p.id);
     const teamBlocked=STATE.takenTeams.has(p.team)&&!isTaken;
-    const warn=teamBlocked?`<span style="color:var(--red);font-size:9px;margin-left:4px">${t('team_full')}</span>`:'';
+    const cantAfford=!isTaken&&p.price>leftBudget+.01;
+    const blocked=teamBlocked||cantAfford;
     const headline=headlineFor?headlineFor(p):`${p.price.toFixed(1)}M`;
     const xiStar=listXIIds.has(p.id)?'<span class="pi-xi-star">⭐</span>':'';
-    return `<div class="pi ${isTaken?'taken':''}" onclick="openPlayerModal(${p.id})">
+    return `<div class="pi ${isTaken?'taken':blocked?'blocked':''}" onclick="openPlayerModal(${p.id})">
       <div class="pi-av">${kitSvg(p.team,32)}</div>
-      <div class="pi-info"><div class="pi-name">${p.name}${warn}</div>
+      <div class="pi-info"><div class="pi-name">${p.name}</div>
       <div class="pi-team">${teamLogoImg(p.team,14)}${p.team}</div>
       <span class="pi-pb" style="background:${POS_C[p.pos]}">${POS_LT[p.pos]}</span>${xiStar}</div>
       <div class="pi-right"><div class="pi-price-val">${headline}</div>${showOwnRow?`<div class="pi-own-val">${ownershipPct(p.id)}%</div>`:''}</div>
