@@ -1607,7 +1607,7 @@ const I18N={
     help_s2_li5:'Nepasirinkus komandos iki termino, tą turą taškų negausi, bet visada gali rinktis kitą turą iš naujo.',
     help_s2_li6:'Kiekvienam turui privalai paskirti vieną kapitoną (spausk „C" ženkliuką ties žaidėju) - jo surinkti taškai tą turą DVIGUBINAMI, įskaitant ir neigiamus, jei žaidėjas suveikė prastai ar gavo raudoną kortelę, todėl kapitoną verta rinktis atsargiai.',
     help_s2_li7:'Paspaudus ant pilkai pažymėto (dar nepasirenkamo) žaidėjo, jo kortelėje aiškiai parašyta, kodėl jo šiuo metu negali pridėti - ar komanda jau atstovaujama, ar ta pozicija pilna, ar trūksta biudžeto.',
-    help_s2_li8:'🎲 „Auto" mygtukas sumeta pilną komandą automatiškai, stengdamasis panaudoti kuo daugiau biudžeto (nepanaudota lieka ne daugiau ~5M) - nuo 2 turo tarp parinktų žaidėjų visada bus bent kelios tuometinės lyderės pagal sezono taškus.',
+    help_s2_li8:'🎲 „Auto" mygtukas automatiškai sumeta tau pilną komandą.',
     help_s4_h:'Žaidėjų sąrašas ir rikiavimas',
     help_s4_li1:'Sąrašą kairėje gali rikiuoti pagal: bendrus sezono taškus, kainą, paskutinio turo taškus, populiarumą (%), įmuštus įvarčius, MVP nominacijas arba kainos pokytį.',
     help_s4_li2:'⭐ šalia pozicijos raidelės rodo, kad žaidėjas šiuo metu patenka į tikrą Fantasy rinktinę - geriausiai realiai sužaidusius žaidėjus, nepriklausomai nuo to, ką pasirenki savo komandoje.',
@@ -1618,11 +1618,9 @@ const I18N={
     help_s6_h:'Kaip keičiasi žaidėjų kainos?',
     help_s6_p1:'Kiekvieno žaidėjo pradinė kaina apskaičiuojama pagal jo praėjusio sezono rezultatus ir poziciją.',
     help_s6_p2:'Po kiekvieno sužaisto turo administratorius gali perskaičiuoti kainas: populiarūs (daug kam priklausantys) ir gerai sužaidę žaidėjai brangsta, o retai renkami bei prastai sužaidę - atpinga.',
-    help_s6_p3:'Kaina niekada nenukris žemiau 3.0M, kad ir kaip prastai žaidėjas sužaistų (vartininkams kaina apskritai niekada nekrenta - ji gali tik kilti arba likti ta pati).',
-    help_s6_p4:'Kaina taip pat negali kilti be galo - ji apribota iki žaidėjo pradinės kainos + 5M, net jei jis turą po turo žaidžia puikiai.',
     help_s7_h:'Terminai ir komandos keitimas',
     help_s7_p1:'Kiekvienas turas turi savo terminą (13:30) - po jo komanda tam turui užsifiksuoja ir keisti jos nebegalima.',
-    help_s7_p2:'Praėjus terminui, kito turo komandų pasirinkimas būna uždarytas iki 30 valandų - per šį laiką administratorius atnaujina kainas ir įrašo rezultatus (jei tai padaroma greičiau, pasirinkimas gali atsirakinti ir anksčiau). Visą tą laiką gali laisvai naršyti visus kitus puslapius (rezultatus, lentelę, statistiką) - tik naujos komandos rinktis tuo metu negali.',
+    help_s7_p2:'Praėjus terminui, kito turo komandų pasirinkimas būna laikinai uždarytas, kol administratorius atnaujina kainas ir įrašo rezultatus. Tuo metu gali laisvai naršyti visus kitus puslapius (rezultatus, lentelę, statistiką) - tik naujos komandos rinktis negali.',
     help_faq_h:'Dažniausiai užduodami klausimai',
     help_faq_q1:'Ar galiu keisti komandą prieš terminą?',
     help_faq_a1:'Taip, tiek kartų, kiek nori - kol dar neprasidėjo turo terminas.',
@@ -1810,7 +1808,7 @@ const I18N={
     help_s2_li5:"If you don't pick a squad before the deadline, you simply won't score points that gameweek - you can always pick again next time.",
     help_s2_li6:'You must set exactly one captain each gameweek (tap the "C" badge on a player) - their points that gameweek are DOUBLED, including negative ones, if they have a bad game or get a red card, so pick carefully.',
     help_s2_li7:"Tapping a greyed-out (currently unpickable) player opens their card with a clear reason why - club already used, that position is full, or you're short on budget.",
-    help_s2_li8:'The 🎲 "Auto" button fills your whole squad automatically, trying to use as much of the budget as possible (at most ~5M left unspent) - from gameweek 2 on, it always includes a few of the current season-points leaders among its picks.',
+    help_s2_li8:'The 🎲 "Auto" button fills your whole squad automatically.',
     help_s4_h:'Player list & sorting',
     help_s4_li1:'Sort the list on the left by: total season points, price, last gameweek points, ownership (%), goals scored, MVP nominations, or price change.',
     help_s4_li2:"⭐ next to the position letter means that player is currently in the real Fantasy Squad - the actual best performers by real results, regardless of who you've picked.",
@@ -1821,11 +1819,9 @@ const I18N={
     help_s6_h:'How do player prices change?',
     help_s6_p1:"Each player's starting price is calculated from their performance last season and their position.",
     help_s6_p2:'After every gameweek is played, the admin can recalculate prices: popular (widely-owned) players who performed well get more expensive, while rarely-picked, poorly-performing players get cheaper.',
-    help_s6_p3:"A price never drops below 3.0M, no matter how badly a player performs (a goalkeeper's price can never drop at all - it can only rise or stay the same).",
-    help_s6_p4:"A price can't rise forever either - it's capped at that player's starting price + 5M, even if they keep performing well gameweek after gameweek.",
     help_s7_h:'Deadlines and squad changes',
     help_s7_p1:"Every gameweek has its own deadline (13:30) - after it passes, your squad for that gameweek is locked in and can no longer be changed.",
-    help_s7_p2:"Once the deadline passes, picking for the NEXT gameweek stays closed for up to 30 hours while the admin updates prices and enters results (it can reopen sooner if that's done faster). You can still freely browse everything else (results, standings, stats) during that time - you just can't pick a new squad yet.",
+    help_s7_p2:"Once the deadline passes, picking for the next gameweek is temporarily closed while the admin updates prices and enters results. You can still freely browse everything else (results, standings, stats) during that time - you just can't pick a new squad yet.",
     help_faq_h:'Frequently asked questions',
     help_faq_q1:'Can I change my squad before the deadline?',
     help_faq_a1:'Yes, as many times as you like - right up until that gameweek’s deadline.',
@@ -4808,7 +4804,7 @@ function renderHelpModal(){
     // other explanation anywhere in the app.
     sec('🧮','help_s4_h',`<ul class="help-list">${['help_s4_li1','help_s4_li2','help_s4_li3','help_s4_li4'].map(k=>`<li>${t(k)}</li>`).join('')}</ul>`)+
     sec('⚡','help_s5_h',`<div class="help-sec-p">${t('help_s5_p')}</div>`)+
-    sec('💰','help_s6_h',`<div class="help-sec-p">${t('help_s6_p1')}</div><div class="help-sec-p">${t('help_s6_p2')}</div><div class="help-sec-p">${t('help_s6_p3')}</div><div class="help-sec-p">${t('help_s6_p4')}</div>`)+
+    sec('💰','help_s6_h',`<div class="help-sec-p">${t('help_s6_p1')}</div><div class="help-sec-p">${t('help_s6_p2')}</div>`)+
     sec('🔒','help_s7_h',`<div class="help-sec-p">${t('help_s7_p1')}</div><div class="help-sec-p">${t('help_s7_p2')}</div>`)+
     sec('❓','help_faq_h',
       faq('help_faq_q1','help_faq_a1')+
