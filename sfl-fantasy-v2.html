@@ -3338,17 +3338,18 @@ function currentSeasonGoals(id){
   return total;
 }
 
-// Price delta from the LATEST recalcPricesForRound() run for this player —
-// price minus priceBase at the highest round key present in priceBase
-// (never a season-cumulative sum: priceBase.{round} only ever freezes the
-// price immediately before THAT round's own adjustment, per the automatic
-// price-update rules). 0 for a player never yet recalculated.
+// Total price change since the player's ORIGINAL (frozen, first-seen)
+// price — current price minus calcPriceFor()'s fresh recompute from their
+// static goals/pos/team, the same frozen baseline PRICE_RISE_CAP is
+// measured from (see "Automatic price updates" rules). Never read from
+// priceBase, which only ever freezes a single round's pre-adjustment price,
+// not a running season total — summing every round's own priceBase delta
+// would double-count rounds in between (each round's base already includes
+// every prior round's rise/fall).
 function priceChangeFor(p){
-  if(!p.priceBase)return 0;
-  const rounds=Object.keys(p.priceBase).map(Number);
-  if(!rounds.length)return 0;
-  const latest=Math.max(...rounds);
-  return Math.round((p.price-p.priceBase[latest])*2)/2;
+  const hist=(DIVISIONS[p.division]||DIVISIONS.A).hist;
+  const original=calcPriceFor(p.goals,p.pos,p.team,hist);
+  return Math.round((p.price-original)*2)/2;
 }
 
 // ═══════════════════════════════════════════════
