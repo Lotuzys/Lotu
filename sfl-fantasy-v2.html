@@ -498,8 +498,9 @@ a{color:var(--or)}
 .phist-sub{display:none;background:var(--sur2);border-bottom:1px solid var(--bor)}
 .phist-rw.open .phist-sub{display:block}
 .phist-rw:last-child.open .phist-sub{border-bottom:none}
-.phist-own-mini{font-size:10.5px;font-weight:700;color:var(--mu)}
-.phist-price-mini{font-size:10.5px;font-weight:700;color:var(--mu)}
+.phist-own-mini{font-size:10.5px;font-weight:700;color:var(--mu);display:inline-block;width:34px;text-align:right}
+.phist-price-mini{font-size:10.5px;font-weight:700;color:var(--mu);display:inline-block;width:38px;text-align:right}
+.phist-pts-mini{display:inline-block;width:38px;text-align:right}
 .phist-mrw{border-top:1px solid var(--bor)}
 .phist-mrw:first-child{border-top:none}
 .phist-subrow{display:flex;justify-content:space-between;align-items:center;padding:7px 15px 7px 26px;font-size:11.5px;color:var(--ink2);cursor:pointer}
@@ -4261,9 +4262,18 @@ function teamFixturesForRound(team,ri){
   });
   return fixtures;
 }
+// All .mbg modals share the same z-index — when two end up open at once
+// (e.g. opening a player's card from a row inside the already-open Match
+// Modal), which one visually wins is just DOM order, not intent. Moving
+// the modal being opened to the end of <body> each time guarantees it
+// paints above whatever else happens to be open, without having to track
+// a z-index stack.
+function bringModalToFront(bgId){const el=document.getElementById(bgId);if(el)document.body.appendChild(el);}
+
 let PM_CURRENT_ID=null;
 function openPlayerModal(id){
   const p=PLAYERS.find(x=>x.id===id);if(!p)return;
+  bringModalToFront('pm-bg');
   PM_CURRENT_ID=id;
   const av=document.getElementById('pm-av');
   av.style.background='transparent';av.innerHTML=kitSvg(p.team,70);
@@ -4368,7 +4378,7 @@ async function openPlayerHistoryModal(idArg){
     return `<div class="phist-rw">
       <div class="phist-row ${ri===STATE.curRound?'cur':''}" onclick="togglePhistRound(this,${id},${ri})">
         <span>${roundName(ri)}${ri===STATE.curRound?' '+t('phist_current_suffix'):''}</span>
-        <span class="phist-row-r"><span class="phist-price-mini">${roundPrice.toFixed(1)}M</span><span class="phist-own-mini" id="${ownId}">…</span><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
+        <span class="phist-row-r"><span class="phist-price-mini">${roundPrice.toFixed(1)}M</span><span class="phist-own-mini" id="${ownId}">…</span><span class="phist-pts-mini ${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
       </div>
       <div class="phist-sub"></div>
     </div>`;
