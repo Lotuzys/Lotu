@@ -417,6 +417,7 @@ a{color:var(--or)}
 .pmname{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:3px;letter-spacing:-.01em}.pmteam{font-size:11px;color:var(--mu)}
 .pmchip{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;margin-top:6px}
 .pmclose{position:absolute;top:12px;right:12px;background:var(--sur);border:1px solid var(--bor);color:var(--mu);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
+.pmback{position:absolute;top:12px;left:12px;background:var(--sur);border:1px solid var(--bor);color:var(--mu);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
 /* Match modal — a Fixtures row's score at top, real individual point-
    earners from both teams listed below (reuses .hcp rows from History). */
 #mm-bg .pm.wide{width:520px}
@@ -469,7 +470,7 @@ a{color:var(--or)}
 .rnav-chip:disabled{opacity:.35;cursor:not-allowed}
 .rnav-help-btn{min-width:30px;height:28px;padding:0 10px;border-radius:8px;border:1px solid var(--orbor);background:var(--ordim);color:var(--or);font-size:12px;font-weight:800;cursor:pointer;transition:all .15s var(--ease);display:inline-flex;align-items:center;gap:4px;margin-left:6px}
 .rnav-help-btn:hover{background:var(--or);color:#fff}
-.pmclose:hover{background:var(--sur2);color:var(--ink)}
+.pmclose:hover,.pmback:hover{background:var(--sur2);color:var(--ink)}
 .pmstats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bor);border-top:1px solid var(--bor);border-bottom:1px solid var(--bor)}
 .pmst{background:var(--sur);padding:12px 5px;text-align:center}
 .pmstv{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em}.pmstl{font-size:9px;color:var(--mu);margin-top:2px;font-weight:600}
@@ -498,6 +499,7 @@ a{color:var(--or)}
 .phist-rw.open .phist-sub{display:block}
 .phist-rw:last-child.open .phist-sub{border-bottom:none}
 .phist-own-mini{font-size:10.5px;font-weight:700;color:var(--mu)}
+.phist-price-mini{font-size:10.5px;font-weight:700;color:var(--mu)}
 .phist-mrw{border-top:1px solid var(--bor)}
 .phist-mrw:first-child{border-top:none}
 .phist-subrow{display:flex;justify-content:space-between;align-items:center;padding:7px 15px 7px 26px;font-size:11.5px;color:var(--ink2);cursor:pointer}
@@ -1333,6 +1335,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 <div class="mbg" id="phist-bg" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="pm">
     <div class="pmh">
+      <button class="pmback" id="phist-back" onclick="phistGoBack()" style="display:none">←</button>
       <div class="pmav" id="phist-av"></div>
       <div class="pmname" id="phist-name"></div>
       <div class="pmteam" id="phist-team"></div>
@@ -3551,8 +3554,9 @@ const AUTO_MAX_LEFTOVER=5;
 // stays mostly random but still guarantees one standout pricier pick (top
 // price bracket for a random slot) rather than an all-cheap squad. Once
 // points exist (round 2+), a few of the squad's slots are forced to an
-// actual current points leader (picked with a little randomness among the
-// top few per position, not always literally #1) and the rest stay random.
+// actual current points leader (picked with randomness among the top 15
+// per position — wide enough that it isn't always the same 1-3 names, but
+// still well above the pack) and the rest stay random.
 function autoFillSquad(){
   if(isLocked())return;
   const positions=['G','D','D','M','M','F','F'];
@@ -3571,7 +3575,7 @@ function autoFillSquad(){
     if(!pool.length)return null;
     if(hasPoints){
       const ranked=[...pool].sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0));
-      const topN=ranked.slice(0,Math.min(3,ranked.length));
+      const topN=ranked.slice(0,Math.min(15,ranked.length));
       return topN[Math.floor(Math.random()*topN.length)];
     }
     const ranked=[...pool].sort((a,b)=>b.price-a.price);
@@ -4049,7 +4053,7 @@ function mmRowHtml(x){
   if(x.motm)bits.push('👑');
   if(x.win)bits.push('✅');
   if(x.loss)bits.push('❌');
-  return `<div class="mm-prow"><div class="mm-prow-av">${kitSvg(x.p.team,24)}</div>
+  return `<div class="mm-prow clk" onclick="openPlayerModal(${x.p.id})"><div class="mm-prow-av">${kitSvg(x.p.team,24)}</div>
     <div class="mm-prow-info"><div class="mm-prow-name">${x.p.name}</div>
     <div class="mm-prow-meta">${bits.join(' ')}</div></div>
     <div class="mm-prow-pts ${x.pts<0?'neg':''}">${x.pts}pts</div></div>`;
@@ -4324,6 +4328,11 @@ function openPlayerModal(id){
 // FR/division unconditionally, so a cross-division player's round history
 // silently came out wrong (usually every round showing 0pts, since the
 // wrong division's fixtures never actually matched their real team).
+// Which card (pm-bg or rpm-bg) to reopen if the back-arrow is used — set
+// below right before that card gets hidden, so phistGoBack() can restore
+// it without having to regenerate its contents (they're left in the DOM,
+// just hidden, so re-adding 'open' brings back exactly what was there).
+let PHIST_RETURN_BG=null;
 async function openPlayerHistoryModal(idArg){
   const id=idArg!==undefined&&idArg!==null?idArg:PM_CURRENT_ID;
   const p=PLAYERS.find(x=>x.id===id);if(!p)return;
@@ -4331,11 +4340,15 @@ async function openPlayerHistoryModal(idArg){
   // squad view) closes immediately — otherwise it stays open underneath,
   // stacking two near-identical-looking overlays and making it look like
   // nothing happened.
+  const pmOpen=document.getElementById('pm-bg').classList.contains('open');
+  const rpmOpen=document.getElementById('rpm-bg').classList.contains('open');
+  PHIST_RETURN_BG=pmOpen?'pm-bg':(rpmOpen?'rpm-bg':null);
   document.getElementById('pm-bg').classList.remove('open');
   document.getElementById('rpm-bg').classList.remove('open');
   document.getElementById('phist-av').innerHTML=kitSvg(p.team,58,p.division);
   document.getElementById('phist-name').textContent=p.name;
   document.getElementById('phist-team').innerHTML=`${teamLogoImg(p.team,16,p.division)}${p.team}`;
+  document.getElementById('phist-back').style.display=PHIST_RETURN_BG?'flex':'none';
   const listEl=document.getElementById('phist-list');
   const db=await getDivisionDB(p.division);
   let total=0,roundsWithData=0;
@@ -4345,6 +4358,13 @@ async function openPlayerHistoryModal(idArg){
     const pts=computeAllPlayerRoundPts(ri,db,p.division)[id]||0;
     total+=pts;roundsWithData++;withDataRounds.push(ri);
     const ownId=`phist-ownmini-${id}-${ri}`;
+    // That round's price — the price actually in effect while that round
+    // was being played, i.e. priceBase[ri] (frozen right before THAT
+    // round's own recalc), falling back to the current price if no recalc
+    // has touched this player yet (same fallback recalcPricesForRound()
+    // itself uses for "base"). Shown before ownership, per the owner's
+    // requested order: price, then ownership, then points.
+    const roundPrice=(p.priceBase&&p.priceBase[ri]!==undefined)?p.priceBase[ri]:p.price;
     // Expandable — chevron reveals this round's 2 matches individually,
     // same idea as the historical squad breakdown, but for any player.
     // Ownership is shown right on this row (filled in below), not gated
@@ -4352,7 +4372,7 @@ async function openPlayerHistoryModal(idArg){
     return `<div class="phist-rw">
       <div class="phist-row ${ri===STATE.curRound?'cur':''}" onclick="togglePhistRound(this,${id},${ri})">
         <span>${roundName(ri)}${ri===STATE.curRound?' '+t('phist_current_suffix'):''}</span>
-        <span class="phist-row-r"><span class="phist-own-mini" id="${ownId}">…</span><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
+        <span class="phist-row-r"><span class="phist-price-mini">${roundPrice.toFixed(1)}M</span><span class="phist-own-mini" id="${ownId}">…</span><span class="${pts<0?'neg':''}">${pts}pts</span><span class="phist-chev">▾</span></span>
       </div>
       <div class="phist-sub"></div>
     </div>`;
@@ -4367,6 +4387,14 @@ async function openPlayerHistoryModal(idArg){
       const el=document.getElementById(`phist-ownmini-${id}-${ri}`);if(el)el.textContent=pct+'%';
     });
   });
+}
+// Back arrow (top-left of the history card) — returns to whichever player
+// card launched it instead of closing everything, like the ✕ does. That
+// card's content was never destroyed (just hidden), so re-adding 'open' is
+// enough to bring it back exactly as it was.
+function phistGoBack(){
+  document.getElementById('phist-bg').classList.remove('open');
+  if(PHIST_RETURN_BG)document.getElementById(PHIST_RETURN_BG).classList.add('open');
 }
 
 // Per-match breakdown for one player in one round — same scoring rules as
@@ -5790,7 +5818,7 @@ function renderTopScorers(db,div){
   if(subEl)subEl.textContent=pastRoundIndices().length?t('lbsc_sub_count',pastRoundIndices().length):'';
   const medals=['🥇','🥈','🥉'];
   document.getElementById('lbsc-list').innerHTML=rows.map((r,i)=>`
-    <div class="scrow">
+    <div class="scrow clk" onclick="openPlayerModal(${r.p.id})">
       <span class="scpos ${i<2?'g':''}">${medals[i]||i+1}</span>
       <span>${teamLogoImg(r.p.team,22,r.p.division)}</span>
       <div><div class="scname">${r.p.name}</div><div class="scteam">${r.p.team} · ${POS_FL[r.p.pos]}</div></div>
