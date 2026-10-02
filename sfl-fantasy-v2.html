@@ -2334,16 +2334,19 @@ function setActiveDivision(div){
 function formatDeadline(i){
   return new Intl.DateTimeFormat(LANG==='en'?'en-GB':'lt-LT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vilnius'}).format(FR[i].deadline);
 }
-// Round/day display names — FR[ri].n / FR[ri].days[di].l ("1 Fantasy
-// Turas" / "1-oji diena") are the Lithuanian schedule data itself, not UI
-// chrome, so they're not in the I18N dict. In English they're shown as
-// "Gameweek N" / "Matchday N" instead — matchdays are numbered globally
-// across the whole schedule (2 per round), matching how the Lithuanian
-// ordinals already count them ("3-ioji diena" is round 2's first day).
-// Admin panel intentionally keeps using FR[i].n/day.l directly — it's
-// Lithuanian-only regardless of LANG.
+// Round display name — FR[ri].n ("1 Fantasy Turas") is the Lithuanian
+// schedule data itself, not UI chrome, so it's not in the I18N dict. In
+// English it's shown as "Gameweek N" instead. Admin panel intentionally
+// keeps using FR[i].n/day.l directly — it's Lithuanian-only regardless
+// of LANG.
 function roundName(ri){return LANG==='en'?`Gameweek ${ri+1}`:FR[ri].n;}
-function dayLabel(ri,di){return LANG==='en'?`Matchday ${ri*2+di+1}`:FR[ri].days[di].l;}
+// Match-within-round label (di is 0 or 1, the round's two matchdays) —
+// always "1"/"2" local to the round the viewer is looking at ("1
+// rungtynės" / "2 rungtynės", i.e. "your team's match 1/2 this round"),
+// not FR[ri].days[di].l's own global day-count across the whole season
+// ("3-ioji diena" for round 2's first day) — that numbering only makes
+// sense in the schedule's own data, not here.
+function dayLabel(ri,di){return LANG==='en'?`Match ${di+1}`:`${di+1} rungtynės`;}
 
 // ═══════════════════════════════════════════════
 // SPONSOR — season sponsor logo, shown in the topbar, dashboard hero and
