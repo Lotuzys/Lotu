@@ -177,7 +177,7 @@ a{color:var(--or)}
 .btns{background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:600;padding:11px 24px;border:1.5px solid rgba(255,255,255,.5);border-radius:12px;cursor:pointer;transition:all .18s var(--ease);backdrop-filter:blur(6px)}
 .btns:hover{border-color:#fff;background:rgba(255,255,255,.22);transform:translateY(-2px)}
 .dstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:820px;margin:22px auto 0;padding:0 20px}
-.sc{background:var(--card);border:1px solid var(--bor);border-radius:var(--r2);padding:18px;text-align:center;box-shadow:var(--sh);transition:all .2s var(--ease)}
+.sc{background:var(--card);border:1px solid var(--bor);border-radius:var(--r2);padding:18px;text-align:center;box-shadow:var(--sh);transition:all .2s var(--ease);text-decoration:none}
 .sc:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
 .sv{font-size:27px;font-weight:800;color:var(--or);letter-spacing:-.02em}.sl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;font-weight:600}
 .dsec{max-width:820px;margin:28px auto 0;padding:0 20px 32px}
@@ -1032,9 +1032,9 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
   <div class="dstats">
     <div class="sc"><div class="sv">11</div><div class="sl" data-i18n="stat_rounds">Fantasy turų</div></div>
     <div class="sc"><div class="sv" id="d-teams">0</div><div class="sl" id="stat-teams-lbl">Fantasy komandų</div></div>
-    <div class="sc"><div class="sv">600€</div><div class="sl" data-i18n="stat_prizes">Prizai</div></div>
-    <div class="sc"><div class="sv" id="d-mypts">0</div><div class="sl" id="stat-mypts-lbl">Tavo taškai</div></div>
-    <div class="sc"><div class="sv" id="d-rank">-</div><div class="sl" data-i18n="stat_rank">Vieta</div></div>
+    <a class="sc clk" href="https://olysportsbar.lt/" target="_blank" rel="noopener noreferrer"><div class="sv">600€</div><div class="sl" data-i18n="stat_prizes">OlyBar prizai</div></a>
+    <div class="sc clk" onclick="showPage('history',document.querySelectorAll('.nb')[2])"><div class="sv" id="d-mypts">0</div><div class="sl" id="stat-mypts-lbl">Tavo taškai</div></div>
+    <div class="sc clk" onclick="showPage('leaders',document.querySelectorAll('.nb')[5])"><div class="sv" id="d-rank">-</div><div class="sl" data-i18n="stat_rank">Vieta</div></div>
   </div>
   <div class="dsec"><div class="sec-title" data-i18n="sched_title">Fantasy turų tvarkaraštis</div><div class="rgrid" id="d-rounds"></div></div>
 </div>
@@ -1576,7 +1576,7 @@ const I18N={
     btn_my_history:'Mano istorija',
     season_over_title:'🏆 Ačiū už dalyvavimą - sezonas baigtas',season_over_sub:'Iki susitikimo kitame SFL fantasy turnyre!',
     rnav_label:'Turai',
-    stat_rounds:'Fantasy turų',stat_teams:n=>`Fantasy ${ltForm(n,'komanda','komandos','komandų')}`,stat_prizes:'Prizai',
+    stat_rounds:'Fantasy turų',stat_teams:n=>`Fantasy ${ltForm(n,'komanda','komandos','komandų')}`,stat_prizes:'OlyBar prizai',
     stat_mypts:n=>ltForm(n,'Taškas','Taškai','Taškų'),stat_rank:'Vieta',sched_title:'Fantasy turų tvarkaraštis',
     rt_locked:'🔒 Uždaryta',rt_waiting:'Laukiama',rt_missed:'🚫 Praleista',
     players_header:'Žaidėjai',sort_by:'Rikiuoti pagal',position_label:'Pozicija',team_label:'Komanda',
@@ -1781,7 +1781,7 @@ const I18N={
     btn_my_history:'My History',
     season_over_title:'🏆 Thanks for playing - the season is over',season_over_sub:'See you in the next SFL fantasy tournament!',
     rnav_label:'Gameweeks',
-    stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'Prizes',
+    stat_rounds:'Fantasy Gameweeks',stat_teams:'Fantasy Teams',stat_prizes:'OlyBar prizes',
     stat_mypts:'Your Points',stat_rank:'Rank',sched_title:'Fantasy Gameweek Schedule',
     rt_locked:'🔒 Locked',rt_waiting:'Pending',rt_missed:'🚫 Missed',
     players_header:'Players',sort_by:'Sort by',position_label:'Position',team_label:'Team',
