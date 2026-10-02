@@ -3529,12 +3529,21 @@ function setSlot(pos,idx,player){
   STATE.slots[pos][idx]=player;
   if(player){STATE.taken.add(player.id);STATE.takenTeams.add(player.team);}
 }
+// Bug fixed: this used to delete only the ids/teams belonging to whatever
+// was CURRENTLY sitting in STATE.slots at the moment it ran, one by one —
+// if STATE.taken/takenTeams had ever drifted out of sync with the actual
+// slots (seen in production: a user's saved pitch-builder state had
+// takenTeams blocking 4 clubs and taken listing 2 player ids, while every
+// slot was already null), those orphaned entries survived every future
+// clearAllSlots() call forever, permanently blocking those clubs/players
+// with no way to recover short of editing the database directly. Every
+// call site here means "wipe the pitch completely" — there is no partial-
+// clear use of this function — so it's always correct, and now
+// self-healing against any prior corruption, to just reset both sets to
+// empty outright rather than trust them to already match what's in slots.
 function clearAllSlots(){
-  Object.keys(STATE.slots).forEach(pos=>STATE.slots[pos].forEach((_,idx)=>{
-    const p=STATE.slots[pos][idx];
-    if(p){STATE.taken.delete(p.id);STATE.takenTeams.delete(p.team);}
-    STATE.slots[pos][idx]=null;
-  }));
+  Object.keys(STATE.slots).forEach(pos=>STATE.slots[pos].forEach((_,idx)=>{STATE.slots[pos][idx]=null;}));
+  STATE.taken=new Set();STATE.takenTeams=new Set();
   STATE.captain=null;
 }
 
