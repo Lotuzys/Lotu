@@ -2341,12 +2341,11 @@ function formatDeadline(i){
 // of LANG.
 function roundName(ri){return LANG==='en'?`Gameweek ${ri+1}`:FR[ri].n;}
 // Match-within-round label (di is 0 or 1, the round's two matchdays) —
-// always "1"/"2" local to the round the viewer is looking at ("1
-// rungtynės" / "2 rungtynės", i.e. "your team's match 1/2 this round"),
-// not FR[ri].days[di].l's own global day-count across the whole season
-// ("3-ioji diena" for round 2's first day) — that numbering only makes
-// sense in the schedule's own data, not here.
-function dayLabel(ri,di){return LANG==='en'?`Match ${di+1}`:`${di+1} rungtynės`;}
+// numbered globally across the whole season, same count FR[ri].days[di].l
+// itself uses ("3-ioji diena" for round 2's first day), just said as
+// "N rungtynės"/"Match N" instead of "N-oji diena"/"Matchday N" — round 2
+// is matches 3+4, round 3 is matches 5+6, and so on.
+function dayLabel(ri,di){const n=ri*2+di+1;return LANG==='en'?`Match ${n}`:`${n} rungtynės`;}
 
 // ═══════════════════════════════════════════════
 // SPONSOR — season sponsor logo, shown in the topbar, dashboard hero and
