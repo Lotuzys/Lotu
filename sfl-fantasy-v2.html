@@ -1162,7 +1162,7 @@ table.stats-table{min-width:640px;border-collapse:separate;border-spacing:0;over
 <div class="page" id="page-standings">
   <div class="swrap">
   <div class="pan">
-    <div class="ph"><h3 data-i18n="standings_title">A grupės lentelė</h3><span class="sub" data-i18n="standings_sub">prasideda nuo 0</span></div>
+    <div class="ph"><h3 data-i18n="standings_title">A grupės lentelė</h3></div>
     <table class="st"><thead><tr><th>#</th><th data-i18n="th_team">Komanda</th><th data-i18n="th_played" data-i18n-title="th_played_full" title="Rungtynės">R</th><th data-i18n="th_wins" data-i18n-title="th_wins_full" title="Pergalės">P</th><th data-i18n="th_draws" data-i18n-title="th_draws_full" title="Lygiosios">L</th><th data-i18n="th_losses" data-i18n-title="th_losses_full" title="Pralaimėjimai">Pr</th><th data-i18n="th_goalsfor" data-i18n-title="th_goalsfor_full" title="Įmušti">Įm</th><th data-i18n="th_goalsagainst" data-i18n-title="th_goalsagainst_full" title="Praleisti">Pr</th><th>+/−</th><th data-i18n="th_points" data-i18n-title="th_points_full" title="Taškai">Tšk</th></tr></thead><tbody id="stand-full"></tbody></table>
   </div>
   <!-- Real top scorers for the division the viewer is currently looking at
@@ -1713,7 +1713,6 @@ const I18N={
     res_lbl:(r,isUpdate)=>`${r} - komanda ${isUpdate?'atnaujinta':'išsaugota'}`,res_captain_suffix:'kapitonas',
     hist_title:'Turų istorija',
     standings_title:()=>`${(()=>{try{return STATE.division}catch(e){return 'A'}})()} grupės lentelė`,
-    standings_sub:'prasideda nuo 0',
     th_team:'Komanda',th_played:'R',th_wins:'P',th_draws:'L',th_losses:'Pr',th_goalsfor:'Įm',th_goalsagainst:'Pr',th_points:'Tšk',
     th_played_full:'Rungtynės',th_wins_full:'Pergalės',th_draws_full:'Lygiosios',th_losses_full:'Pralaimėjimai',
     th_goalsfor_full:'Įmušti',th_goalsagainst_full:'Praleisti',th_points_full:'Taškai',
@@ -1910,7 +1909,6 @@ const I18N={
     res_lbl:(r,isUpdate)=>`${r} - team ${isUpdate?'updated':'saved'}`,res_captain_suffix:'captain',
     hist_title:'Gameweek History',
     standings_title:()=>`Group ${(()=>{try{return STATE.division}catch(e){return 'A'}})()} Table`,
-    standings_sub:'starts from 0',
     th_team:'Team',th_played:'P',th_wins:'W',th_draws:'D',th_losses:'L',th_goalsfor:'F',th_goalsagainst:'A',th_points:'Pts',
     th_played_full:'Played',th_wins_full:'Wins',th_draws_full:'Draws',th_losses_full:'Losses',
     th_goalsfor_full:'Goals for',th_goalsagainst_full:'Goals against',th_points_full:'Points',
