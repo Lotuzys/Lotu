@@ -1,0 +1,432 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Max session duration ────────────────────────────────────────────
+    // 1 hour from the moment an account actually signed in, enforced the
+    // same way on every device it's signed into — not just whichever one
+    // happens to notice first. auth_time is a standard ID token claim that
+    // stays fixed at the original sign-in through every silent background
+    // token refresh (only a genuine new sign-in resets it), so comparing
+    // it against request.time (the server's own clock, not anything a
+    // client can lie about) gives every device the identical wall-clock
+    // cutoff regardless of when each one's own token was last refreshed.
+    // The app's own client-side timer (armSessionTimeout() in
+    // sfl-fantasy-v2.html) exists only to turn this into a clean, explained
+    // sign-out instead of a silent pile of denied reads — this check is
+    // what actually enforces it, here, independent of that timer ever
+    // firing on time (or at all, e.g. a laptop asleep past the hour).
+    function sessionFresh() {
+      return request.time.toMillis() - request.auth.token.auth_time * 1000 < 3600000;
+    }
+    function isSignedIn() {
+      return request.auth != null && sessionFresh();
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'eima.lotuzys@gmail.com';
+    }
+
+    // ── Round deadlines ──────────────────────────────────────────────────
+    // Each round is played on one day; deadline is 13:30 EEST (10:30 UTC,
+    // i.e. +630 minutes past midnight UTC) that day, every 2nd day starting
+    // 2026-09-29 (season 3). Must match FR[i].days[0].date in
+    // sfl-fantasy-v2.html exactly — update both together.
+    function DEADLINES() {
+      return {
+        '0':  timestamp.date(2026, 9, 29) + duration.value(630, 'm'),
+        '1':  timestamp.date(2026, 10, 1) + duration.value(630, 'm'),
+        '2':  timestamp.date(2026, 10, 3) + duration.value(630, 'm'),
+        '3':  timestamp.date(2026, 10, 5) + duration.value(630, 'm'),
+        '4':  timestamp.date(2026, 10, 7) + duration.value(630, 'm'),
+        '5':  timestamp.date(2026, 10, 9) + duration.value(630, 'm'),
+        '6':  timestamp.date(2026, 10, 11) + duration.value(630, 'm'),
+        '7':  timestamp.date(2026, 10, 13) + duration.value(630, 'm'),
+        '8':  timestamp.date(2026, 10, 15) + duration.value(630, 'm'),
+        '9':  timestamp.date(2026, 10, 17) + duration.value(630, 'm'),
+        '10': timestamp.date(2026, 10, 19) + duration.value(630, 'm'),
+      };
+    }
+
+    // ── Post-deadline pick freeze ───────────────────────────────────────
+    // Once a round's deadline passes, squad-picking stays closed for the
+    // NEXT round too, for 30h — the window the admin uses to update player
+    // prices/goals before picking reopens. Mirrors PICK_FREEZE_MS /
+    // isPickingFrozen() in sfl-fantasy-v2.html exactly (keep both in sync
+    // if the duration ever changes) so the freeze can't be bypassed by
+    // writing straight to Firestore instead of going through the app.
+    // Round '0' has no previous round to wait on — it opens the moment the
+    // season starts, same as before this existed. Takes the already-
+    // computed DEADLINES() map rather than calling it again itself — CEL
+    // doesn't memoize function calls, so the caller (the squads/{round}
+    // write rule below) computes it once and passes it in here, instead of
+    // rebuilding the whole 11-entry map a second time for every write.
+    // earlyUnlocked() lets the admin end this wait early once that round's
+    // results/prices are actually done, instead of always waiting the full
+    // 30h — see unlockPickingNow() in sfl-fantasy-v2.html.
+    function pickWindowOpen(round, dl, div) {
+      return int(round) == 0
+        || request.time >= dl[string(int(round) - 1)] + duration.value(1800, 'm')
+        || earlyUnlocked(div, round);
+    }
+    // meta/pickUnlock holds one small doc, {`${div}_${round}`: true} per
+    // admin-unlocked round — written by unlockPickingNow() (admin-only, via
+    // the meta/{doc} write rule below). Kept in this tiny dedicated doc
+    // rather than on the division's own league/state doc for the same
+    // reason playersById is one-doc-per-player instead of one big mirror:
+    // this doc's own size is what CEL charges get() cost against, and
+    // league/state can grow large (DB/teams/savedMatches for a whole
+    // season). Must ALWAYS exist (seeded once, empty, alongside this rules
+    // change) — a plain get() on a missing doc throws in this rules engine
+    // rather than returning null, which would deny every squad write.
+    function earlyUnlocked(div, round) {
+      return get(/databases/$(database)/documents/meta/pickUnlock).data.get(div + '_' + string(round), false) == true;
+    }
+
+    // ── Trusted player data ─────────────────────────────────────────────
+    // playersById/{id} holds one small doc per player (position/team/price/
+    // division only), keyed by the app's own permanent id — synced
+    // alongside the players/{extId} collection by both the scheduled
+    // scraper (functions/index.js) and syncPlayerIndex() (admin-triggered,
+    // in the app) — so squad legality can be checked against real data
+    // instead of whatever a client write claims.
+    //
+    // A squad write only ever needs to resolve 7 specific players, so this
+    // fetches exactly those 7 individually instead of loading one giant
+    // mirror array covering the whole league. That used to be a single
+    // meta/players array doc (all 5 divisions' rosters in one document,
+    // indexed by id-1) — cheap-looking, but Firestore's rules CEL
+    // evaluator charges cost proportional to a get()'d document's total
+    // size, so once meta/players grew to cover all 5 divisions (2796
+    // entries) loading it AT ALL — before any of the actual legality
+    // logic even ran — was enough on its own to push every real squad
+    // write over Firestore's 1000-expression-per-request budget, silently
+    // denying every legal squad with a bare permission-denied. Confirmed
+    // via the local emulator: truncating meta/players down to a few
+    // hundred entries made the budget error go away even though the rule
+    // logic itself was unchanged — proving the cost scaled with the
+    // loaded document's size, not with the rule's own complexity. Per-id
+    // docs keep this constant-cost regardless of total roster size.
+    function playerPath(id) {
+      return /databases/$(database)/documents/playersById/$(string(id));
+    }
+    // Plain get() — no exists() guard. Firestore rules cap a single
+    // request at 10 get()/exists() calls total; userDivision() below
+    // already spends one, leaving exactly 7 for one exists()+get() pair
+    // per player (14) to fit, which it doesn't. get()-only spends exactly
+    // 7 (one per player), fitting with headroom. The cost: an id with no
+    // matching playersById doc (out of range, or a gap between divisions'
+    // reserved blocks) makes get() throw instead of returning null — but
+    // that only ever happens for a squad that isn't legal anyway (the
+    // app's own UI only ever submits real ids from its own PLAYERS list),
+    // and Firestore denies the write either way, error or plain `false` —
+    // confirmed against the emulator with a deliberately-bogus id.
+    function playerAt(id) {
+      return get(playerPath(id)).data;
+    }
+
+    // ── Divisions ─────────────────────────────────────────────────────────
+    // A user's own division comes from their profile doc (set at onboarding,
+    // derived from their chosen favourite team) — never from anything the
+    // squad write itself claims.
+    //
+    // Every users/{uid} doc and every playersById/{id} entry is required
+    // to have a concrete `division` value (backfilled to 'A' for every
+    // pre-existing account/player the moment this deployed — see the
+    // migration run alongside this rules change) precisely so this stays a
+    // plain equality check. A "missing field defaults to A" fallback was
+    // tried here first (several equivalent forms — a ternary, a boolean-OR
+    // null check, a retry branch in squadLegal) and every one of them blew
+    // Firestore's 1000-expression rule budget once combined with
+    // slotValid()'s 7x-per-squad-write call pattern, even against a
+    // 10-element trusted index; only removing the need for a fallback
+    // entirely — by guaranteeing the data never has the gap — fit the
+    // budget. Verified against the Firestore emulator; don't reintroduce a
+    // conditional here without re-running that test suite.
+    function userDivision(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.division;
+    }
+
+    // ── Per-round squad integrity ────────────────────────────────────────
+    // Points are never stored — the client always derives them from a
+    // round's frozen squad snapshot plus the shared match-results doc
+    // (admin-only-writable), recomputed fresh on every read. So what's worth
+    // protecting here is the squad snapshot itself: it must be a legal squad
+    // (7 correctly-positioned real players, one per club, within budget)
+    // whenever it's created or changed, and frozen once that round's
+    // deadline passes.
+    //
+    // Each round's squad is its OWN document — users/{uid}/squads/{round} —
+    // rather than one entry in a big map field on the user doc. A write to
+    // one round's document can't touch, and costs nothing to compare
+    // against, any other round's document; Firestore isolates them for
+    // free. The single-map-field version of this used to force every squad
+    // write's rule check to diff/compare the entire history of submitted
+    // squads against its previous version — cost that grew every round the
+    // season had already played, and blew Firestore's 1000-expression-per-
+    // request rule budget by round 2.
+
+    // A single slot must be a real player (checked against the trusted
+    // index by id, not by trusting the pos/team/price the client submitted
+    // alongside it) whose recorded position AND division match this slot.
+    // pl (that player's own trusted-index record) is now passed in already
+    // resolved — see trustedPlayers() below for why.
+    function slotValid(p, pl, pos, div) {
+      return p != null && ('id' in p) && p.id >= 1
+        && pl != null && pl.pos == pos && pl.division == div;
+    }
+
+    // Firestore rules cap each function at 10 local variables, so the
+    // legality check is split into several small functions on a 7-element
+    // list [G, D, D, M, M, F, F] instead of one function with a named
+    // variable per slot.
+    function squadSlots(snap) {
+      let gk = snap.slots.G; let df = snap.slots.D; let mf = snap.slots.M; let fw = snap.slots.F;
+      let shapeOk = gk.size()==1 && df.size()==2 && mf.size()==2 && fw.size()==2;
+      return shapeOk ? [gk[0], df[0], df[1], mf[0], mf[1], fw[0], fw[1]] : [];
+    }
+    // Resolves each of the 7 submitted slots' player id against the
+    // trusted per-id docs EXACTLY ONCE, reused below by slotsValid/
+    // teamsDistinct/squadBudget instead of each of them re-fetching
+    // independently — Firestore rules only allow a bounded number of
+    // get()/exists() calls per request, so re-resolving all 7 players
+    // three times over would blow that budget fast. The s.size()==7 guard
+    // (squadSlots() only ever returns length-7 or length-0) keeps the s[0]
+    // .. s[6] indexing below from erroring on a malformed squad.
+    //
+    // Returned as a MAP keyed by '0'..'6' rather than a 7-element LIST: a
+    // CEL list whose elements are the results of separate get() calls
+    // throws a runtime "evaluation error" the moment it's indexed back out
+    // in this rules engine (confirmed by bisection against the local
+    // emulator — the exact same 7 playerAt() calls work fine wrapped in a
+    // map literal instead of a list). Not documented anywhere; just an
+    // empirically-confirmed limitation of this rules engine — don't
+    // re-introduce a list here.
+    function trustedPlayers(s) {
+      return s.size()==7
+        ? {'0': playerAt(s[0].id), '1': playerAt(s[1].id), '2': playerAt(s[2].id),
+           '3': playerAt(s[3].id), '4': playerAt(s[4].id), '5': playerAt(s[5].id), '6': playerAt(s[6].id)}
+        : {};
+    }
+    function slotsValid(s, tp, div) {
+      return s.size()==7
+        && slotValid(s[0],tp['0'],'G',div) && slotValid(s[1],tp['1'],'D',div) && slotValid(s[2],tp['2'],'D',div)
+        && slotValid(s[3],tp['3'],'M',div) && slotValid(s[4],tp['4'],'M',div) && slotValid(s[5],tp['5'],'F',div) && slotValid(s[6],tp['6'],'F',div);
+    }
+    // One player per club — 7 pairwise distinctness checks (no set type
+    // available here, so this is spelled out rather than deduced).
+    function teamsDistinct(tp) {
+      return tp['0'].team!=tp['1'].team && tp['0'].team!=tp['2'].team && tp['0'].team!=tp['3'].team && tp['0'].team!=tp['4'].team && tp['0'].team!=tp['5'].team && tp['0'].team!=tp['6'].team
+        && tp['1'].team!=tp['2'].team && tp['1'].team!=tp['3'].team && tp['1'].team!=tp['4'].team && tp['1'].team!=tp['5'].team && tp['1'].team!=tp['6'].team
+        && tp['2'].team!=tp['3'].team && tp['2'].team!=tp['4'].team && tp['2'].team!=tp['5'].team && tp['2'].team!=tp['6'].team
+        && tp['3'].team!=tp['4'].team && tp['3'].team!=tp['5'].team && tp['3'].team!=tp['6'].team
+        && tp['4'].team!=tp['5'].team && tp['4'].team!=tp['6'].team
+        && tp['5'].team!=tp['6'].team;
+    }
+    function squadBudget(tp) {
+      return tp['0'].price + tp['1'].price + tp['2'].price + tp['3'].price + tp['4'].price + tp['5'].price + tp['6'].price;
+    }
+    // A squad must match the submitting user's OWN registered division
+    // (userDivision(uid), server-trusted from their profile doc) — a
+    // player can never claim a different division's players. The admin
+    // account is not special-cased here: switchDivision() (client-side)
+    // persists STATE.division into the admin's own profile doc whenever
+    // they browse a different division, so userDivision(uid) always
+    // reflects whichever division the admin is currently viewing and this
+    // one plain check already does the right thing for them too — no
+    // second legality function or extra `allow` clause needed. (An
+    // isAdmin()-branched version of this WAS tried — both a ternary inside
+    // this function and a second unconditional `allow` clause running a
+    // parallel admin-only legality function — and both blew the 1000-
+    // expression budget the moment sessionFresh() added a little more
+    // work to isSignedIn()/isAdmin(). Removing the need for the branch
+    // entirely, rather than trying to make the branch cheaper, is what
+    // actually fit back under budget.)
+    // div is now passed in (computed once by the caller, squadWritable())
+    // rather than each recomputing userDivision(uid) itself — pickWindowOpen()
+    // needs it too now (for earlyUnlocked()), and a second userDivision()
+    // get() call here would push the request over budget for no reason.
+    function squadLegal(snap, div) {
+      let s = squadSlots(snap);
+      let tp = trustedPlayers(s);
+      return (s.size()==7 && slotsValid(s, tp, div))
+        ? (teamsDistinct(tp) && squadBudget(tp) <= 50.01)
+        : false;
+    }
+
+    // Bundles the deadline/freeze/legality checks a squad write needs —
+    // computes DEADLINES() and userDivision(uid) once here and hands them to
+    // pickWindowOpen()/squadLegal() instead of each recomputing separately
+    // (the map literal itself, 11 timestamp+duration constructions, isn't
+    // free to rebuild twice on every single write; userDivision() spends a
+    // get() call each time it runs, and the 10-get()-per-request budget is
+    // already tight — see trustedPlayers()).
+    function squadWritable(round, snap, uid) {
+      let dl = DEADLINES();
+      let div = userDivision(uid);
+      return request.time < dl[round]
+        && pickWindowOpen(round, dl, div)
+        && squadLegal(snap, div);
+    }
+
+    // name/fantasyTeamName/favTeam are free text a user picks for their own
+    // profile, and the leaderboard renders every OTHER signed-in user's
+    // copy of them (the client HTML-escapes there — this is defense in
+    // depth for that, since nothing else here stops a signed-in user from
+    // writing their own users/{uid} doc directly with a raw SDK/API call
+    // that skips the app's own maxlength/trim entirely). Caps length and
+    // blocks angle brackets rather than matching an exact team-name
+    // picklist — cheap here (plain string ops, no get()) and doesn't risk
+    // the squad-write budget the way a get()-based check would.
+    function safeProfileText(s, maxLen) {
+      return s is string && s.size() <= maxLen && !s.matches('.*[<>].*');
+    }
+    // users/{uid} is readable by every signed-in user (leaderboard/ownership
+    // need to see everyone's profile) — email must never land in it, or it
+    // leaks to the entire league the moment anyone calls fetchAllUsers().
+    // The app itself was fixed to stop writing it (email now comes only
+    // from Firebase Auth's own token, never this document), and every
+    // existing account's stored copy was scrubbed in the same migration —
+    // this is the server-side backstop so a future accidental write of it
+    // is rejected outright instead of silently reopening the leak.
+    function profileFieldsSafe(data) {
+      return !('email' in data)
+        && (!('name' in data) || safeProfileText(data.name, 60))
+        && (!('fantasyTeamName' in data) || safeProfileText(data.fantasyTeamName, 40))
+        && (!('favTeam' in data) || safeProfileText(data.favTeam, 40));
+    }
+
+    // Profile + in-progress pitch-builder state. Everyone signed in can
+    // read (needed for the leaderboard — every viewer recomputes every
+    // user's points client-side from this plus each round's squad doc and
+    // the shared results doc). No squad-legality concerns here any more —
+    // that's entirely on the squads subcollection below.
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == uid && profileFieldsSafe(request.resource.data);
+      // `division` is set once at onboarding (create) and frozen after —
+      // without this, nothing stopped a signed-in user from writing their
+      // own doc directly (bypassing the app's UI, which never re-exposes
+      // onboarding) to jump into a different division's real-money prize
+      // pool at will. isAdmin() is exempted: switchDivision()'s "browse
+      // any division without changing which one you're actually onboarded
+      // into" already only ever mutates STATE.division locally for the
+      // admin's own session — this just lets that account's convenience
+      // saveCurrentState() calls go through while doing so, same as before.
+      // resource.data.favTeam=='' is ALSO exempted — an account only ever
+      // reaches an empty favTeam via an admin-initiated reset (the app's
+      // own finishOnboard() always writes a non-empty one; there is no
+      // in-app path back to blank), e.g. between testing seasons. Without
+      // this, a reset account's own re-onboarding pick of a different
+      // division's team silently rejects THIS ENTIRE merge write (Firestore
+      // rules reject a write atomically) — favTeam/fantasyTeamName/slots
+      // never save either, even though the app shows onboarding as done.
+      allow update: if isSignedIn() && request.auth.uid == uid
+        && (isAdmin() || resource.data.get('favTeam','') == '' || request.resource.data.division == resource.data.division)
+        && profileFieldsSafe(request.resource.data);
+
+      // A round's submitted squad. Writable (create or overwrite) only by
+      // its owner, only before that round's own deadline, only once its
+      // 30h post-previous-deadline pick freeze has lifted (pickWindowOpen()
+      // above), and only if legal. Once the deadline passes, neither create
+      // nor update is granted by any rule below — the round is frozen. No
+      // delete rule exists either, so deleting a submitted squad is always
+      // denied.
+      //
+      // Read is owner-only WHILE the round is still open, and opens up to
+      // everyone signed in once its deadline passes — otherwise anyone
+      // could read a rival's still-open picks (via this direct path, the
+      // app's own "load my squads" call always queries its own uid, so the
+      // owner side of this OR is exactly that self-read; a foreign uid only
+      // ever reaches this path through someone deliberately querying it)
+      // and copy them before submitting their own. request.auth.uid==uid is
+      // checked first and CEL short-circuits `||`, so an owner's own read
+      // never depends on DEADLINES() having an entry for this round at all.
+      match /squads/{round} {
+        allow read: if isSignedIn() && (request.auth.uid == uid || request.time >= DEADLINES()[round]);
+        allow create, update: if isSignedIn() && request.auth.uid == uid
+          && squadWritable(round, request.resource.data, uid);
+      }
+    }
+
+    // A {path=**} wildcard pattern like this one structurally matches the
+    // SAME documents the nested match above does — Firestore evaluates
+    // EVERY match block whose path pattern fits a given request and grants
+    // it if ANY of them allow it (this is not "most specific match wins";
+    // confirmed against the emulator the hard way, after a first version
+    // of this rule left `allow read: if isSignedIn()` here unconditionally
+    // and that alone was enough to let anyone read anyone's still-open
+    // squad through a plain single-document get() on the direct path
+    // above too — the nested rule's owner/deadline check never mattered,
+    // because this one, being also-applicable and more permissive, was
+    // enough on its own). So `get` here needs the SAME deadline gate as
+    // the direct path, split out from `list`:
+    //
+    // - `get` (a single document read, however it's addressed) is
+    //   deadline-gated exactly like the nested rule — `round`/`resource`
+    //   ARE reliably bound for a targeted get(), so this works and closes
+    //   the bypass above. Alice reading her own still-open squad through
+    //   this pattern still succeeds regardless, because the nested rule's
+    //   independent owner grant applies too (any matching rule allowing
+    //   it is enough).
+    // - `list` (collectionGroup('squads').get(), used by the
+    //   leaderboard/ownership stats to read every user's squads at once)
+    //   stays unconditional. Tried deadline-gating it the same way first —
+    //   confirmed against the emulator that Firestore leaves `round`,
+    //   `resource.id`, AND `resource.data` all unbound for a plain
+    //   collectionGroup list query with no matching where() filter; any
+    //   expression touching any of them throws instead of evaluating,
+    //   denying the ENTIRE query outright rather than filtering per
+    //   document. Real per-round filtering here needs the client's query
+    //   itself constrained on an indexed field Firestore can statically
+    //   check (a bigger schema/client change, deliberately not done
+    //   silently — see the chat for the options this was weighed
+    //   against). So: a rival's still-open squad can't be read by
+    //   targeting it directly any more, but IS currently still readable
+    //   to anyone signed in through this specific bulk-read path.
+    match /{path=**}/squads/{round} {
+      allow get: if isSignedIn() && request.time >= DEADLINES()[round];
+      allow list: if isSignedIn();
+    }
+
+    // Match results, goalscorers and league standings — shared by everyone,
+    // only the admin account can write.
+    match /league/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // meta/players itself is no longer read by squad-legality checks (see
+    // playerAt() above) but this collection also covers other meta/* docs
+    // (e.g. meta/playerIdCounter), so the grant stays.
+    match /meta/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Full player roster, auto-synced from vilniausfutbolas.lt every 12h by
+    // a scheduled Cloud Function (functions/index.js) — the app boots its
+    // PLAYERS list from this collection. The function itself writes via the
+    // Admin SDK, which bypasses these rules entirely; this write grant only
+    // covers the (rare/manual) case of an admin editing a player by hand
+    // from a client.
+    match /players/{extId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // One small doc per player, keyed by the app's own permanent id — see
+    // playerAt() above for why squad-legality checks resolve players this
+    // way instead of through the old meta/players array mirror. Written by
+    // the same two places that used to maintain that mirror: the scraper
+    // (functions/index.js, via the Admin SDK — bypasses these rules) and
+    // syncPlayerIndex() (admin-triggered, in the app).
+    match /playersById/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
